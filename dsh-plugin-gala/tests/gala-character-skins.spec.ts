@@ -4,14 +4,14 @@ import {
   CHARACTER_SKINS,
   skinIdForCharacter,
 } from '../src/gala-character-skins.ts'
-import { OFFICIAL_GALAS } from '../src/gala-officials.ts'
+import { SELECTABLE_GALAS } from '../src/gala-officials.ts'
 import { BUILTIN_SKINS } from '../src/gala-skins-builtin.ts'
 import { SKIN_TOKEN_NAMES } from '../src/gala-skin-map.ts'
 import { validateSkinManifest } from '../src/protocols/skin-protocol.ts'
 
-describe('一人一肤：官方角色皮肤目录', () => {
-  it('每位官方少女都有一套皮肤，且通过 GSP schema 校验', () => {
-    expect(CHARACTER_SKINS.length).toBe(OFFICIAL_GALAS.length)
+describe('全员默认 + 一人一肤：官方角色皮肤目录', () => {
+  it('全员形象与每位官方少女都有一套皮肤，且通过 GSP schema 校验', () => {
+    expect(CHARACTER_SKINS.length).toBe(SELECTABLE_GALAS.length)
     for (const manifest of CHARACTER_SKINS) {
       expect(validateSkinManifest(manifest)).toBe(true)
     }
@@ -30,7 +30,7 @@ describe('一人一肤：官方角色皮肤目录', () => {
   it('皮肤 id ↔ 角色 id 双射，且不与内置经典皮肤冲突', () => {
     const skinIds = new Set(CHARACTER_SKINS.map(manifest => manifest.id))
     expect(skinIds.size).toBe(CHARACTER_SKINS.length)
-    for (const entry of OFFICIAL_GALAS) {
+    for (const entry of SELECTABLE_GALAS) {
       const skinId = skinIdForCharacter(entry.character.id)
       expect(skinIds.has(skinId)).toBe(true)
       expect(CHARACTER_BY_SKIN.get(skinId)).toBe(entry.character.id)
@@ -47,7 +47,7 @@ describe('一人一肤：官方角色皮肤目录', () => {
   })
 
   it('皮肤继承角色的族系与稀有度', () => {
-    for (const entry of OFFICIAL_GALAS) {
+    for (const entry of SELECTABLE_GALAS) {
       const manifest = CHARACTER_SKINS.find(
         candidate => candidate.id === skinIdForCharacter(entry.character.id),
       )

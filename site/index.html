@@ -4,13 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>DeepSeek Harness Desktop Gala</title>
-<meta name="description" content="DeepSeek Harness 桌面端，内置 Gala 角色皮肤系统。十位角色、整片舞台背景、一键换装。macOS / Windows 安装包点击即下载。">
+<meta name="description" content="DeepSeek Harness 桌面端，内置 Gala 角色皮肤系统。全员默认、十位单角色、整片舞台背景、一键换装。macOS / Windows 安装包点击即下载。">
 <meta name="theme-color" content="#5b5bd6">
-<link rel="icon" href="assets/icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="256x256" href="assets/icon.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
 <meta property="og:title" content="DeepSeek Harness Desktop Gala">
 <meta property="og:description" content="把 DeepSeek Harness 装进桌面，再给它一个角色。">
-<meta property="og:image" content="assets/characters/dsh-llm-hero.webp">
-<link rel="preload" as="image" href="assets/characters/dsh-llm-hero.webp">
+<meta property="og:image" content="assets/characters/ensemble-hero.webp">
+<link rel="preload" as="image" href="assets/characters/ensemble-hero.webp">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -24,7 +26,7 @@
     --font: "Noto Sans SC", "Inter", "PingFang SC", "Hiragino Sans GB", system-ui, sans-serif;
     --num: "Inter", var(--font);
     --r-card: 22px;
-    --hero-img: url("assets/characters/dsh-llm-hero.webp");
+    --hero-img: url("assets/characters/ensemble-hero.webp");
   }
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
@@ -191,10 +193,10 @@
 
     <div class="eyebrow">DeepSeek Harness · Desktop</div>
     <p class="product">把 Harness 装进桌面，再给它一个角色。</p>
-    <h1 id="headline"><span class="flip">与<em>星海</em>对话</span></h1>
-    <p class="tagline" id="tagline">语言会落成星光，照亮还没有名字的答案。</p>
-    <div class="quote" id="quote"><img id="quote-avatar" src="assets/characters/dsh-llm-portrait.webp" alt=""><span id="quote-text">星星掉出来一颗，替我接住哦。</span></div>
-    <span class="character-name" id="character-name">当前角色 <b>灵灵</b> · 灵灵·星海夜航</span>
+    <h1 id="headline"><span class="flip">与<em>全员</em>并肩</span></h1>
+    <p class="tagline" id="tagline">十种能力围住同一个愿望，一起把未来推近一点。</p>
+    <div class="quote" id="quote"><img id="quote-avatar" src="assets/characters/ensemble-portrait.webp" alt=""><span id="quote-text">大家都在，今天也一起出发吧！</span></div>
+    <span class="character-name" id="character-name">当前角色 <b>Gala全员</b> · Gala全员·共赴星海</span>
 
     <div class="cta" id="download">
       <a class="btn btn-primary" id="primary" href="https://github.com/SkyNotSilent/deepseek-harness-desktop-gala/releases" aria-disabled="true">
@@ -218,8 +220,8 @@
 
 <section class="block" id="gallery" aria-labelledby="gallery-title">
   <div class="section-head">
-    <h2 id="gallery-title">十位角色，随你换装</h2>
-    <p>每位角色自带配色、头像、舞台立绘与寄语。点一下卡片，整站就换她的装。</p>
+    <h2 id="gallery-title">全员默认，十位角色随你换装</h2>
+    <p>先与大家一起出发，也可以选择任意一位伙伴。每套皮肤都有专属配色、头像、舞台立绘与寄语。</p>
   </div>
   <div class="gallery" id="cards"></div>
 </section>
@@ -229,7 +231,7 @@
   <div class="features">
     <div class="feature"><div class="orb">🖥️</div><h3>零配置本地 Host</h3><p>自带 Electron、Node 与固定版本的 DeepSeek Harness 运行时，双击即用；API Key 在「设置 → 模型」填一次。</p></div>
     <div class="feature"><div class="orb">🖼️</div><h3>多模态对话</h3><p>跟随上游 0.1.1，支持图片输入与 DeepSeek-V4 Flash Vision。</p></div>
-    <div class="feature"><div class="orb">🎀</div><h3>Gala 角色皮肤</h3><p>侧边栏头像、欢迎页、整片对话舞台与配色一起换装；切回经典配色一键恢复。支持导入 .ggal 角色包与合成。</p></div>
+    <div class="feature"><div class="orb">🎀</div><h3>Gala 角色皮肤</h3><p>首次启动由全员与鲸鱼共同登场，也可选择十位单独角色；头像、欢迎页、整片对话舞台与配色会一起换装。三套经典配色保持无人物界面。</p></div>
     <div class="feature"><div class="orb">🧰</div><h3>托盘、终端、更新</h3><p>常驻托盘，一键打开配好环境的终端；新版本通过 GitHub Releases 检查，下载前必经确认。</p></div>
   </div>
 </section>
@@ -246,7 +248,7 @@
 (async () => {
   const REPO = 'SkyNotSilent/deepseek-harness-desktop-gala';
   const RELEASES = `https://github.com/${REPO}/releases`;
-  const DEFAULT = 'dsh-llm';
+  const DEFAULT = 'ensemble';
   const RARITY = { common: ['普通', '#a8b0bc'], uncommon: ['精良', '#5fd0a5'], rare: ['稀有', '#6fa8ff'], epic: ['史诗', '#c084fc'], legendary: ['传说', '#ffb703'] };
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = id => document.getElementById(id);

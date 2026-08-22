@@ -85,6 +85,7 @@ describe('packaged desktop runtime verification', () => {
     'lib/terminal.js',
     'node_modules/@deepseek-ai/dsh/lib/bin.js',
     'node_modules/dsh-plugin-gala/lib/index.js',
+    'node_modules/dsh-plugin-gala/assets/gala/officials/ensemble/assets/hero-v2.webp',
     'node_modules/dsh-plugin-gala/assets/gala/officials/dsh-base/assets/hero-v2.webp',
     'node_modules/pnpm/bin/pnpm.mjs',
     'node_modules/node-pty/prebuilds/win32-x64/conpty.node',

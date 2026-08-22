@@ -33,7 +33,7 @@ async function loadOfficials() {
     return match[1]
   }
   const characters = source
-    .split(/official\('@deepseek-ai\/dsh-[a-z-]+', \{/u)
+    .split(/official\('[^']+', \{/u)
     .slice(1)
     .map((block) => {
       const id = field(block, 'id')
@@ -48,11 +48,11 @@ async function loadOfficials() {
         tagline: field(block, 'tagline'),
       }
     })
-  if (characters.length !== 10) throw new Error(`expected 10 official characters, parsed ${characters.length}`)
+  if (characters.length !== 11) throw new Error(`expected the ensemble plus 10 official characters, parsed ${characters.length}`)
 
   const palettes = new Map()
-  for (const block of skins.split(/'gala:(?=dsh-[a-z-]+': \{)/u).slice(1)) {
-    const slug = block.match(/^(dsh-[a-z-]+)/u)[1]
+  for (const block of skins.split(/'gala:(?=[a-z0-9-]+': \{)/u).slice(1)) {
+    const slug = block.match(/^([a-z0-9-]+)/u)[1]
     const hex = key => field(block, key)
     palettes.set(slug, {
       themeName: field(block, 'themeName'),

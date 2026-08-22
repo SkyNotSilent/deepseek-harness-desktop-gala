@@ -46,6 +46,22 @@ function official(
   }
 }
 
+/** Gala 自身的默认全员形象；不映射到任何上游插件包。 */
+export const ENSEMBLE_GALA: OfficialGala = official('dsh-plugin-gala', {
+  id: 'gala:ensemble',
+  name: 'Gala全员',
+  family: 'ensemble',
+  rarity: 'legendary',
+  tier: 3,
+  description: '十位伙伴与鲸鱼共同组成的 Gala 全员形象。她们代表完整的桌面体验，也是每位用户初次见到的默认伙伴。',
+  lines: { onEquip: '大家都在，今天也一起出发吧！' },
+  tags: ['全员', '默认', '官方'],
+}, {
+  headline: '与全员并肩',
+  tagline: '十种能力围住同一个愿望，一起把未来推近一点。',
+  backdrop: 'assets/hero-v2.webp',
+})
+
 /** 官方嘎啦全家桶（id 与 §8.4 缺省规则对包名的推导一致） */
 export const OFFICIAL_GALAS: readonly OfficialGala[] = [
   official('@deepseek-ai/dsh-base', {
@@ -197,8 +213,11 @@ export const OFFICIALS_BY_PACKAGE: ReadonlyMap<string, GalaCharacter> = new Map(
 
 /** 按 gala id 索引（资产路由解析包目录用） */
 export const OFFICIALS_BY_ID: ReadonlyMap<string, GalaCharacter> = new Map(
-  OFFICIAL_GALAS.map(entry => [entry.character.id, entry.character]),
+  [ENSEMBLE_GALA, ...OFFICIAL_GALAS].map(entry => [entry.character.id, entry.character]),
 )
+
+/** 所有可选择的人物呈现：默认全员形象在十位单角色之前。 */
+export const SELECTABLE_GALAS: readonly OfficialGala[] = [ENSEMBLE_GALA, ...OFFICIAL_GALAS]
 
 /** 官方示例配方（PRD §10.3；output 只含必备束，合成后必可启动） */
 export const OFFICIAL_RECIPES: readonly ComposeRecipe[] = [

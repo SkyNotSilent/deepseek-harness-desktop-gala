@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/hero.webp" alt="DeepSeek Harness Desktop Gala" width="100%">
+  <img src="assets/screenshot-site-home.webp" alt="DeepSeek Harness Desktop Gala 下载站与角色舞台" width="100%">
 </p>
 
 <h1 align="center">DeepSeek Harness Desktop Gala</h1>
@@ -14,7 +14,7 @@
 
 <p align="center">
   <b>把 DeepSeek Harness 装进桌面，再给它一个角色。</b><br>
-  一个开箱即用的 DeepSeek Harness（DSH）桌面端，内置 <b>Gala 角色皮肤系统</b>：十位角色，整片舞台背景，一键换装。
+  一个开箱即用的 DeepSeek Harness（DSH）桌面端，内置 <b>Gala 角色皮肤系统</b>：全员集合默认登场，十位角色可独立换装，整片舞台背景始终相随。
 </p>
 
 <h3 align="center">
@@ -31,7 +31,7 @@
 
 DeepSeek Harness 是一个"万物皆插件"的 Agent 运行时，官方提供命令行与 Web 界面。**DeepSeek Harness Desktop Gala** 把同一个运行时封装成 macOS / Windows 应用：双击启动、系统托盘常驻、内置终端、自动检查更新——并在此之上做了一件官方没做的事：**让界面有角色**。
 
-选中一位 Gala 角色后，侧边栏头像、欢迎页标题、整片对话舞台背景和界面配色会一起换装；切回经典配色，一切恢复如初。角色是贯穿使用过程的陪伴，不只是换个主题色。
+首次启动由十位 Gala 角色与鲸鱼共同登场；选中单独角色后，侧边栏头像、欢迎页标题、整片对话舞台背景和界面配色会一起换装。「恢复全员默认」可随时回到集合皮肤，三套经典配色则保持纯净、无人物的界面。角色是贯穿使用过程的陪伴，不只是换个主题色。
 
 > 本项目是社区作品，**不是 DeepSeek 官方产品**。完全开源免费；如有人向你出售此软件，请拒绝。
 
@@ -39,7 +39,7 @@ DeepSeek Harness 是一个"万物皆插件"的 Agent 运行时，官方提供命
 
 | | |
 |---|---|
-| 🎀 **Gala 角色皮肤** | 十位官方角色（阿基、小窗、阿念、灵灵、盾盾、敲敲、巧巧、忆忆、令令、宝宝），各带专属配色、头像、舞台立绘与寄语；支持导入 `.ggal` 角色包、收藏与合成。 |
+| 🎀 **Gala 角色皮肤** | 默认由十位角色与鲸鱼共同登场；也可切换阿基、小窗、阿念、灵灵、盾盾、敲敲、巧巧、忆忆、令令或宝宝。每套都有专属配色、头像、舞台立绘与寄语；支持导入 `.ggal` 角色包、收藏与合成。 |
 | 🖼️ **多模态对话** | 跟随 DeepSeek Harness 0.1.1，支持图片输入与 DeepSeek-V4 Flash Vision。 |
 | 🖥️ **零配置本地 Host** | 安装包自带 Electron、Node 与固定版本的 DSH 运行时；首次启动自动准备默认 profile，无需安装 Node.js 或 pnpm。 |
 | 🧩 **插件生态兼容** | 继续使用官方 `dsh plugin` 语义管理插件；兼容模式保留上游 Web 客户端，高级模式提供桌面自有布局与窗口材质。 |
@@ -68,7 +68,7 @@ DeepSeek Harness 是一个"万物皆插件"的 Agent 运行时，官方提供命
 
 ## 使用 Gala
 
-- 侧边栏底部 **🎀 Gala皮肤图鉴** 打开换装面板，点选角色后整站换装；「恢复默认」切回经典配色。
+- 侧边栏底部 **🎀 Gala皮肤图鉴** 打开换装面板，点选角色后整站换装；「恢复全员默认」回到十位角色与鲸鱼共同登场的集合皮肤。三套经典配色仍可单独选择。
 - 托盘菜单提供 **嘎啦图鉴 / 换肤面板 / 合成工坊 / 导入嘎啦包**；快捷键 `Cmd/Ctrl + Shift + S` 直达换肤面板。
 - 角色数据与皮肤协议见 [`dsh-plugin-gala/`](dsh-plugin-gala/)。
 

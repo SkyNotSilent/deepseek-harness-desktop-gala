@@ -55,7 +55,8 @@ describe('面板视图模型', () => {
     expect(base?.name).toBe('阿基')
     expect(base?.quote).toBe('交给我吧，稳稳的哦。')
     expect(base?.rarityLabel).toBe('稀有')
-    expect(model.skins.length).toBe(3 + OFFICIAL_GALAS.length) // 经典三件套 + 一人一肤
+    expect(model.skins.length).toBe(4 + OFFICIAL_GALAS.length) // 经典三件套 + 全员默认 + 一人一肤
+    expect(model.defaultSkinId).toBe('gala:skin-ensemble')
     expect(model.skins.every(skin => !skin.active)).toBe(true)
     expect(model.skins.find(skin => skin.id === 'gala:skin-dsh-base')?.art).toMatch(/^(data:image|\/_dsh\/)/)
     expect(model.compose.error).toBeUndefined()
@@ -122,7 +123,8 @@ describe('面板页面渲染', () => {
     expect(html).toContain('data-skin-id="gala:skin-cream-pink"')
     expect(html).toContain('id="skins-library"')
     expect(html).toContain('id="classic-skins"')
-    expect(html).toContain('选择你的 Gala 角色')
+    expect(html).toContain('选择你的 Gala 伙伴')
+    expect(html).toContain('恢复全员默认')
     expect(html).toContain('只调整界面颜色，不代表角色')
     expect(html).toContain('data-recipe-id="gala:atelier-duo"')
     expect(html).toContain('data-compose-id="gala:atelier-duo"')

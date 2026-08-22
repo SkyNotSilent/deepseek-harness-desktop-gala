@@ -8,6 +8,7 @@
  */
 
 import type { GalaLayer } from './gala-host.ts'
+import { DEFAULT_GALA_SKIN_ID } from './gala-character-skins.ts'
 import { PANEL_SCRIPT } from './gala-panel-script.ts'
 import { PANEL_STYLE, RARITY_COLORS } from './gala-panel-style.ts'
 import type { GalaRarity } from './protocols/gala-json.ts'
@@ -34,6 +35,7 @@ export function escapeHtml(value: string): string {
 /** 面板视图模型（页面渲染与 JSON 载荷共用） */
 export interface PanelViewModel {
   view: string
+  defaultSkinId: string
   cards: readonly {
     id: string
     name: string
@@ -100,6 +102,7 @@ export function panelViewModel(layer: GalaLayer, view: string): PanelViewModel {
   }
   return {
     view,
+    defaultSkinId: DEFAULT_GALA_SKIN_ID,
     cards: layer.panelCards().map(card => {
       let detail: ReturnType<GalaLayer['panelDetail']>
       try {
@@ -262,12 +265,12 @@ export function renderPanelPage(model: PanelViewModel, nonce: string): string {
     `<section id="view-gallery" hidden>${galleryBody}</section>`,
     '<section id="view-skins" hidden>',
     '<div id="skins-library">',
-    '<div class="skin-section-heading"><span>GALA CHARACTERS</span><h2>选择你的 Gala 角色</h2><p>角色会同步改变配色、欢迎语与主界面场景。</p></div>',
+    '<div class="skin-section-heading"><span>GALA CHARACTERS</span><h2>选择你的 Gala 伙伴</h2><p>默认是全员集合，也可以切换到任意一位角色；配色、欢迎语与主界面场景会同步变化。</p></div>',
     `<div id="skins-grid">${characterSkins.map(skinCardMarkup).join('')}</div>`,
     '<div class="skin-section-heading classic-heading"><span>CLASSIC PALETTES</span><h2>经典配色</h2><p>只调整界面颜色，不代表角色。</p></div>',
     `<div id="classic-skins">${classicSkins.map(classicSkinMarkup).join('')}</div>`,
     '</div>',
-    '<p style="margin-top:18px"><button class="btn" id="skin-revert">恢复默认外观</button></p>',
+    '<p style="margin-top:18px"><button class="btn" id="skin-revert">恢复全员默认</button></p>',
     '</section>',
     '<section id="view-compose" hidden>',
     '<div class="atelier-hero">',

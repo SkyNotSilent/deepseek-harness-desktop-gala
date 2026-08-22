@@ -164,8 +164,10 @@ $('#skin-revert').addEventListener('click', async () => {
   try {
     await rpc('skin-revert')
     for (const el of document.querySelectorAll('.skin-card')) delete el.dataset.active
+    const defaultCard = document.querySelector('[data-skin-id="' + CSS.escape(data.defaultSkinId) + '"]')
+    if (defaultCard) defaultCard.dataset.active = ''
     applyPreview(undefined)
-    toast('已恢复默认外观')
+    toast('已恢复「Gala全员·共赴星海」')
   } catch (cause) {
     toast('恢复失败：' + cause.message)
   }

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/hero.webp" alt="DeepSeek Harness Desktop Gala" width="100%">
+  <img src="assets/screenshot-site-home.webp" alt="DeepSeek Harness Desktop Gala download site and character stage" width="100%">
 </p>
 
 <h1 align="center">DeepSeek Harness Desktop Gala</h1>
@@ -14,7 +14,7 @@
 
 <p align="center">
   <b>DeepSeek Harness on your desktop — with a character.</b><br>
-  A ready-to-run desktop app for DeepSeek Harness (DSH), featuring the <b>Gala character-skin system</b>: ten characters, full-stage backdrops, one-click dress-up.
+  A ready-to-run desktop app for DeepSeek Harness (DSH), featuring the <b>Gala character-skin system</b>: the full ensemble appears by default, ten individual characters are one click away, and stage backdrops remain throughout every conversation.
 </p>
 
 <h3 align="center">
@@ -31,13 +31,13 @@
 
 DeepSeek Harness is a plugin-first agent runtime that ships with a CLI and a Web UI. **DeepSeek Harness Desktop Gala** wraps that same runtime into a macOS / Windows application — double-click to launch, tray-resident, bundled terminal, update checks — and adds the one thing the stock UI does not have: **a character**.
 
-Pick a Gala character and the sidebar avatar, welcome headline, full conversation backdrop and colour palette change together. Switch back to the classic palette and everything is restored.
+The ensemble skin is active on first launch. Pick an individual Gala character and the sidebar avatar, welcome headline, full conversation backdrop and colour palette change together; “Restore ensemble default” brings everyone and the whale back. Classic character-free palettes remain available separately.
 
 > Community project, **not an official DeepSeek product**. Free and open source — if anyone tries to sell you this software, decline.
 
 ## Features
 
-- 🎀 **Gala character skins** — ten official characters, each with its own palette, avatar, stage artwork and lines; import `.ggal` packs, favourite and fuse characters.
+- 🎀 **Gala character skins** — one default ensemble plus ten individual characters, each with its own palette, avatar, stage artwork and lines; import `.ggal` packs, favourite and fuse characters.
 - 🖼️ **Multimodal chat** — tracks DeepSeek Harness 0.1.1 with image input and DeepSeek-V4 Flash Vision.
 - 🖥️ **Zero-setup local Host** — Electron, Node and a pinned DSH runtime are bundled; no Node.js or pnpm install required.
 - 🧩 **Plugin-compatible** — keeps the official `dsh plugin` semantics; compatibility mode preserves the upstream Web client, advanced mode adds a desktop-owned layout.

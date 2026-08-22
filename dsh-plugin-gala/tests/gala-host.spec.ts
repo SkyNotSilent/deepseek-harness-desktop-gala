@@ -191,7 +191,7 @@ describe('交互式导入 .ggal', () => {
 })
 
 describe('皮肤桥（内置皮肤 + --dsw-* 映射层 + 事件）', () => {
-  it('内置皮肤 = 经典三件套 + 一人一肤角色皮肤', () => {
+  it('内置皮肤 = 经典三件套 + 全员默认 + 一人一肤角色皮肤', () => {
     const { create } = workspace()
     const layer = create()
 
@@ -199,8 +199,9 @@ describe('皮肤桥（内置皮肤 + --dsw-* 映射层 + 事件）', () => {
     expect(ids).toContain('gala:skin-cream-pink')
     expect(ids).toContain('gala:skin-mint-soda')
     expect(ids).toContain('gala:skin-star-purple')
+    expect(ids[3]).toBe('gala:skin-ensemble')
     expect(ids).toContain('gala:skin-dsh-llm')
-    expect(ids.length).toBe(3 + OFFICIAL_COUNT)
+    expect(ids.length).toBe(4 + OFFICIAL_COUNT)
   })
 
   it('apply 注入 CSS、生成 --dsw 双值层并广播 skin-changed', async () => {
@@ -219,7 +220,7 @@ describe('皮肤桥（内置皮肤 + --dsw-* 映射层 + 事件）', () => {
     expect(events).toEqual(['skin-changed'])
   })
 
-  it('revert 清空映射层并再次广播', async () => {
+  it('revert 恢复全员默认皮肤并再次广播', async () => {
     const { create } = workspace()
     const layer = create()
     await layer.skin.apply('gala:skin-cream-pink')
@@ -227,7 +228,8 @@ describe('皮肤桥（内置皮肤 + --dsw-* 映射层 + 事件）', () => {
 
     await layer.skin.revert()
 
-    expect(layer.skinTokens()).toEqual({})
+    expect(layer.skin.current()?.id).toBe('gala:skin-ensemble')
+    expect(layer.skinTokens()['--dsw-alias-brand-primary']?.light).toBe('#6758d8')
   })
 
   it('重启后 activate 恢复上次皮肤并重建映射层', async () => {
@@ -253,16 +255,38 @@ describe('皮肤桥（内置皮肤 + --dsw-* 映射层 + 事件）', () => {
 })
 
 describe('选肤弹层状态（pickerState）', () => {
-  it('无皮肤：全员不 active、logo 为 null', () => {
+  it('尚未 activate：全员不 active、logo 为 null', () => {
     const { create } = workspace()
     const state = create().pickerState()
 
-    expect(state.girls.length).toBe(OFFICIAL_COUNT)
+    expect(state.girls.length).toBe(OFFICIAL_COUNT + 1)
     expect(state.classics.length).toBe(3)
     expect(state.girls.every(girl => !girl.active)).toBe(true)
     expect(state.activeSkinId).toBeNull()
     expect(state.logo).toBeNull()
     expect(state.persona).toBeNull()
+  })
+
+  it('首次 activate 自动穿上全员默认皮肤', async () => {
+    const { create } = workspace()
+    const layer = create()
+
+    await layer.activate()
+    const state = layer.pickerState()
+
+    expect(state.activeSkinId).toBe('gala:skin-ensemble')
+    expect(state.girls[0]).toMatchObject({
+      skinId: 'gala:skin-ensemble',
+      characterId: 'gala:ensemble',
+      name: 'Gala全员',
+      active: true,
+    })
+    expect(state.logo?.name).toBe('Gala全员')
+    expect(state.persona).toMatchObject({
+      characterId: 'gala:ensemble',
+      headline: '与全员并肩',
+    })
+    layer.dispose()
   })
 
   it('角色皮肤生效：对应少女 active，logo 指向她的立绘', async () => {

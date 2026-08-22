@@ -14,7 +14,12 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { galaSvgDataUrl } from './gala-avatar.ts'
-import { CHARACTER_BY_SKIN, CHARACTER_SKINS, skinIdForCharacter } from './gala-character-skins.ts'
+import {
+  CHARACTER_BY_SKIN,
+  CHARACTER_SKINS,
+  DEFAULT_GALA_SKIN_ID,
+  skinIdForCharacter,
+} from './gala-character-skins.ts'
 import { createGalaCollectionStore, type GalaCollectionStore } from './gala-collection.ts'
 import { createGalaComposeService, type GalaComposeService } from './gala-compose.ts'
 import { createGalaGalleryService, type GalaGalleryService, type GalleryCard, type GalleryDetail } from './gala-gallery.ts'
@@ -24,7 +29,13 @@ import {
   type ConflictResolution,
   type GalaMarketService,
 } from './gala-market.ts'
-import { OFFICIAL_GALAS, OFFICIAL_RECIPES, OFFICIALS_BY_ID, OFFICIALS_BY_PACKAGE } from './gala-officials.ts'
+import {
+  OFFICIAL_GALAS,
+  OFFICIAL_RECIPES,
+  OFFICIALS_BY_ID,
+  OFFICIALS_BY_PACKAGE,
+  SELECTABLE_GALAS,
+} from './gala-officials.ts'
 import { RARITY_LABELS } from './gala-panel-page.ts'
 import { createGalaRegistry, defaultGalaForPackage, type GalaRegistry } from './gala-registry.ts'
 import { mapSkinTokens, type TokenPair } from './gala-skin-map.ts'
@@ -136,7 +147,7 @@ export interface PickerLogo {
   name: string
 }
 
-/** 当前角色在欢迎页上的完整呈现（经典配色 / 默认外观时为空） */
+/** 当前角色在欢迎页上的完整呈现（经典配色时为空） */
 export interface PickerPersona {
   characterId: string
   name: string
@@ -174,7 +185,7 @@ export interface GalaLayer {
   skinList(): readonly SkinManifest[]
   /** 当前皮肤映射到官方 UI 的 --dsw-* 双值层（无皮肤时为空对象） */
   skinTokens(): Record<string, TokenPair>
-  /** 选肤弹层状态（少女 + 经典配色 + 当前 logo） */
+  /** 选肤弹层状态（默认全员 + 单角色 + 经典配色 + 当前 logo） */
   pickerState(): PickerState
   /** 资产路由的包目录解析（官方 / 市场包） */
   assetRoot(packageId: string): string | undefined
@@ -249,7 +260,7 @@ export function createGalaLayer(options: GalaLayerOptions): GalaLayer {
     },
   })
   for (const manifest of BUILTIN_SKINS) skin.register(manifest)
-  // 一人一肤：官方少女角色皮肤（选中少女 = 换上她的主题）
+  // 默认全员 + 一人一肤：选中形象 = 换上对应主题
   for (const manifest of CHARACTER_SKINS) skin.register(manifest)
 
   /** 当前皮肤映射到官方 UI 的双值层（皮肤变更时重算并广播） */
@@ -282,8 +293,7 @@ export function createGalaLayer(options: GalaLayerOptions): GalaLayer {
     refreshSkinBridge()
   }
   const revertSkin = async (): Promise<void> => {
-    await skin.revert()
-    refreshSkinBridge()
+    await applySkin(DEFAULT_GALA_SKIN_ID)
   }
 
   // ── 图鉴与形象 ────────────────────────────────────────────────────
@@ -341,10 +351,10 @@ export function createGalaLayer(options: GalaLayerOptions): GalaLayer {
     return { ...detail, art: artFor(detail, detail.avatar) }
   }
 
-  /** 选肤弹层状态：10 位少女 + 3 套经典配色 + 当前 logo 替换信息 */
+  /** 选肤弹层状态：默认全员 + 10 位少女 + 3 套经典配色 + 当前 logo */
   const pickerState = (): PickerState => {
     const activeSkinId = skin.current()?.id ?? null
-    const girls = OFFICIAL_GALAS.map(entry => {
+    const girls = SELECTABLE_GALAS.map(entry => {
       const character = registry.get(entry.character.id) ?? entry.character
       const skinId = skinIdForCharacter(character.id)
       return {
@@ -375,7 +385,7 @@ export function createGalaLayer(options: GalaLayerOptions): GalaLayer {
       : { art: artFor(logoCharacter, logoCharacter.assets?.avatar ?? ''), name: logoCharacter.name }
     const official = characterId === undefined
       ? undefined
-      : OFFICIAL_GALAS.find(entry => entry.character.id === characterId)
+      : SELECTABLE_GALAS.find(entry => entry.character.id === characterId)
     const persona = official === undefined
       ? null
       : {
@@ -440,7 +450,8 @@ export function createGalaLayer(options: GalaLayerOptions): GalaLayer {
       try {
         activeSkinDir = stored === undefined ? undefined : skinDirs.get(stored)
         await skin.restore()
-        refreshSkinBridge()
+        if (skin.current() === undefined) await applySkin(DEFAULT_GALA_SKIN_ID)
+        else refreshSkinBridge()
       } catch (cause) {
         native.notify('皮肤恢复失败', messageOf(cause))
       }

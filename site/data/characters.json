@@ -1,5 +1,32 @@
 [
   {
+    "slug": "ensemble",
+    "name": "Gala全员",
+    "family": "ensemble",
+    "rarity": "legendary",
+    "description": "十位伙伴与鲸鱼共同组成的 Gala 全员形象。她们代表完整的桌面体验，也是每位用户初次见到的默认伙伴。",
+    "onEquip": "大家都在，今天也一起出发吧！",
+    "headline": "与全员并肩",
+    "tagline": "十种能力围住同一个愿望，一起把未来推近一点。",
+    "themeName": "Gala全员·共赴星海",
+    "light": {
+      "primary": "#6758d8",
+      "primaryHover": "#5849c5",
+      "bg": "#f7f6ff",
+      "surface": "#eeebff",
+      "bubble": "#e5e0ff",
+      "hover": "#dcd5fb"
+    },
+    "dark": {
+      "primary": "#8579e0",
+      "primaryHover": "#7468cf",
+      "bg": "#171528",
+      "surface": "#221d39",
+      "bubble": "#221d39",
+      "hover": "#2e2556"
+    }
+  },
+  {
     "slug": "dsh-base",
     "name": "阿基",
     "family": "core",

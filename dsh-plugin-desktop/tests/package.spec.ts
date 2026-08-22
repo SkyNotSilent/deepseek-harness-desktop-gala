@@ -245,18 +245,19 @@ describe('published package surface', () => {
     }
   })
 
-  it('keeps the Gala source icon unmodified', () => {
+  it('keeps the shared Gala whale source icon unmodified', () => {
     const digest = createHash('sha256')
       .update(readFileSync(new URL('build/app-icon.png', packageRoot)))
       .digest('hex')
 
-    expect(digest).toBe('2d736af00393a5afaf20313f49654d900657fee777ee08d26fe7775ea05b94a3')
+    expect(digest).toBe('33a37574507e10f391f1bb15749b8714e47481dbf158e2c34dd7a2d74eb5675c')
   })
 
   it('generates a centered macOS icon with a 100-pixel visual inset', async () => {
     const source = await sharp(readFileSync(new URL('build/app-icon.png', packageRoot))).metadata()
     const icon = sharp(readFileSync(new URL('build/app-icon-mac.png', packageRoot)))
     const metadata = await icon.metadata()
+    const stats = await icon.stats()
     const { info } = await icon
       .trim({ background: { r: 0, g: 0, b: 0, alpha: 0 }, threshold: 0 })
       .toBuffer({ resolveWithObject: true })
@@ -265,13 +266,17 @@ describe('published package surface', () => {
       format: 'png',
       width: 1024,
       height: 1024,
-      space: 'rgb16',
-      depth: 'ushort',
-      bitsPerSample: 16,
+      space: 'srgb',
+      depth: 'uchar',
+      bitsPerSample: 8,
       channels: 4,
       hasAlpha: true,
     }))
     expect(metadata.icc).toEqual(source.icc)
+    for (const channel of stats.channels.slice(0, 3)) {
+      expect(channel.max).toBeGreaterThan(200)
+      expect(channel.mean).toBeGreaterThan(20)
+    }
     expect(info).toEqual(expect.objectContaining({
       width: 824,
       height: 824,

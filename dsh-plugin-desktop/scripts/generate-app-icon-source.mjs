@@ -1,7 +1,7 @@
 /**
- * Produce the cross-platform source icon from the Gala artwork that ships with the app.
+ * Produce the desktop and website icons from the shared Gala brand artwork.
  *
- * The result is the 1024×1024 RGBA16 PNG with an sRGB profile that
+ * The result is the 1024×1024 RGBA8 PNG with an sRGB profile that
  * `generate-mac-app-icon.mjs` expects as its input. Run it only when the icon
  * artwork changes; the build pipeline derives every platform variant from the
  * committed output.
@@ -12,8 +12,12 @@ import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
 
 const packageRoot = dirname(dirname(fileURLToPath(import.meta.url)))
-const ARTWORK = join(packageRoot, '..', 'dsh-plugin-gala', 'assets', 'gala', 'officials', 'dsh-llm', 'assets', 'portrait-v2.webp')
+const repositoryRoot = join(packageRoot, '..')
+const ARTWORK = join(repositoryRoot, 'assets', 'gala-whale-app-icon-master.png')
 const OUTPUT = join(packageRoot, 'build', 'app-icon.png')
+const SITE_ICON = join(repositoryRoot, 'site', 'assets', 'icon.png')
+const SITE_FAVICON = join(repositoryRoot, 'site', 'assets', 'favicon-32.png')
+const SITE_TOUCH_ICON = join(repositoryRoot, 'site', 'assets', 'apple-touch-icon.png')
 
 const SIZE = 1024
 /** macOS-style continuous corner radius (≈22.4% of the edge). */
@@ -44,10 +48,30 @@ const portrait = await sharp(ARTWORK)
 
 await sharp(portrait, { raw: { width: SIZE, height: SIZE, channels: 3 } })
   .joinChannel(roundedSquareAlpha(SIZE, RADIUS), { raw: { width: SIZE, height: SIZE, channels: 1 } })
-  .toColourspace('rgb16')
+  .toColourspace('srgb')
   .withIccProfile('srgb')
   .png({ compressionLevel: 9 })
   .toFile(OUTPUT)
 
+async function writeWebsiteIcon(size, output, flatten = false) {
+  const resized = await sharp(ARTWORK)
+    .resize({ width: size, height: size, fit: 'cover', position: 'centre', kernel: sharp.kernel.lanczos3 })
+    .removeAlpha()
+    .raw()
+    .toBuffer()
+
+  let icon = sharp(resized, { raw: { width: size, height: size, channels: 3 } })
+    .joinChannel(roundedSquareAlpha(size, Math.round(size * RADIUS / SIZE)), {
+      raw: { width: size, height: size, channels: 1 },
+    })
+
+  if (flatten) icon = icon.flatten({ background: '#241447' })
+  await icon.toColourspace('srgb').png({ compressionLevel: 9 }).toFile(output)
+}
+
+await writeWebsiteIcon(256, SITE_ICON)
+await writeWebsiteIcon(32, SITE_FAVICON)
+await writeWebsiteIcon(180, SITE_TOUCH_ICON, true)
+
 const meta = await sharp(OUTPUT).metadata()
-process.stdout.write(`app-icon.png: ${meta.width}x${meta.height} ${meta.space} depth=${meta.depth} icc=${meta.icc !== undefined}\n`)
+process.stdout.write(`brand icons: app=${meta.width}x${meta.height}, site=256x256, favicon=32x32, touch=180x180\n`)

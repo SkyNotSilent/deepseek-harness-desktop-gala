@@ -1,5 +1,5 @@
 /**
- * 一人一肤：官方少女角色皮肤目录 — PRD v4.0 §9 / 原生换肤系统
+ * 全员默认 + 一人一肤：官方角色皮肤目录 — PRD v4.0 §9 / 原生换肤系统
  *
  * 每位官方少女（gala-officials.ts）对应一套主题皮肤：选中哪位少女，
  * 整个官方 UI 就换成她的主题色。色相取自形象族系（gala-avatar.ts 的
@@ -10,7 +10,7 @@
  * 经典配色（gala-skins-builtin.ts）并列注册，互不冲突。
  */
 
-import { OFFICIAL_GALAS } from './gala-officials.ts'
+import { SELECTABLE_GALAS } from './gala-officials.ts'
 import { galaSlug } from './protocols/market-manifest.ts'
 import type { SkinManifest } from './protocols/skin-protocol.ts'
 
@@ -28,6 +28,15 @@ interface CharacterTheme {
 
 /** 角色 id → 手工调校的主题色（键齐 OFFICIAL_GALAS，测试兜底校验） */
 const CHARACTER_THEMES: Record<string, CharacterTheme> = {
+  'gala:ensemble': {
+    themeName: 'Gala全员·共赴星海',
+    primary: '#6758d8',
+    primaryHover: '#5849c5',
+    bg: '#f7f6ff',
+    surface: '#eeebff',
+    bubble: '#e5e0ff',
+    hover: '#dcd5fb',
+  },
   'gala:dsh-base': {
     themeName: '阿基·蜜糖工地',
     primary: '#c9821f',
@@ -125,8 +134,11 @@ export function skinIdForCharacter(characterId: string): string {
   return `gala:skin-${galaSlug(characterId)}`
 }
 
-/** 官方角色皮肤目录（顺序与 OFFICIAL_GALAS 一致） */
-export const CHARACTER_SKINS: readonly SkinManifest[] = OFFICIAL_GALAS.map(entry => {
+/** 首次进入及“恢复默认”使用的全员皮肤。 */
+export const DEFAULT_GALA_SKIN_ID = skinIdForCharacter('gala:ensemble')
+
+/** 官方角色皮肤目录（默认全员在首位，其后为十位单角色） */
+export const CHARACTER_SKINS: readonly SkinManifest[] = SELECTABLE_GALAS.map(entry => {
   const theme = CHARACTER_THEMES[entry.character.id]
   if (theme === undefined) {
     throw new Error(`gala-character-skins: ${entry.character.id} 缺少主题色定义`)
@@ -156,5 +168,5 @@ export const CHARACTER_SKINS: readonly SkinManifest[] = OFFICIAL_GALAS.map(entry
 
 /** 皮肤 id → 角色 id（logo / 立绘查询用；经典配色不在其中） */
 export const CHARACTER_BY_SKIN: ReadonlyMap<string, string> = new Map(
-  OFFICIAL_GALAS.map(entry => [skinIdForCharacter(entry.character.id), entry.character.id]),
+  SELECTABLE_GALAS.map(entry => [skinIdForCharacter(entry.character.id), entry.character.id]),
 )

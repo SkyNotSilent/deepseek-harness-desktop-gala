@@ -3,8 +3,8 @@
  *
  * 注册进官方声明的 `sidebar.footer.action` 扩展位（设置旁的动作位，
  * dsh-client-ui-sidebar 的合同），宽态整行按钮 / 窄态圆钮，样式全部走
- * `--dsw-alias-*` token（随皮肤变色）。点击弹出页面内弹层：10 位少女
- * （一人一肤）+ 3 套经典配色 + 恢复默认；确认经 loopback RPC 换肤，
+ * `--dsw-alias-*` token（随皮肤变色）。点击弹出页面内弹层：全员默认
+ * + 10 位少女（一人一肤）+ 3 套经典配色；确认经 loopback RPC 换肤，
  * token 与 logo 经既有 SSE 桥即时生效。Gala 层不可用时静默降级（§7.4）。
  */
 
@@ -297,7 +297,7 @@ function SkinPickerDialog({ onClose }: { onClose: () => void }) {
                   style={{ ...girlCardStyle(selected === 'default'), flexDirection: 'row', gap: 8, padding: selected === 'default' ? '7px 11px' : '8px 12px' }}
                   onClick={() => { setSelected('default') }}
                 >
-                  <span style={{ fontSize: 13 }}>🐳 恢复默认</span>
+                  <span style={{ fontSize: 13 }}>🐳 恢复全员默认</span>
                 </button>
               </div>
             </>
