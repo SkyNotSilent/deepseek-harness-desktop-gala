@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://skynotsilent.github.io/deepseek-harness-desktop-gala/sitemap.xml
