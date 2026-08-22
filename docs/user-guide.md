@@ -1,0 +1,94 @@
+# 用户指南
+
+## 安装与第一次打开
+
+从[下载页面](https://skynotsilent.github.io/deepseek-harness-desktop-gala/)或 [Releases](https://github.com/SkyNotSilent/deepseek-harness-desktop-gala/releases) 获取安装包。应用自带 Electron、Node 和 DeepSeek Harness 运行时，不需要额外安装任何东西。
+
+第一次打开时，应用会在本机创建默认 profile、启动 Harness Host，然后在窗口里加载界面。整个过程在本地完成，界面只通过 `127.0.0.1` 的随机端口和 Host 通信。
+
+**关闭窗口 ≠ 退出。** 窗口关闭后应用仍在托盘运行，从托盘可以重新打开；选择托盘里的 **退出** 才会结束 Host。
+
+### 系统安全提示
+
+Preview 版本未签名，首次启动会被系统拦一次：
+
+| 系统 | 怎么做 |
+| --- | --- |
+| macOS 15+ | 系统设置 → 隐私与安全性 → 底部「仍要打开」 |
+| macOS 14 及更早 | 右键应用图标 → 打开 |
+| Windows | SmartScreen 弹窗 → 更多信息 → 仍要运行 |
+
+## 配置 DeepSeek API Key
+
+发送第一条消息前，打开 **设置 → 模型**，填入 DeepSeek 的 API Key。密钥写入本机 `~/.dsh/.credentials.yaml`（权限 600），优先级低于启动环境中的 `DEEPSEEK_API_KEY`。
+
+如果账户余额不足，对话会直接显示「余额不足」并给出充值链接；密钥无效则显示「API key is invalid」。
+
+## 使用 Gala 角色
+
+### 换装
+
+侧边栏底部的 **🎀 Gala皮肤图鉴** 打开换装面板。点选一位角色并确认后：
+
+- 侧边栏品牌位换成角色头像与名字；
+- 欢迎页标题换成角色的一句话，下方出现角色寄语；
+- 整片对话区域铺上角色的舞台立绘，进入已有对话后依然保留；
+- 界面主色、背景、气泡等配色切换为角色专属配色，深色模式自动派生。
+
+选择「恢复默认」回到经典配色，所有角色元素会被清理干净。经典配色里另有三套不带角色的配色方案。
+
+### 图鉴、合成与导入
+
+托盘菜单提供四个入口：
+
+- **嘎啦图鉴**：查看已拥有的角色、稀有度与介绍，收藏喜欢的角色。
+- **换肤面板**：与侧边栏入口相同，快捷键 `Cmd/Ctrl + Shift + S`。
+- **合成工坊**：按配方把两位角色合成为新角色；合成会改写 profile 的插件组合并重启应用，失败时自动回滚。
+- **导入嘎啦包…**：导入 `.ggal` 角色包。同名冲突时可以覆盖、跳过或重命名。
+
+## 图片输入
+
+在输入框拖入图片或点击附件按钮，并选择支持视觉的模型（如 DeepSeek-V4 Flash Vision）。纯文本模型收到图片会返回 `UNSUPPORTED_CONTENT` 提示。
+
+## Profile 与插件
+
+Profile 是一组 DSH 插件与配置的组合。托盘的 **Profile** 菜单可以在多个 profile 间切换，切换通过重启生效；启动失败会自动回到上一次可用的 profile。
+
+插件管理沿用官方命令。从托盘打开的终端里，省略 `--profile` 时默认作用于当前 profile：
+
+```sh
+dsh plugin add <plugin>
+dsh plugin remove <plugin>
+dsh plugin update
+```
+
+改动插件后重启应用生效。
+
+## 终端
+
+托盘 **Open DeepSeek Harness Desktop Gala Terminal** 会打开一个已经配好 `dsh`、`pnpm`、`node` 路径的终端（macOS 用 Terminal，Windows 优先 Windows Terminal）。这些路径只对该终端进程生效，不会改动你的系统 PATH 或 shell 配置。
+
+## 兼容模式与高级模式
+
+- **兼容模式**（默认）：界面与官方 DeepSeek Harness Web 一致，Gala 通过官方扩展点叠加。
+- **高级模式**：桌面自有的窗口布局与材质（macOS vibrancy / Windows Mica）。
+
+从托盘切换模式，应用会重启。Linux 只有兼容模式。
+
+## 更新
+
+应用每 6 小时在后台检查一次 GitHub Releases，托盘的 **Check for Updates…** 可手动检查。
+
+- **Preview 版**：发现新版只弹出通知并打开 Release 页面，由你手动下载安装。
+- **签名正式版**：下载前询问一次，下载完成后再询问是否重启安装；选择「稍后」不会在后台偷偷安装。
+
+## 常见问题
+
+| 现象 | 处理 |
+| --- | --- |
+| 窗口不见了 | 看系统托盘，关闭窗口不是退出 |
+| 发消息显示「余额不足」 | 去 DeepSeek 开放平台充值后重新发送 |
+| 插件装了没出现 | 确认作用于当前 profile，然后重启应用 |
+| 终端里找不到 `dsh` | 用托盘重新打开终端；系统自带终端没有这些路径 |
+| 没有收到更新提示 | 后台检查失败会静默；用托盘手动检查看结果 |
+| 角色背景没铺满 | 切回经典配色再选一次角色；仍有问题请附截图提 Issue |

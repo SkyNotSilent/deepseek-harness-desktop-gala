@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - release/**
+
+permissions:
+  contents: read
+
+env:
+  DSH_TELEMETRY_DISABLED: '1'
+
+jobs:
+  check:
+    name: Linux build, types, tests and closure
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          submodules: recursive
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22.23.2
+      - run: corepack enable
+      - run: corepack yarn install --immutable
+      - run: corepack yarn check
+
+  windows-preview:
+    name: Windows x64 unsigned NSIS
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          submodules: recursive
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22.23.2
+          architecture: x64
+      - run: corepack enable
+      - run: corepack yarn install --immutable
+      - run: corepack yarn workspace dsh-plugin-gala build
+      - run: corepack yarn dist:win
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-x64-preview
+          path: dsh-plugin-desktop/dist/DeepSeek-Harness-Desktop-Gala-*-x64-Setup.exe
+          if-no-files-found: error
+
+  macos-preview:
+    name: macOS ARM64 unsigned DMG and ZIP
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          submodules: recursive
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22.23.2
+      - run: corepack enable
+      - run: corepack yarn install --immutable
+      - run: corepack yarn build
+      - name: Build unsigned artifacts
+        working-directory: dsh-plugin-desktop
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: corepack yarn exec electron-builder --mac dmg zip --arm64 --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-arm64-preview
+          path: |
+            dsh-plugin-desktop/dist/DeepSeek-Harness-Desktop-Gala-*-arm64.dmg
+            dsh-plugin-desktop/dist/DeepSeek-Harness-Desktop-Gala-*-arm64.zip
+          if-no-files-found: error

@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.client.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "noEmit": true,
+    "emitDeclarationOnly": false
+  },
+  "include": [
+    "src/client/**/*.ts",
+    "src/client/**/*.tsx",
+    "tests/client-gala-brand.spec.tsx",
+    "tests/client-gala-persona-presenter.spec.ts",
+    "tests/client-gala-skin-bridge.spec.ts"
+  ]
+}

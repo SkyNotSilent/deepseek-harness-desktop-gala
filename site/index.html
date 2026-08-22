@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DeepSeek Harness Desktop Gala</title>
+<meta name="description" content="DeepSeek Harness 桌面端，内置 Gala 角色皮肤系统。十位角色、整片舞台背景、一键换装。macOS / Windows 安装包点击即下载。">
+<meta name="theme-color" content="#5b5bd6">
+<link rel="icon" href="assets/icon.png">
+<meta property="og:title" content="DeepSeek Harness Desktop Gala">
+<meta property="og:description" content="把 DeepSeek Harness 装进桌面，再给它一个角色。">
+<meta property="og:image" content="assets/characters/dsh-llm-hero.webp">
+<link rel="preload" as="image" href="assets/characters/dsh-llm-hero.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --accent: #5b5bd6; --accent-hover: #4a4ac2;
+    --bg: #f6f6ff; --surface: #ececff; --bubble: #e2e2fd; --hover: #d8d8fa;
+    --ink: #3a3050; --ink-soft: #6f6786; --ink-faint: rgba(58,48,80,.14);
+    --paper: #ffffff;
+    --bounce: cubic-bezier(.34,1.56,.64,1);
+    --font: "Noto Sans SC", "Inter", "PingFang SC", "Hiragino Sans GB", system-ui, sans-serif;
+    --num: "Inter", var(--font);
+    --r-card: 22px;
+    --hero-img: url("assets/characters/dsh-llm-hero.webp");
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font); -webkit-font-smoothing: antialiased; transition: background .45s ease; }
+  a { color: inherit; }
+  button { font: inherit; color: inherit; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 8px; }
+  img { max-width: 100%; display: block; }
+
+  .stage { position: relative; min-height: 100svh; overflow: hidden; isolation: isolate; }
+  .stage-art, .stage-art-next {
+    position: absolute; inset: -4%; z-index: -3;
+    background: var(--hero-img) right center / cover no-repeat;
+    filter: saturate(.9) contrast(.95);
+    transition: opacity .6s ease, transform .3s ease-out; will-change: transform, opacity;
+  }
+  .stage-art-next { opacity: 0; }
+  .stage-veil {
+    position: absolute; inset: 0; z-index: -2;
+    background:
+      linear-gradient(90deg, color-mix(in srgb, var(--bg) 94%, transparent) 0%, color-mix(in srgb, var(--bg) 72%, transparent) 40%, color-mix(in srgb, var(--surface) 30%, transparent) 66%, color-mix(in srgb, var(--accent) 12%, transparent) 100%),
+      linear-gradient(180deg, transparent 70%, var(--bg) 100%);
+    transition: background .45s ease;
+  }
+  #stars { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+  .grain {
+    position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: .06; mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+
+  header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px clamp(18px, 4vw, 56px); }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: .01em; }
+  .brand img { width: 36px; height: 36px; border-radius: 10px; border: 2.5px solid var(--ink); box-shadow: 0 3px 0 var(--ink); }
+  nav { display: flex; gap: 6px; }
+  nav a { text-decoration: none; font-size: 14px; font-weight: 600; padding: 8px 12px; border-radius: 999px; transition: background .15s; }
+  nav a:hover { background: var(--hover); }
+
+  .hero { padding: clamp(8px, 4vh, 40px) clamp(18px, 4vw, 56px) 48px; max-width: 1240px; }
+
+  .wardrobe { display: flex; gap: 10px; overflow-x: auto; padding: 6px 6px 14px; margin: 0 -6px 26px; scrollbar-width: none; }
+  .wardrobe::-webkit-scrollbar { display: none; }
+  .chip {
+    flex: none; width: 64px; height: 64px; padding: 0; border-radius: 18px; border: 2.5px solid var(--ink); background: var(--paper);
+    box-shadow: 0 3px 0 var(--ink); cursor: pointer; overflow: hidden; position: relative;
+    transition: transform .18s var(--bounce), box-shadow .18s;
+  }
+  .chip img { width: 100%; height: 100%; object-fit: cover; }
+  .chip::after { content: ""; position: absolute; inset: 4px; border-radius: 13px; border: 2px dashed var(--rarity, #a8b0bc); opacity: .55; pointer-events: none; }
+  .chip:hover { transform: translateY(-3px) rotate(-2deg); box-shadow: 0 6px 0 var(--ink); }
+  .chip[aria-checked="true"] { transform: translateY(-4px) scale(1.06); box-shadow: 0 6px 0 var(--ink), 0 0 0 4px var(--accent); }
+  .chip:active { transform: translateY(1px); box-shadow: 0 2px 0 var(--ink); }
+
+  .eyebrow { font-family: var(--num); color: var(--accent); font-size: 12px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; transition: color .45s; }
+  .product { margin: 10px 0 0; font-size: clamp(1.05rem, 1.6vw, 1.25rem); font-weight: 700; color: var(--ink-soft); }
+  h1 { margin: 10px 0 0; font-size: clamp(2.4rem, 6.5vw, 5rem); line-height: 1.02; letter-spacing: -.02em; font-weight: 900; max-width: 13ch; text-shadow: 0 2px 0 var(--paper); }
+  h1 em { font-style: normal; color: var(--accent); transition: color .45s; }
+  .flip { display: inline-block; animation: flip-in .32s var(--bounce) both; }
+  @keyframes flip-in { from { opacity: 0; transform: perspective(600px) rotateX(40deg) translateY(10px); } to { opacity: 1; transform: none; } }
+  .tagline { margin: 16px 0 0; max-width: 40ch; font-size: clamp(1rem, 1.5vw, 1.2rem); line-height: 1.75; color: var(--ink-soft); }
+  .quote {
+    display: inline-flex; align-items: center; gap: 10px; margin-top: 22px; padding: 10px 16px 10px 12px;
+    background: var(--bubble); border: 2.5px solid var(--ink); border-radius: 18px 18px 18px 4px; box-shadow: 0 4px 0 var(--ink);
+    font-size: 14px; font-weight: 600; transition: background .45s;
+  }
+  .quote img { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--ink); }
+  .character-name { display: block; margin-top: 14px; font-size: 13px; color: var(--ink-soft); }
+  .character-name b { color: var(--ink); }
+
+  .cta { margin-top: 36px; display: flex; flex-wrap: wrap; gap: 14px; align-items: stretch; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 12px; padding: 14px 22px; border-radius: 18px; text-decoration: none;
+    font-weight: 700; font-size: 16px; line-height: 1.1; border: 2.5px solid var(--ink); background: var(--paper); color: var(--ink);
+    box-shadow: 0 5px 0 var(--ink); transition: transform .15s var(--bounce), box-shadow .15s, background .45s;
+  }
+  .btn:hover { transform: translateY(-3px); box-shadow: 0 8px 0 var(--ink); }
+  .btn:active { transform: translateY(1px); box-shadow: 0 2px 0 var(--ink); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn small { display: block; font-weight: 500; font-size: 12px; opacity: .85; margin-top: 5px; font-family: var(--num); }
+  .btn svg { width: 22px; height: 22px; flex: none; }
+  .btn[aria-disabled="true"] { opacity: .55; pointer-events: none; }
+  .btn[hidden], [hidden] { display: none !important; }
+  .meta { margin-top: 16px; font-size: 13px; color: var(--ink-soft); display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; font-family: var(--num); }
+  .tag { display: inline-block; padding: 2px 10px; border-radius: 999px; border: 2px solid var(--ink); background: var(--paper); font-size: 11px; font-weight: 700; color: var(--ink); }
+  details.notice { margin-top: 22px; max-width: 640px; border: 2.5px solid var(--ink); border-radius: 16px; background: var(--paper); box-shadow: 0 4px 0 var(--ink); font-size: 14px; line-height: 1.65; }
+  details.notice summary { cursor: pointer; padding: 12px 16px; font-weight: 700; list-style: none; }
+  details.notice summary::before { content: "▸ "; color: var(--accent); }
+  details.notice[open] summary::before { content: "▾ "; }
+  details.notice > div { padding: 0 16px 14px; color: var(--ink-soft); }
+  details.notice code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; color: var(--ink); }
+
+  section.block { padding: clamp(40px, 7vh, 88px) clamp(18px, 4vw, 56px); max-width: 1240px; margin: 0 auto; }
+  .section-head { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; margin-bottom: 28px; }
+  .section-head h2 { margin: 0; font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 900; letter-spacing: -.01em; }
+  .section-head p { margin: 0; color: var(--ink-soft); }
+
+  .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+  .card {
+    position: relative; border: 3px solid var(--ink); border-radius: var(--r-card); background: var(--paper); box-shadow: 0 5px 0 rgba(58,48,80,.9);
+    padding: 10px; text-align: left; cursor: pointer; opacity: 0; transform: translateY(18px) scale(.96);
+    transition: transform .2s var(--bounce), box-shadow .2s; --rarity: #a8b0bc;
+  }
+  .card.in { animation: pop-in .36s var(--bounce) forwards; }
+  @keyframes pop-in { to { opacity: 1; transform: none; } }
+  .card::before { content: ""; position: absolute; inset: 6px; border-radius: 16px; border: 2.5px dashed var(--rarity); opacity: .55; pointer-events: none; }
+  .card:hover { transform: translateY(-6px) rotate(-1.2deg); box-shadow: 0 10px 0 rgba(58,48,80,.85); }
+  .card[aria-pressed="true"] { outline: 3.5px solid var(--accent); outline-offset: 4px; }
+  .card img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 14px; border: 2px solid var(--ink); }
+  .card h3 { margin: 12px 4px 2px; font-size: 17px; display: flex; align-items: center; justify-content: space-between; }
+  .card .rarity { font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 999px; color: #fff; background: var(--rarity); }
+  .card p { margin: 0 4px 6px; font-size: 13px; line-height: 1.6; color: var(--ink-soft); min-height: 2.4em; }
+  .card .line { margin: 0 4px; font-size: 12px; color: var(--accent); font-weight: 600; opacity: 0; transform: translateY(4px); transition: opacity .2s, transform .2s var(--bounce); }
+  .card:hover .line, .card:focus-visible .line { opacity: 1; transform: none; }
+
+  .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+  .feature { border: 3px solid var(--ink); border-radius: var(--r-card); background: var(--paper); box-shadow: 0 5px 0 rgba(58,48,80,.9); padding: 22px; opacity: 0; transform: translateY(18px); }
+  .feature.in { animation: pop-in .36s var(--bounce) forwards; }
+  .feature .orb {
+    width: 52px; height: 52px; display: grid; place-items: center; font-size: 24px; margin-bottom: 14px;
+    border-radius: 31% 69% 54% 46% / 55% 35% 65% 45%; background: linear-gradient(145deg, var(--bubble), var(--hover)); border: 2.5px solid var(--ink); box-shadow: 0 3px 0 var(--ink); transform: rotate(-7deg);
+    transition: background .45s;
+  }
+  .feature h3 { margin: 0 0 8px; font-size: 17px; }
+  .feature p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.65; }
+
+  footer { padding: 32px clamp(18px, 4vw, 56px) 56px; color: var(--ink-soft); font-size: 13px; line-height: 1.8; border-top: 2.5px dashed var(--ink-faint); max-width: 1240px; margin: 0 auto; }
+  footer a { color: var(--ink); }
+
+  @media (max-width: 760px) {
+    .stage-art, .stage-art-next { background-position: 72% center; }
+    .stage-veil { background: linear-gradient(180deg, color-mix(in srgb, var(--bg) 55%, transparent) 0%, color-mix(in srgb, var(--bg) 90%, transparent) 55%, var(--bg) 100%); }
+    h1 { max-width: none; }
+    .chip { width: 56px; height: 56px; border-radius: 16px; }
+    header { padding: 14px 18px; }
+    .brand span { font-size: 14px; }
+    nav a { font-size: 13px; padding: 6px 8px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .flip, .card.in, .feature.in { animation: none !important; opacity: 1; transform: none; }
+    .btn, .chip, .card, .stage-art, .stage-art-next { transition: none; }
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="stage-art" id="art"></div>
+  <div class="stage-art-next" id="art-next"></div>
+  <div class="stage-veil"></div>
+  <canvas id="stars" aria-hidden="true"></canvas>
+  <div class="grain"></div>
+
+  <header>
+    <div class="brand"><img src="assets/icon.png" alt=""><span>DeepSeek Harness Desktop Gala</span></div>
+    <nav aria-label="站点导航">
+      <a href="#download">下载</a>
+      <a href="#gallery">角色</a>
+      <a href="https://github.com/SkyNotSilent/deepseek-harness-desktop-gala">GitHub</a>
+    </nav>
+  </header>
+
+  <main class="hero">
+    <div class="wardrobe" id="wardrobe" role="radiogroup" aria-label="选择角色，整站随之换装"></div>
+
+    <div class="eyebrow">DeepSeek Harness · Desktop</div>
+    <p class="product">把 Harness 装进桌面，再给它一个角色。</p>
+    <h1 id="headline"><span class="flip">与<em>星海</em>对话</span></h1>
+    <p class="tagline" id="tagline">语言会落成星光，照亮还没有名字的答案。</p>
+    <div class="quote" id="quote"><img id="quote-avatar" src="assets/characters/dsh-llm-portrait.webp" alt=""><span id="quote-text">星星掉出来一颗，替我接住哦。</span></div>
+    <span class="character-name" id="character-name">当前角色 <b>灵灵</b> · 灵灵·星海夜航</span>
+
+    <div class="cta" id="download">
+      <a class="btn btn-primary" id="primary" href="https://github.com/SkyNotSilent/deepseek-harness-desktop-gala/releases" aria-disabled="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+        <span id="primary-label">正在读取最新版本…</span>
+      </a>
+      <a class="btn" id="secondary" href="https://github.com/SkyNotSilent/deepseek-harness-desktop-gala/releases" hidden></a>
+    </div>
+    <div class="meta" id="meta"></div>
+
+    <details class="notice" id="notice" hidden>
+      <summary>首次打开会被系统拦一次（Preview 未签名）</summary>
+      <div>
+        <b>macOS</b>：系统设置 → 隐私与安全性 → 底部「仍要打开」（macOS 14 及更早可右键 → 打开）。<br>
+        <b>Windows</b>：SmartScreen 弹窗 → 更多信息 → 仍要运行。<br>
+        校验文件请核对 Release 页的 <code>SHA256SUMS.txt</code>。签名正式版发布后这些提示会消失。
+      </div>
+    </details>
+  </main>
+</div>
+
+<section class="block" id="gallery" aria-labelledby="gallery-title">
+  <div class="section-head">
+    <h2 id="gallery-title">十位角色，随你换装</h2>
+    <p>每位角色自带配色、头像、舞台立绘与寄语。点一下卡片，整站就换她的装。</p>
+  </div>
+  <div class="gallery" id="cards"></div>
+</section>
+
+<section class="block" aria-labelledby="features-title">
+  <div class="section-head"><h2 id="features-title">桌面该有的，都在</h2></div>
+  <div class="features">
+    <div class="feature"><div class="orb">🖥️</div><h3>零配置本地 Host</h3><p>自带 Electron、Node 与固定版本的 DeepSeek Harness 运行时，双击即用；API Key 在「设置 → 模型」填一次。</p></div>
+    <div class="feature"><div class="orb">🖼️</div><h3>多模态对话</h3><p>跟随上游 0.1.1，支持图片输入与 DeepSeek-V4 Flash Vision。</p></div>
+    <div class="feature"><div class="orb">🎀</div><h3>Gala 角色皮肤</h3><p>侧边栏头像、欢迎页、整片对话舞台与配色一起换装；切回经典配色一键恢复。支持导入 .ggal 角色包与合成。</p></div>
+    <div class="feature"><div class="orb">🧰</div><h3>托盘、终端、更新</h3><p>常驻托盘，一键打开配好环境的终端；新版本通过 GitHub Releases 检查，下载前必经确认。</p></div>
+  </div>
+</section>
+
+<footer>
+  DeepSeek Harness Desktop Gala 是基于 <a href="https://github.com/deepseek-ai/deepseek-harness">DeepSeek Harness</a> 的社区桌面版本，并非 DeepSeek 官方产品。<br>
+  本项目完全开源免费（<a href="https://github.com/SkyNotSilent/deepseek-harness-desktop-gala/blob/main/LICENSE">MIT</a>）；如有人向你出售此软件，请拒绝。
+  <a href="https://github.com/SkyNotSilent/deepseek-harness-desktop-gala">源码</a> ·
+  <a href="https://github.com/SkyNotSilent/deepseek-harness-desktop-gala/releases">全部版本</a> ·
+  <a href="https://github.com/SkyNotSilent/deepseek-harness-desktop-gala/blob/main/docs/user-guide.md">使用指南</a>
+</footer>
+
+<script>
+(async () => {
+  const REPO = 'SkyNotSilent/deepseek-harness-desktop-gala';
+  const RELEASES = `https://github.com/${REPO}/releases`;
+  const DEFAULT = 'dsh-llm';
+  const RARITY = { common: ['普通', '#a8b0bc'], uncommon: ['精良', '#5fd0a5'], rare: ['稀有', '#6fa8ff'], epic: ['史诗', '#c084fc'], legendary: ['传说', '#ffb703'] };
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const $ = id => document.getElementById(id);
+
+  /* ---------- 角色数据与换装 ---------- */
+  let characters = [];
+  try { characters = await (await fetch('data/characters.json')).json(); } catch { characters = []; }
+  const bySlug = Object.fromEntries(characters.map(c => [c.slug, c]));
+  let current = DEFAULT;
+  let autoTimer = null;
+  let artFront = $('art'), artBack = $('art-next');
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
+
+  const splitHeadline = (text) => {
+    const n = text.length;
+    if (n < 4) return `<em>${text}</em>`;
+    const a = Math.floor((n - 2) / 2);
+    return `${text.slice(0, a)}<em>${text.slice(a, a + 2)}</em>${text.slice(a + 2)}`;
+  };
+  const preload = slug => { const i = new Image(); i.src = `assets/characters/${slug}-hero.webp`; return i; };
+
+  function dress(slug, { animate = true } = {}) {
+    const c = bySlug[slug]; if (!c) return;
+    current = slug;
+    const root = document.documentElement.style;
+    root.setProperty('--accent', c.light.primary);
+    root.setProperty('--accent-hover', c.light.primaryHover);
+    root.setProperty('--bg', c.light.bg);
+    root.setProperty('--surface', c.light.surface);
+    root.setProperty('--bubble', c.light.bubble);
+    root.setProperty('--hover', c.light.hover);
+    themeMeta?.setAttribute('content', c.light.primary);
+
+    const next = `url("assets/characters/${slug}-hero.webp")`;
+    if (animate && !reduced) {
+      const img = preload(slug);
+      const swap = () => {
+        artBack.style.setProperty('--hero-img', next);
+        artBack.style.opacity = '1';
+        artFront.style.opacity = '0';
+        [artFront, artBack] = [artBack, artFront];
+      };
+      img.complete ? swap() : (img.onload = swap);
+    } else {
+      artFront.style.setProperty('--hero-img', next);
+      artFront.style.opacity = '1'; artBack.style.opacity = '0';
+    }
+
+    $('headline').innerHTML = `<span class="${animate && !reduced ? 'flip' : ''}">${splitHeadline(c.headline)}</span>`;
+    $('tagline').textContent = c.tagline;
+    $('quote-text').textContent = c.onEquip;
+    $('quote-avatar').src = `assets/characters/${slug}-portrait.webp`;
+    $('character-name').innerHTML = `当前角色 <b>${c.name}</b> · ${c.themeName}`;
+
+    for (const chip of document.querySelectorAll('.chip')) {
+      const on = chip.dataset.slug === slug;
+      chip.setAttribute('aria-checked', on);
+      chip.tabIndex = on ? 0 : -1;
+    }
+    for (const card of document.querySelectorAll('.card')) card.setAttribute('aria-pressed', card.dataset.slug === slug);
+    starColor = c.light.primary;
+  }
+
+  function stopAuto() { if (autoTimer) { clearInterval(autoTimer); autoTimer = null; } }
+  function startAuto() {
+    if (reduced || autoTimer || characters.length === 0) return;
+    autoTimer = setInterval(() => {
+      const i = characters.findIndex(c => c.slug === current);
+      dress(characters[(i + 1) % characters.length].slug);
+    }, 8000);
+  }
+
+  const wardrobe = $('wardrobe');
+  for (const c of characters) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip'; b.setAttribute('role', 'radio'); b.dataset.slug = c.slug;
+    b.title = `${c.name} · ${c.themeName}`; b.setAttribute('aria-label', `${c.name}（${RARITY[c.rarity]?.[0] ?? ''}）`);
+    b.style.setProperty('--rarity', RARITY[c.rarity]?.[1] ?? '#a8b0bc');
+    b.innerHTML = `<img src="assets/characters/${c.slug}-portrait.webp" alt="" loading="lazy" width="64" height="64">`;
+    b.addEventListener('click', () => { stopAuto(); dress(c.slug); });
+    b.addEventListener('mouseenter', () => preload(c.slug));
+    wardrobe.appendChild(b);
+  }
+  wardrobe.addEventListener('keydown', (e) => {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    e.preventDefault(); stopAuto();
+    const i = characters.findIndex(c => c.slug === current);
+    const n = (i + (e.key === 'ArrowRight' ? 1 : -1) + characters.length) % characters.length;
+    dress(characters[n].slug);
+    wardrobe.querySelector(`[data-slug="${characters[n].slug}"]`)?.focus();
+  });
+
+  const cards = $('cards');
+  for (const c of characters) {
+    const [label, color] = RARITY[c.rarity] ?? ['', '#a8b0bc'];
+    const el = document.createElement('button');
+    el.type = 'button'; el.className = 'card'; el.dataset.slug = c.slug; el.style.setProperty('--rarity', color);
+    el.setAttribute('aria-label', `换成 ${c.name}`);
+    el.innerHTML = `
+      <img src="assets/characters/${c.slug}-portrait.webp" alt="${c.name}" loading="lazy" width="320" height="320">
+      <h3><span>${c.name}</span><span class="rarity">${label}</span></h3>
+      <p>${c.description.split('。')[0]}。</p>
+      <div class="line">「${c.onEquip}」</div>`;
+    el.addEventListener('click', () => { stopAuto(); dress(c.slug); document.querySelector('.stage').scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' }); });
+    cards.appendChild(el);
+  }
+
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((en, i) => { if (en.isIntersecting) { en.target.style.animationDelay = `${(i % 6) * 60}ms`; en.target.classList.add('in'); io.unobserve(en.target); } });
+  }, { threshold: .15 });
+  document.querySelectorAll('.card, .feature').forEach(el => io.observe(el));
+
+  /* ---------- 视差 + 粒子 ---------- */
+  const stage = document.querySelector('.stage');
+  if (!reduced && matchMedia('(pointer: fine)').matches) {
+    stage.addEventListener('pointermove', (e) => {
+      const r = stage.getBoundingClientRect();
+      const dx = ((e.clientX - r.left) / r.width - .5) * 2, dy = ((e.clientY - r.top) / r.height - .5) * 2;
+      const t = `translate(${-dx * 12}px, ${-dy * 8}px) scale(1.04)`;
+      artFront.style.transform = t; artBack.style.transform = t;
+    });
+  }
+
+  const canvas = $('stars'); const ctx = canvas.getContext('2d');
+  let stars = [], starColor = '#5b5bd6', raf = null;
+  function resize() {
+    canvas.width = stage.clientWidth * devicePixelRatio; canvas.height = stage.clientHeight * devicePixelRatio;
+    canvas.style.width = stage.clientWidth + 'px'; canvas.style.height = stage.clientHeight + 'px';
+    stars = Array.from({ length: 48 }, () => ({ x: Math.random(), y: Math.random(), r: 1 + Math.random() * 2.2, s: .2 + Math.random() * .6, p: Math.random() * Math.PI * 2 }));
+  }
+  function tick(t) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = starColor;
+    for (const s of stars) {
+      const a = .25 + .55 * (.5 + .5 * Math.sin(t / 900 * s.s + s.p));
+      const y = (s.y - (t / 40000) * s.s) % 1; const yy = y < 0 ? y + 1 : y;
+      ctx.globalAlpha = a;
+      ctx.beginPath(); ctx.arc(s.x * canvas.width, yy * canvas.height, s.r * devicePixelRatio, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    raf = requestAnimationFrame(tick);
+  }
+  if (!reduced) {
+    resize(); addEventListener('resize', resize);
+    raf = requestAnimationFrame(tick);
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) { cancelAnimationFrame(raf); raf = null; stopAuto(); }
+      else if (!raf) { raf = requestAnimationFrame(tick); }
+    });
+  }
+
+  dress(DEFAULT, { animate: false });
+  startAuto();
+
+  /* ---------- 下载按钮 ---------- */
+  const primary = $('primary'), primaryLabel = $('primary-label'), secondary = $('secondary'), meta = $('meta'), notice = $('notice');
+  const isWin = /Windows/.test(navigator.userAgent);
+  const kinds = {
+    mac: { test: a => /-arm64\.dmg$/.test(a.name), label: 'macOS（Apple Silicon）' },
+    win: { test: a => /-x64-Setup\.exe$/.test(a.name), label: 'Windows x64' },
+  };
+  const fail = (msg) => { primary.removeAttribute('aria-disabled'); primaryLabel.textContent = '前往 GitHub Releases 下载'; meta.textContent = msg || ''; };
+
+  let releases;
+  try {
+    const r = await fetch(`https://api.github.com/repos/${REPO}/releases?per_page=10`, { headers: { Accept: 'application/vnd.github+json' } });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    releases = await r.json();
+  } catch { return fail('暂时无法读取版本列表，请直接前往 Releases 页面。'); }
+
+  const usable = releases.filter(x => !x.draft && x.assets && x.assets.length);
+  const release = usable.find(x => !x.prerelease) || usable[0];
+  if (!release) return fail('还没有发布任何安装包，敬请期待。');
+
+  const pick = k => release.assets.find(kinds[k].test);
+  const order = isWin ? ['win', 'mac'] : ['mac', 'win'];
+  const [p, s] = order.map(k => ({ k, a: pick(k) }));
+  const fmt = x => `${kinds[x.k].label}${x.a ? ' · ' + (x.a.size / 1048576).toFixed(0) + ' MB' : ''}`;
+  const version = release.tag_name.replace(/^v/, '');
+
+  primary.removeAttribute('aria-disabled');
+  if (p.a) { primary.href = p.a.browser_download_url; primaryLabel.innerHTML = `下载 ${version}<small>${fmt(p)}</small>`; }
+  else { primary.href = release.html_url; primaryLabel.innerHTML = `查看 ${release.tag_name}<small>此平台暂无安装包</small>`; }
+  if (s.a) { secondary.hidden = false; secondary.href = s.a.browser_download_url; secondary.textContent = fmt(s); }
+
+  const date = new Date(release.published_at).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
+  meta.innerHTML = `<span class="tag">${release.prerelease ? 'Preview' : 'Stable'}</span><span>发布于 ${date}</span><a href="${release.html_url}">发布说明 · SHA256SUMS</a><a href="${RELEASES}">历史版本</a>`;
+  if (release.prerelease) notice.hidden = false;
+})();
+</script>
+</body>
+</html>

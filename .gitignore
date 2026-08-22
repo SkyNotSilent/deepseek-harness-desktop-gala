@@ -1,0 +1,15 @@
+.DS_Store
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+node_modules/
+*.tsbuildinfo
+.build/
+
+dsh-plugin-desktop/dist/
+dsh-plugin-desktop/lib/
+dsh-plugin-gala/dist/
+dsh-plugin-gala/lib/
