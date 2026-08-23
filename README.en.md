@@ -1,11 +1,12 @@
 <p align="center">
-  <img src="assets/screenshot-site-home.webp" alt="DeepSeek Harness Desktop Gala download site and character stage" width="100%">
+  <img src="assets/screenshot-welcome.webp" alt="DeepSeek Harness Desktop Gala character-stage welcome view" width="100%">
 </p>
 
 <h1 align="center">DeepSeek Harness Desktop Gala</h1>
 
 <p align="center">
   <a href="https://github.com/SkyNotSilent/deepseek-harness-desktop-gala/releases"><img src="https://img.shields.io/github/v/release/SkyNotSilent/deepseek-harness-desktop-gala?include_prereleases&style=flat&label=release&color=7b5fd4" alt="Latest release"></a>
+  <a href="https://github.com/SkyNotSilent/deepseek-harness-desktop-gala/actions/workflows/ci.yml"><img src="https://github.com/SkyNotSilent/deepseek-harness-desktop-gala/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI"></a>
   <img src="https://img.shields.io/badge/macOS%20%7C%20Windows-47848F?style=flat" alt="macOS and Windows">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-2EA44F?style=flat" alt="MIT License"></a>
 </p>
@@ -23,8 +24,10 @@
   <a href="https://github.com/SkyNotSilent/deepseek-harness-desktop-gala/releases">GitHub Releases</a>
 </h3>
 
+<p align="center"><sub>If this makes DSH better for you, a ⭐ Star is a lovely way to follow the project.</sub></p>
+
 <p align="center">
-  <img src="assets/screenshot-welcome.webp" alt="Welcome view with the Lingling character" width="100%">
+  <img src="assets/screenshot-chat.webp" alt="A live DSH conversation with the Gala character stage behind it" width="100%">
 </p>
 
 ## What it is

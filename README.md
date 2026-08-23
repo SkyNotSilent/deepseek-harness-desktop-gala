@@ -1,11 +1,12 @@
 <p align="center">
-  <img src="assets/screenshot-site-home.webp" alt="DeepSeek Harness Desktop Gala 下载站与角色舞台" width="100%">
+  <img src="assets/screenshot-welcome.webp" alt="DeepSeek Harness Desktop Gala 角色舞台欢迎页" width="100%">
 </p>
 
 <h1 align="center">DeepSeek Harness Desktop Gala</h1>
 
 <p align="center">
   <a href="https://github.com/SkyNotSilent/deepseek-harness-desktop-gala/releases"><img src="https://img.shields.io/github/v/release/SkyNotSilent/deepseek-harness-desktop-gala?include_prereleases&style=flat&label=release&color=7b5fd4" alt="Latest release"></a>
+  <a href="https://github.com/SkyNotSilent/deepseek-harness-desktop-gala/actions/workflows/ci.yml"><img src="https://github.com/SkyNotSilent/deepseek-harness-desktop-gala/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI"></a>
   <img src="https://img.shields.io/badge/macOS%20%7C%20Windows-47848F?style=flat" alt="macOS and Windows">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-2EA44F?style=flat" alt="MIT License"></a>
 </p>
@@ -23,8 +24,10 @@
   <a href="https://github.com/SkyNotSilent/deepseek-harness-desktop-gala/releases">GitHub Releases</a>
 </h3>
 
+<p align="center"><sub>如果这个项目让 DSH 更好用，欢迎点一个 ⭐ Star 关注后续更新。</sub></p>
+
 <p align="center">
-  <img src="assets/screenshot-welcome.webp" alt="选择灵灵后的欢迎页：整片舞台背景与角色标题" width="100%">
+  <img src="assets/screenshot-chat.webp" alt="进入对话后角色舞台背景仍然常驻" width="100%">
 </p>
 
 ## 这是什么
@@ -72,7 +75,7 @@ DeepSeek Harness 是一个"万物皆插件"的 Agent 运行时，官方提供命
 - 托盘菜单提供 **嘎啦图鉴 / 换肤面板 / 合成工坊 / 导入嘎啦包**；快捷键 `Cmd/Ctrl + Shift + S` 直达换肤面板。
 - 角色数据与皮肤协议见 [`dsh-plugin-gala/`](dsh-plugin-gala/)。
 
-<p align="center"><img src="assets/screenshot-chat.webp" alt="进入对话后角色舞台背景仍然常驻" width="100%"></p>
+<p align="center"><a href="https://skynotsilent.github.io/deepseek-harness-desktop-gala/"><img src="assets/screenshot-site-home.webp" alt="DeepSeek Harness Desktop Gala 下载站与角色舞台" width="100%"></a></p>
 
 更多说明见 [用户指南](docs/user-guide.md)。
 

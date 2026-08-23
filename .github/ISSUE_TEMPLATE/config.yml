@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Installation and usage guide
+    url: https://github.com/SkyNotSilent/deepseek-harness-desktop-gala/blob/main/docs/user-guide.md
+    about: Check setup, first-launch warnings, API key configuration and troubleshooting before filing an Issue.
+  - name: Private security report
+    url: https://github.com/SkyNotSilent/deepseek-harness-desktop-gala/security/advisories/new
+    about: Report vulnerabilities privately instead of opening a public Issue.
