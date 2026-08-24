@@ -86,4 +86,4 @@ jobs:
             --repo "${{ github.repository }}" \
             --prerelease \
             --title "DeepSeek Harness Desktop Gala ${TAG#v}" \
-            --notes-file "docs/releases/${TAG#v}.md"
+            --notes-file "docs/releases/${TAG}.md"
