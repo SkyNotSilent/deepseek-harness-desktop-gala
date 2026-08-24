@@ -50,6 +50,7 @@ jobs:
           name: windows-x64-preview
           path: dsh-plugin-desktop/dist/DeepSeek-Harness-Desktop-Gala-*-x64-Setup.exe
           if-no-files-found: error
+          retention-days: 1
 
   macos-preview:
     name: macOS ARM64 unsigned DMG and ZIP
@@ -77,3 +78,4 @@ jobs:
             dsh-plugin-desktop/dist/DeepSeek-Harness-Desktop-Gala-*-arm64.dmg
             dsh-plugin-desktop/dist/DeepSeek-Harness-Desktop-Gala-*-arm64.zip
           if-no-files-found: error
+          retention-days: 1

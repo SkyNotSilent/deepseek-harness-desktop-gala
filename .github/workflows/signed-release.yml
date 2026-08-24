@@ -59,6 +59,7 @@ jobs:
             dsh-plugin-desktop/dist/DeepSeek-Harness-Desktop-Gala-*-x64-Setup.exe.blockmap
             dsh-plugin-desktop/dist/latest.yml
           if-no-files-found: error
+          retention-days: 1
 
   macos:
     if: ${{ !contains(github.ref_name, '-') }}
@@ -94,6 +95,7 @@ jobs:
             dsh-plugin-desktop/dist/DeepSeek-Harness-Desktop-Gala-*-arm64.zip.blockmap
             dsh-plugin-desktop/dist/latest-mac.yml
           if-no-files-found: error
+          retention-days: 1
 
   release:
     if: ${{ !contains(github.ref_name, '-') }}

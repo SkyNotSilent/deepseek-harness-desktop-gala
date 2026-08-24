@@ -34,6 +34,7 @@ jobs:
           name: windows
           path: dsh-plugin-desktop/dist/DeepSeek-Harness-Desktop-Gala-*-x64-Setup.exe
           if-no-files-found: error
+          retention-days: 1
 
   macos:
     runs-on: macos-14
@@ -62,6 +63,7 @@ jobs:
             dsh-plugin-desktop/dist/DeepSeek-Harness-Desktop-Gala-*-arm64.dmg
             dsh-plugin-desktop/dist/DeepSeek-Harness-Desktop-Gala-*-arm64.zip
           if-no-files-found: error
+          retention-days: 1
 
   release:
     needs: [windows, macos]

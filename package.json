@@ -47,11 +47,8 @@
     "build": "yarn workspace dsh-plugin-gala build && yarn workspace dsh-plugin-desktop build",
     "typecheck": "yarn workspace dsh-plugin-gala typecheck && yarn workspace dsh-plugin-desktop typecheck",
     "test": "yarn workspace dsh-plugin-gala test && yarn workspace dsh-plugin-desktop test",
-    "check": "yarn workspace dsh-plugin-gala check && yarn workspace dsh-plugin-desktop check",
-
-
-
-
+    "verify:public": "node scripts/verify-public-tree.mjs",
+    "check": "yarn run verify:public && yarn workspace dsh-plugin-gala check && yarn workspace dsh-plugin-desktop check",
     "dev": "yarn workspace dsh-plugin-desktop dev",
     "start": "yarn workspace dsh-plugin-desktop start",
     "package:dir": "yarn workspace dsh-plugin-desktop package:dir",
