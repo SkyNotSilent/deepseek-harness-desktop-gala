@@ -48,6 +48,8 @@ export interface DesktopProfileSummary {
   readonly webCapable: boolean
   /** Manifest diagnostic that prevents selection. */
   readonly problem?: string
+  /** Launcher-managed implementation detail hidden from the ordinary tray list. */
+  readonly managedBy?: 'gala'
 }
 
 /** Private desktop selection state persisted outside `$DSH_HOME/profiles`. */
@@ -113,13 +115,16 @@ function manifestBundles(manifest: ReturnType<typeof readProfileManifest>): stri
 function existingProfile(name: string, home: string): DesktopProfileSummary {
   const dir = resolveProfileDir(name, home)
   try {
-    const bundles = manifestBundles(readProfileManifest(BIN_NAME, dir))
+    const manifest = readProfileManifest(BIN_NAME, dir)
+    const bundles = manifestBundles(manifest)
     const desktopBundleIndex = bundles.indexOf(DESKTOP_BUNDLE_NAME)
     const problem = name !== DEFAULT_PROFILE_NAME && desktopBundleIndex !== -1
       ? `${DESKTOP_BUNDLE_NAME} is launcher-owned and must not appear in dsh.profile.bundles`
       : undefined
     const baseBundleIndex = bundles.indexOf(BASE_BUNDLE_NAME)
     const webBundleIndex = bundles.indexOf(WEB_BUNDLE_NAME)
+    const galaWorkspace = (manifest.dsh as Record<string, unknown> | undefined)?.galaWorkspace
+    const managedBy = typeof galaWorkspace === 'object' && galaWorkspace !== null ? 'gala' as const : undefined
     return {
       name,
       dir,
@@ -128,6 +133,7 @@ function existingProfile(name: string, home: string): DesktopProfileSummary {
       webCapable: problem === undefined && (name === DEFAULT_PROFILE_NAME
         || baseBundleIndex !== -1 && webBundleIndex > baseBundleIndex),
       ...(problem === undefined ? {} : { problem }),
+      ...(managedBy === undefined ? {} : { managedBy }),
     }
   } catch (cause) {
     return {
@@ -334,6 +340,22 @@ export function selectDesktopProfile(statePath: string, home: string, name: stri
         pending: name,
         lastKnownGood: current.lastKnownGood,
       }
+  writeState(statePath, next)
+  return next
+}
+
+/** Clear one exact pending request when Electron rejected the restart itself. */
+export function cancelDesktopProfileSelection(statePath: string, name: string): DesktopProfileStateV1 {
+  assertDesktopProfileName(name)
+  const current = loadState(statePath).state
+  if (current.pending !== name) {
+    throw new Error(`${BIN_NAME}: cannot cancel non-pending profile ${JSON.stringify(name)}`)
+  }
+  const next: DesktopProfileStateV1 = {
+    version: STATE_VERSION,
+    active: current.active,
+    lastKnownGood: current.lastKnownGood,
+  }
   writeState(statePath, next)
   return next
 }

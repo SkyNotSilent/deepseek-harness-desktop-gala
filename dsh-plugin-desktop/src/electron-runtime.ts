@@ -40,6 +40,19 @@ import { desktopWindowOptions } from './window-options.ts'
 
 const { autoUpdater } = electronUpdater
 
+const RENDERER_LOAD_RETRY_DELAYS_MS = [100, 200, 400, 800] as const
+
+/** Only retry the loopback race Electron reports while the local Web surface is coming online. */
+export function isTransientRendererLoadFailure(cause: unknown): boolean {
+  if (!(cause instanceof Error)) return false
+  return (cause as Error & { code?: number }).code === -102
+    || cause.message.includes('ERR_CONNECTION_REFUSED')
+}
+
+function wait(delayMs: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, delayMs))
+}
+
 /** Return the presentation mode opposite the active generation. */
 export function nextDesktopShellMode(mode: DesktopShellSpec['mode']): DesktopShellSpec['mode'] {
   return mode === 'compatibility' ? 'advanced' : 'compatibility'
@@ -138,6 +151,7 @@ export class ElectronDesktopRuntime implements DesktopRuntime {
   constructor(
     private readonly restart: () => Promise<void>,
     private readonly onRendererBoot: (report: RendererBootReport) => void = () => {},
+    private readonly waitBeforeRendererRetry: (delayMs: number) => Promise<void> = wait,
   ) {
     if (process.platform !== 'darwin' && process.platform !== 'win32' && process.platform !== 'linux') {
       throw new Error(`dsh-plugin-desktop: unsupported Electron platform ${process.platform}`)
@@ -554,7 +568,7 @@ export class ElectronDesktopRuntime implements DesktopRuntime {
     window.once('ready-to-show', show)
     let tray: Tray | undefined
     try {
-      await window.loadURL(spec.url)
+      await this.loadRenderer(window, spec.url)
       tray = new Tray(prepareTrayIcon(spec.trayIcons, this.platform))
       this.tray = tray
       tray.setToolTip(spec.productName)
@@ -591,6 +605,20 @@ export class ElectronDesktopRuntime implements DesktopRuntime {
       if (!window.isDestroyed()) window.destroy()
       if (this.tray === mountedTray) this.tray = undefined
       if (this.window === window) this.window = undefined
+    }
+  }
+
+  /** Absorb a bounded loopback-listener race without hiding real renderer failures. */
+  private async loadRenderer(window: BrowserWindow, url: string): Promise<void> {
+    for (let attempt = 0; ; attempt += 1) {
+      try {
+        await window.loadURL(url)
+        return
+      } catch (cause) {
+        const delayMs = RENDERER_LOAD_RETRY_DELAYS_MS[attempt]
+        if (delayMs === undefined || !isTransientRendererLoadFailure(cause)) throw cause
+        await this.waitBeforeRendererRetry(delayMs)
+      }
     }
   }
 }

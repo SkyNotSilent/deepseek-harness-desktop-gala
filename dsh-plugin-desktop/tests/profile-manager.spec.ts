@@ -15,6 +15,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import {
   assertDesktopProfileName,
   beginDesktopProfileStartup,
+  cancelDesktopProfileSelection,
   listDesktopProfiles,
   markDesktopProfileFailed,
   markDesktopProfileHealthy,
@@ -116,6 +117,21 @@ describe('desktop profile discovery', () => {
       problem: expect.any(String),
     }))
   })
+
+  it('marks internal Gala Profiles so ordinary selectors can hide them', () => {
+    const home = temporaryRoot()
+    const dir = writeProfile(home, 'gala-dsh-llm', ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app'])
+    const manifest = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')) as Record<string, unknown>
+    manifest.dsh = {
+      ...manifest.dsh as Record<string, unknown>,
+      galaWorkspace: { version: 1, personaId: 'gala:dsh-llm', personaName: '灵灵' },
+    }
+    writeFileSync(join(dir, 'package.json'), JSON.stringify(manifest, null, 2) + '\n')
+    expect(listDesktopProfiles(home).find(profile => profile.name === 'gala-dsh-llm')).toMatchObject({
+      managedBy: 'gala',
+      webCapable: true,
+    })
+  })
 })
 
 describe('desktop profile selection state', () => {
@@ -153,6 +169,20 @@ describe('desktop profile selection state', () => {
     expect(() => selectDesktopProfile(statePath, home, '../outside')).toThrow()
     expect(statSync(statePath).mode & 0o777).toBe(0o600)
     expect(statSync(join(root, 'desktop-private', 'profile-selection')).mode & 0o777).toBe(0o700)
+  })
+
+  it('cancels only the exact pending profile after a restart request failure', () => {
+    const root = temporaryRoot()
+    const home = join(root, 'harness')
+    const statePath = join(root, 'desktop-private', 'profile-selection', 'state.json')
+    writeProfile(home, 'work', ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app'])
+    selectDesktopProfile(statePath, home, 'work')
+    expect(cancelDesktopProfileSelection(statePath, 'work')).toEqual({
+      version: 1,
+      active: 'desktop',
+      lastKnownGood: 'desktop',
+    })
+    expect(() => cancelDesktopProfileSelection(statePath, 'work')).toThrow('non-pending')
   })
 
   it('consumes a pending profile and rolls back an unconfirmed startup on the next launch', () => {

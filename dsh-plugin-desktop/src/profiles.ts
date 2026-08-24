@@ -29,7 +29,7 @@ export function apply(ctx: Context): void {
       order: 10,
       label: () => `Profile: ${ctx.desktopProfiles.current.name}`,
       invoke: () => {},
-      submenu: () => ctx.desktopProfiles.list().map(profile => ({
+      submenu: () => ctx.desktopProfiles.list().filter(profile => profile.managedBy !== 'gala').map(profile => ({
         label: () => profileLabel(profile),
         type: 'radio',
         checked: () => profile.name === ctx.desktopProfiles.current.name,

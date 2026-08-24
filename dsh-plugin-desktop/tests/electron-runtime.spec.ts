@@ -357,6 +357,26 @@ describe('Electron compatibility runtime', () => {
     await release()
   })
 
+  it('retries a transient loopback refusal before exposing the native shell', async () => {
+    vi.spyOn(process, 'platform', 'get').mockReturnValue('darwin')
+    electron.loadURL
+      .mockRejectedValueOnce(new Error("ERR_CONNECTION_REFUSED (-102) loading 'http://127.0.0.1:43120/'"))
+      .mockResolvedValueOnce(undefined)
+    const waitBeforeRetry = vi.fn(async () => {})
+    const { ElectronDesktopRuntime } = await import('../src/electron-runtime.ts')
+    const runtime = new ElectronDesktopRuntime(async () => {}, () => {}, waitBeforeRetry)
+    const release = runtime.schedule(spec)
+
+    await runtime.mountScheduled()
+
+    expect(electron.loadURL).toHaveBeenCalledTimes(2)
+    expect(waitBeforeRetry).toHaveBeenCalledOnce()
+    expect(waitBeforeRetry).toHaveBeenCalledWith(100)
+    expect(electron.trays).toHaveLength(1)
+
+    await release()
+  })
+
   it('persists the opposite mode when its tray command is clicked', async () => {
     vi.spyOn(process, 'platform', 'get').mockReturnValue('darwin')
     const { ElectronDesktopRuntime } = await import('../src/electron-runtime.ts')

@@ -2,7 +2,11 @@
 
 import { app, BrowserWindow } from 'electron'
 import type { Context } from '@deepseek-ai/cordis'
-import type { GalaService } from 'dsh-plugin-gala'
+import {
+  defaultOfficialsDir,
+  resolveGalaSplashAppearance,
+  type GalaService,
+} from 'dsh-plugin-gala'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
@@ -17,17 +21,21 @@ import { DSH_LAUNCH_ENVIRONMENT_KEY } from '@deepseek-ai/dsh-launch-environment'
 import { installDesktopPnpmRuntime } from './desktop-runtime-environment.ts'
 import { ElectronDesktopRuntime } from './electron-runtime.ts'
 import { createGalaHostAdapter } from './gala-electron.ts'
+import { createGalaWorkspaceCoordinator } from './gala-workspaces.ts'
 import { readProfileBundles, writeProfileBundles } from './profile-bundles.ts'
 import {
   openSplash,
   SPLASH_HEIGHT,
   SPLASH_WIDTH,
+  splashPresentationFromAppearance,
   type SplashController,
+  type SplashPresentation,
 } from './splash.ts'
 import { installProfilePackageResolver } from './module-resolution.ts'
 import { packagedDependencyPath } from './packaged-runtime-path.ts'
 import {
   beginDesktopProfileStartup,
+  cancelDesktopProfileSelection,
   listDesktopProfiles,
   markDesktopProfileFailed,
   markDesktopProfileHealthy,
@@ -109,7 +117,7 @@ function notifyWindowsVolumeConcerns(
 }
 
 /** Open the splash window; every failure degrades to a stderr note. */
-function openSplashWindow(): SplashController {
+function openSplashWindow(presentation: SplashPresentation): SplashController {
   return openSplash({
     open: html => {
       const window = new BrowserWindow({
@@ -123,15 +131,29 @@ function openSplashWindow(): SplashController {
         show: false,
         webPreferences: { sandbox: true, contextIsolation: true, nodeIntegration: false },
       })
-      window.once('ready-to-show', () => {
-        if (!window.isDestroyed()) window.show()
+      let resolveShown!: () => void
+      let rejectShown!: (cause: unknown) => void
+      const shown = new Promise<void>((resolve, reject) => {
+        resolveShown = resolve
+        rejectShown = reject
       })
-      void window.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`)
-      return () => {
-        if (!window.isDestroyed()) window.destroy()
+      window.webContents.once('did-finish-load', () => {
+        if (window.isDestroyed()) return
+        window.center()
+        window.setAlwaysOnTop(true, 'floating')
+        window.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
+        window.show()
+        resolveShown()
+      })
+      void window.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`).catch(rejectShown)
+      return {
+        shown,
+        close: () => {
+          if (!window.isDestroyed()) window.destroy()
+        },
       }
     },
-  })
+  }, { presentation })
 }
 
 /** Start one Electron process and leave lifetime to the mounted desktop plugin. */
@@ -192,7 +214,7 @@ async function start(): Promise<void> {
 
   app.on('second-instance', () => { runtime.show() })
   await app.whenReady()
-  const splash = openSplashWindow()
+  let splash: SplashController = { settle: () => {} }
   if (process.platform === 'win32') app.setAppUserModelId('io.github.skynotsilent.harnessgala')
   if (app.isPackaged && process.cwd() === '/') process.chdir(app.getPath('home'))
   const homeDir = resolveDshHome()
@@ -218,6 +240,18 @@ async function start(): Promise<void> {
   })
 
   try {
+    const selectionStatePath = join(app.getPath('userData'), 'profile-selection', 'state.json')
+    profileStatePath = selectionStatePath
+    profileStartup = beginDesktopProfileStartup(selectionStatePath, homeDir)
+    const activeProfileName = profileStartup.profileName
+    const activeProfile = listDesktopProfiles(homeDir).find(profile => profile.name === activeProfileName)
+    splash = openSplashWindow(splashPresentationFromAppearance(resolveGalaSplashAppearance({
+      userDataDir: app.getPath('userData'),
+      profileName: activeProfileName,
+      isolatedWorkspace: activeProfile?.managedBy === 'gala',
+      officialsDir: defaultOfficialsDir(),
+    })))
+
     const environment = loadLayeredEnv(BIN_NAME, process.cwd())
     const electronVersion = process.versions.electron
     if (electronVersion === undefined) {
@@ -234,10 +268,6 @@ async function start(): Promise<void> {
     })
     const releasePnpmRuntime = (): void => { pnpmRuntime.dispose() }
     disposePnpmRuntime = releasePnpmRuntime
-    const selectionStatePath = join(app.getPath('userData'), 'profile-selection', 'state.json')
-    profileStatePath = selectionStatePath
-    profileStartup = beginDesktopProfileStartup(selectionStatePath, homeDir)
-    const activeProfileName = profileStartup.profileName
     const prepared = prepareDesktopProfile(
       process.env.DSH_TELEMETRY_DISABLED,
       homeDir,
@@ -256,6 +286,25 @@ async function start(): Promise<void> {
       clearEnvironmentPath: pnpmRuntime.clearEnvironmentPath,
       dshBootstrapPath: fileURLToPath(new URL('./desktop-cli.js', import.meta.url)),
     }
+    const galaWorkspaces = createGalaWorkspaceCoordinator({
+      userDataDir: app.getPath('userData'),
+      homeDir,
+      currentProfileName: activeProfileName,
+      currentProfileDir: prepared.profile.dir,
+      validateProfile: name => {
+        prepareDesktopProfile(process.env.DSH_TELEMETRY_DISABLED, homeDir, process.platform, name)
+      },
+      selectProfile: async name => {
+        selectDesktopProfile(selectionStatePath, homeDir, name)
+        try {
+          await runtime.requestRestart()
+        } catch (cause) {
+          cancelDesktopProfileSelection(selectionStatePath, name)
+          throw cause
+        }
+      },
+      restartCurrentProfile: () => runtime.requestRestart(),
+    })
     const releasePackageResolver = installProfilePackageResolver(prepared.bareModuleBaseUrl)
     const ctx = await boot(
       BIN_NAME,
@@ -287,6 +336,7 @@ async function start(): Promise<void> {
             read: () => readProfileBundles(profileDir),
             write: bundles => { writeProfileBundles(profileDir, bundles) },
           },
+          workspaces: galaWorkspaces,
         }))
         await hostCtx.plugin(DesktopProfileService, {
           current: {
@@ -298,7 +348,7 @@ async function start(): Promise<void> {
           requestRestart: () => runtime.requestRestart(),
         })
         provideCmdline(hostCtx, {
-          args: ['--host', '127.0.0.1', '--port', '0'],
+          args: ['--host', '127.0.0.1', '--port', '0', '--no-open'],
           exit: requestQuit,
         })
       },

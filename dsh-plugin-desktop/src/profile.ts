@@ -338,6 +338,9 @@ export function prepareDesktopProfile(
   const settingsConfig = FileSettingsProvider.Config({
     dshHome: home,
     ...rowConfig(settings),
+    ...(typeof (readProfileManifest(BIN_NAME, profileDir).dsh as Record<string, unknown> | undefined)?.galaWorkspace === 'object'
+      ? { path: join(profileDir, 'settings.yaml') }
+      : {}),
   } as SettingsFileConfig)
   const mode = readDesktopShellMode(settingsConfig)
   patches.push({

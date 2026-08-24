@@ -96,7 +96,9 @@ describe('published package surface', () => {
       ],
     })
     expect(readFileSync(new URL('cordis.patch.yml', packageRoot), 'utf8')).toContain('name: dsh-plugin-desktop')
-    expect(readFileSync(new URL('cordis.patch.yml', packageRoot), 'utf8')).toContain('name: dsh-plugin-gala')
+    const desktopPatch = readFileSync(new URL('cordis.patch.yml', packageRoot), 'utf8')
+    expect(desktopPatch).toContain('name: dsh-plugin-gala')
+    expect(desktopPatch).toContain('openBrowser: false')
     expect(manifest.dependencies?.['dsh-plugin-gala']).toBe('workspace:*')
     expect(workspaceManifest.workspaces).toEqual(['dsh-plugin-desktop', 'dsh-plugin-gala'])
     expect(readFileSync(new URL('cordis.patch.yml', packageRoot), 'utf8')).toContain('name: dsh-plugin-desktop/terminal')
@@ -246,11 +248,12 @@ describe('published package surface', () => {
   })
 
   it('keeps the shared Gala whale source icon unmodified', () => {
+    // 2026-08-23 起换为“群星”版图标：渐变鲸鱼 + 十位角色头像环绕。
     const digest = createHash('sha256')
       .update(readFileSync(new URL('build/app-icon.png', packageRoot)))
       .digest('hex')
 
-    expect(digest).toBe('33a37574507e10f391f1bb15749b8714e47481dbf158e2c34dd7a2d74eb5675c')
+    expect(digest).toBe('7a11df0ac27662c48487de165c268e329bb31f42b66511469c83fc706cae9659')
   })
 
   it('generates a centered macOS icon with a 100-pixel visual inset', async () => {

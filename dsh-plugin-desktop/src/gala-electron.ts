@@ -16,6 +16,7 @@ import {
   type GalaNative,
   type GalaPackageSource,
   type GalaService,
+  type GalaWorkspaceHost,
 } from 'dsh-plugin-gala'
 import type { DesktopRuntime, DesktopTrayItemRegistration } from './runtime.ts'
 
@@ -36,6 +37,7 @@ export interface GalaDesktopAdapterOptions {
   profileDir: string
   packages: readonly GalaPackageSource[]
   bundles: GalaBundleAccess
+  workspaces?: GalaWorkspaceHost
   /** 注入皮肤 CSS 的目标窗口（缺省取当前主窗口） */
   targetWindow?: () => BrowserWindow | undefined
 }
@@ -101,6 +103,22 @@ function createNative(options: GalaDesktopAdapterOptions, resolveOrigin: () => s
         cancelId: 1,
         message,
         detail: '合成会替换当前插件配置，并在完成后重启 DeepSeek Harness Desktop Gala。',
+      }
+      const parent = resolveWindow()
+      const result = parent === undefined
+        ? await dialog.showMessageBox(dialogOptions)
+        : await dialog.showMessageBox(parent, dialogOptions)
+      return result.response === 0
+    },
+
+    confirmWorkspaceSwitch: async name => {
+      const dialogOptions: MessageBoxOptions = {
+        type: 'question',
+        buttons: ['保存并重启', '取消'],
+        defaultId: 0,
+        cancelId: 1,
+        message: `切换到「${name}」角色工作台？`,
+        detail: '将保存当前状态，准备该角色的插件编队与独立设置，然后有序重启应用。',
       }
       const parent = resolveWindow()
       const result = parent === undefined
@@ -181,6 +199,7 @@ export function createGalaHostAdapter(options: GalaDesktopAdapterOptions): GalaH
     packages: options.packages,
     bundles: options.bundles,
     native,
+    ...(options.workspaces === undefined ? {} : { workspaces: options.workspaces }),
     configureOrigin: next => { origin = next },
     attach: service => attachNativeCommands(options.runtime, native, service),
   }
