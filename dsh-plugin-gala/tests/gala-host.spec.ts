@@ -69,10 +69,12 @@ describe('Gala 层装配（ctx.gala 注入点）', () => {
     const { create } = workspace()
     const layer = create()
 
-    expect(layer.registry.list().length).toBe(OFFICIAL_COUNT)
+    expect(layer.registry.list().length).toBe(OFFICIAL_COUNT + 1)
+    expect(layer.registry.list()[0]?.id).toBe('gala:stars')
     expect(layer.registry.get('gala:dsh-base')?.name).toBe('阿基')
     expect(layer.registry.get('gala:dsh-llm')?.rarity).toBe('legendary')
-    expect(layer.panelCards().length).toBe(OFFICIAL_COUNT)
+    expect(layer.panelCards().length).toBe(OFFICIAL_COUNT + 1)
+    expect(layer.panelCards()[0]).toMatchObject({ id: 'gala:stars', isDefault: true })
   })
 
   it('官方包名映射到官方嘎啦，未知包落 §8.4 缺省嘎啦', () => {
@@ -81,7 +83,7 @@ describe('Gala 层装配（ctx.gala 注入点）', () => {
 
     expect(layer.registry.get('gala:dsh-base')?.name).toBe('阿基') // 官方 override
     expect(layer.registry.get('gala:unknown-plugin')?.name).toBe('@vendor/unknown-plugin')
-    expect(layer.registry.list().length).toBe(OFFICIAL_COUNT + 1)
+    expect(layer.registry.list().length).toBe(OFFICIAL_COUNT + 2)
   })
 
   it('包内自带 gala.json 时优先采用其元数据', () => {
@@ -96,6 +98,22 @@ describe('Gala 层装配（ctx.gala 注入点）', () => {
     const layer = create([{ name: '@vendor/fancy', dir: packageDir }])
 
     expect(layer.registry.get('gala:fancy-one')?.name).toBe('花哨嘎啦')
+  })
+
+  it('自定义角色排在官方角色后，并自动拥有可选皮肤与呈现', async () => {
+    const { root, create } = workspace()
+    const packageDir = join(root, 'packages', 'custom')
+    mkdirSync(packageDir, { recursive: true })
+    writeFileSync(
+      join(packageDir, 'gala.json'),
+      JSON.stringify(sampleCharacter({ id: 'gala:custom-star', name: '星仔' })),
+    )
+    const layer = create([{ name: '@user/custom', dir: packageDir }])
+
+    const picker = layer.pickerState()
+    expect(picker.girls.at(-1)).toMatchObject({ characterId: 'gala:custom-star', name: '星仔' })
+    await layer.skin.apply('gala:skin-custom-star')
+    expect(layer.pickerState().persona).toMatchObject({ characterId: 'gala:custom-star', name: '星仔' })
   })
 
   it('包内 gala.json 损坏时退回缺省而不是整层崩溃', () => {
@@ -185,7 +203,7 @@ describe('交互式导入 .ggal', () => {
     const layer = create()
 
     await expect(layer.importPackage()).resolves.toBe(false)
-    expect(layer.panelCards().length).toBe(OFFICIAL_COUNT)
+    expect(layer.panelCards().length).toBe(OFFICIAL_COUNT + 1)
     expect(log.notices[0]?.title).toBe('嘎啦包导入失败')
   })
 })
@@ -199,7 +217,7 @@ describe('皮肤桥（内置皮肤 + --dsw-* 映射层 + 事件）', () => {
     expect(ids).toContain('gala:skin-cream-pink')
     expect(ids).toContain('gala:skin-mint-soda')
     expect(ids).toContain('gala:skin-star-purple')
-    expect(ids[3]).toBe('gala:skin-ensemble')
+    expect(ids[3]).toBe('gala:skin-stars')
     expect(ids).toContain('gala:skin-dsh-llm')
     expect(ids.length).toBe(4 + OFFICIAL_COUNT)
   })
@@ -220,7 +238,7 @@ describe('皮肤桥（内置皮肤 + --dsw-* 映射层 + 事件）', () => {
     expect(events).toEqual(['skin-changed'])
   })
 
-  it('revert 恢复全员默认皮肤并再次广播', async () => {
+  it('revert 恢复原装并再次广播', async () => {
     const { create } = workspace()
     const layer = create()
     await layer.skin.apply('gala:skin-cream-pink')
@@ -228,8 +246,8 @@ describe('皮肤桥（内置皮肤 + --dsw-* 映射层 + 事件）', () => {
 
     await layer.skin.revert()
 
-    expect(layer.skin.current()?.id).toBe('gala:skin-ensemble')
-    expect(layer.skinTokens()['--dsw-alias-brand-primary']?.light).toBe('#6758d8')
+    expect(layer.skin.current()).toBeUndefined()
+    expect(layer.skinTokens()).toEqual({})
   })
 
   it('重启后 activate 恢复上次皮肤并重建映射层', async () => {
@@ -274,17 +292,19 @@ describe('选肤弹层状态（pickerState）', () => {
     await layer.activate()
     const state = layer.pickerState()
 
-    expect(state.activeSkinId).toBe('gala:skin-ensemble')
+    expect(state.activeSkinId).toBe('gala:skin-stars')
     expect(state.girls[0]).toMatchObject({
-      skinId: 'gala:skin-ensemble',
-      characterId: 'gala:ensemble',
-      name: 'Gala全员',
+      skinId: 'gala:skin-stars',
+      characterId: 'gala:stars',
+      name: 'GALA·群星',
+      isDefault: true,
       active: true,
     })
-    expect(state.logo?.name).toBe('Gala全员')
+    expect(state.girls.slice(1).every(girl => !girl.isDefault)).toBe(true)
+    expect(state.logo?.name).toBe('GALA·群星')
     expect(state.persona).toMatchObject({
-      characterId: 'gala:ensemble',
-      headline: '与全员并肩',
+      characterId: 'gala:stars',
+      headline: '与群星并肩',
     })
     layer.dispose()
   })

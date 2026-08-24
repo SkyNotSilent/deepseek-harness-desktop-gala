@@ -24,6 +24,8 @@ export interface GalleryCard {
   avatar: string
   favorite: boolean
   firstSeenAt?: string | undefined
+  /** 产品默认 IP；原装不属于 IP，因此不会出现此标记。 */
+  isDefault: boolean
 }
 
 /** 图鉴详情（G6：description + compose 配方） */
@@ -75,6 +77,7 @@ export function createGalaGalleryService(options: GalaGalleryOptions): GalaGalle
       avatar: character.assets.avatar,
       favorite: entry?.favorite ?? false,
       firstSeenAt: entry?.firstSeenAt,
+      isDefault: character.id === 'gala:stars',
     }
   }
 
@@ -82,7 +85,8 @@ export function createGalaGalleryService(options: GalaGalleryOptions): GalaGalle
 
   return {
     list: () => {
-      const characters = [...registry.list()].sort((a, b) => a.id.localeCompare(b.id))
+      // Registry 的插入顺序就是产品顺序：全员 → 官方角色 → 自定义角色。
+      const characters = [...registry.list()]
       for (const character of characters) collection.record(character.id) // 首次亮相即收录
       const cards: GalleryCard[] = []
       for (const character of characters) {

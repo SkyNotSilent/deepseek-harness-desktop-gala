@@ -76,6 +76,14 @@ export interface GalaHttpRpc {
   applySkin(id: string): Promise<void>
   /** 移除当前皮肤 */
   revertSkin(): Promise<void>
+  /** 明确选择恢复范围，避免把原装与退出独立空间混为一谈。 */
+  restoreOriginal?(choice: 'appearance-only' | 'exit-isolated'): Promise<void>
+  enableWorkspaces?(): Promise<void>
+  disableWorkspaces?(): Promise<void>
+  stagePlugins?(changes: Readonly<Record<string, boolean>>): Promise<void>
+  applyPlugins?(): Promise<void>
+  /** 开关角色人设对话（即时生效，不重启） */
+  setPersonaEnabled?(enabled: boolean): Promise<void>
   /** 交互式导入 .ggal（弹文件选择框）；返回是否成功导入 */
   importPackage(): Promise<boolean>
   /** 按配方合成；true=已提交并准备重启，false=用户取消 */
@@ -136,6 +144,17 @@ function stringField(value: unknown, field: string): string | undefined {
   if (typeof value !== 'object' || value === null) return undefined
   const raw = (value as Record<string, unknown>)[field]
   return typeof raw === 'string' && raw.length > 0 && raw.length <= 512 ? raw : undefined
+}
+
+function booleanRecordField(value: unknown, field: string): Record<string, boolean> | undefined {
+  if (typeof value !== 'object' || value === null) return undefined
+  const raw = (value as Record<string, unknown>)[field]
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return undefined
+  const entries = Object.entries(raw)
+  if (entries.length > 128 || entries.some(([key, enabled]) => key.length === 0 || key.length > 256 || typeof enabled !== 'boolean')) {
+    return undefined
+  }
+  return Object.fromEntries(entries) as Record<string, boolean>
 }
 
 function serveAsset(res: ServerResponse, root: string, relativePath: string): void {
@@ -207,6 +226,42 @@ async function handleRpc(
         await options.rpc.revertSkin()
         return finish(res, 200, JSON.stringify({ ok: true }))
       }
+      case 'appearance-original': {
+        const choice = stringField(body, 'choice')
+        if (choice !== 'appearance-only' && choice !== 'exit-isolated') return finish(res, 400)
+        if (options.rpc.restoreOriginal === undefined) return finish(res, 404)
+        await options.rpc.restoreOriginal(choice)
+        return finish(res, 200, JSON.stringify({ ok: true }))
+      }
+      case 'workspace-enable': {
+        if (options.rpc.enableWorkspaces === undefined) return finish(res, 404)
+        await options.rpc.enableWorkspaces()
+        return finish(res, 200, JSON.stringify({ ok: true }))
+      }
+      case 'workspace-disable': {
+        if (options.rpc.disableWorkspaces === undefined) return finish(res, 404)
+        await options.rpc.disableWorkspaces()
+        return finish(res, 200, JSON.stringify({ ok: true }))
+      }
+      case 'plugins-stage': {
+        const changes = booleanRecordField(body, 'changes')
+        if (changes === undefined) return finish(res, 400)
+        if (options.rpc.stagePlugins === undefined) return finish(res, 404)
+        await options.rpc.stagePlugins(changes)
+        return finish(res, 200, JSON.stringify({ ok: true }))
+      }
+      case 'plugins-apply': {
+        if (options.rpc.applyPlugins === undefined) return finish(res, 404)
+        await options.rpc.applyPlugins()
+        return finish(res, 200, JSON.stringify({ ok: true }))
+      }
+      case 'persona-toggle': {
+        const enabled = (body as { enabled?: unknown } | null)?.enabled
+        if (typeof enabled !== 'boolean') return finish(res, 400)
+        if (options.rpc.setPersonaEnabled === undefined) return finish(res, 404)
+        await options.rpc.setPersonaEnabled(enabled)
+        return finish(res, 200, JSON.stringify({ ok: true, enabled }))
+      }
       case 'import': {
         const imported = await options.rpc.importPackage()
         return finish(res, 200, JSON.stringify({ ok: true, imported }))
@@ -232,7 +287,7 @@ async function handleRpc(
  * - GET  /skin-tokens                        当前皮肤映射层 JSON
  * - GET  /picker                             选肤弹层状态 JSON
  * - GET  /events                             SSE 事件流
- * - POST /rpc/<open|favorite|skin-apply|skin-revert|import|compose>
+ * - POST /rpc/<open|favorite|skin-apply|skin-revert|appearance-original|workspace-*|plugins-*|persona-toggle|import|compose>
  */
 export function createGalaHttpHandler(options: GalaHttpOptions): GalaHttpHandler {
   const makeNonce = options.nonce ?? (() => crypto.randomUUID().replaceAll('-', ''))

@@ -64,6 +64,9 @@ function openDetail(id) {
   $('#detail-rarity').textContent = card.rarityLabel
   $('#detail-rarity').style.setProperty('--chip', card.rarityColor)
   $('#detail-desc').textContent = card.description
+  $('#detail-persona').hidden = !card.archetype
+  $('#detail-archetype').textContent = card.archetype ? '人物 · ' + card.archetype : ''
+  $('#detail-story').textContent = card.story
   $('#detail-quote').textContent = card.quote ? '「' + card.quote + '」' : ''
   $('#detail-recipes').textContent = card.recipes.length
     ? '可参与合成：' + card.recipes.map((recipe) => recipe.name).join('、')
@@ -121,7 +124,7 @@ $('#detail-favorite').addEventListener('click', async () => {
   }
 })
 
-// ── 换肤：预览（页内试色）/ 应用 / 恢复默认 ──
+// ── 换肤：预览（页内试色）/ 应用 / 恢复原装 ──
 let previewSkin
 function applyPreview(skin) {
   const root = document.documentElement
@@ -163,11 +166,9 @@ document.getElementById('skins-library').addEventListener('click', async (event)
 $('#skin-revert').addEventListener('click', async () => {
   try {
     await rpc('skin-revert')
-    for (const el of document.querySelectorAll('.skin-card')) delete el.dataset.active
-    const defaultCard = document.querySelector('[data-skin-id="' + CSS.escape(data.defaultSkinId) + '"]')
-    if (defaultCard) defaultCard.dataset.active = ''
+    for (const el of document.querySelectorAll('[data-skin-id]')) delete el.dataset.active
     applyPreview(undefined)
-    toast('已恢复「Gala全员·共赴星海」')
+    toast('已恢复原装外观')
   } catch (cause) {
     toast('恢复失败：' + cause.message)
   }

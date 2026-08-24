@@ -121,6 +121,20 @@ export const PANEL_STYLE = `
     text-shadow: 0 2px 0 var(--ink);
     transform: rotate(12deg);
   }
+  .gala-card .default-chip {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 1;
+    padding: 3px 9px;
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    background: var(--mint);
+    color: var(--ink);
+    font-size: 11px;
+    font-weight: 900;
+    box-shadow: 0 2px 0 var(--ink);
+  }
   .gala-card[data-rarity="legendary"] { animation: pop-in 240ms var(--bounce) backwards, glow 2.6s ease-in-out infinite; }
 
   /* ── 详情 ── */
@@ -155,6 +169,9 @@ export const PANEL_STYLE = `
     background: var(--chip, var(--blush));
   }
   #detail .desc { line-height: 1.9; font-size: 14.5px; }
+  #detail .persona { margin-top: 12px; font-size: 13.5px; line-height: 1.8; display: flex; flex-direction: column; gap: 6px; }
+  #detail .persona[hidden] { display: none; }
+  #detail .persona .chip { align-self: flex-start; --chip: var(--mint, #d6f5e7); }
   #detail .quote { margin-top: 10px; color: var(--ink-soft); font-size: 13px; }
   #detail .recipes { margin-top: 12px; font-size: 13px; color: var(--ink-soft); }
   #detail .actions { display: flex; justify-content: center; gap: 12px; margin-top: 18px; }

@@ -18,34 +18,38 @@ import type { SkinManifest } from './protocols/skin-protocol.ts'
 
 /** skins.json 顶层结构（PRD §13.2） */
 export interface GalaSkinStoreFile {
-  version: 1
+  version: 2
+  /** 区分从未初始化与用户明确选择原装。 */
+  initialized: true
   /** 当前启用皮肤 ID；null 表示无皮肤 */
   active: string | null
 }
 
 /** skins.json 当前版本 */
-export const SKIN_STORE_VERSION = 1
+export const SKIN_STORE_VERSION = 2
 
 /** 皮肤持久化存储接口 */
 export interface GalaSkinStore {
   /** 上次启用的皮肤 ID；从未启用则 undefined */
-  getActive(): string | undefined
+  getActive(): string | null | undefined
   /** 记录启用皮肤；null 表示清除 */
   setActive(id: string | null): void
 }
 
-function isSkinStoreFile(data: unknown): data is GalaSkinStoreFile {
-  if (typeof data !== 'object' || data === null) return false
-  const file = data as Partial<GalaSkinStoreFile>
-  return (
-    file.version === SKIN_STORE_VERSION &&
-    (file.active === null || typeof file.active === 'string')
-  )
+function storedActive(data: unknown): string | null | undefined {
+  if (typeof data !== 'object' || data === null) return undefined
+  const file = data as { version?: unknown; initialized?: unknown; active?: unknown }
+  const active = file.active
+  if (active !== null && typeof active !== 'string') return undefined
+  // v1 的 null 已经代表用户明确恢复原装；迁移时必须保留。
+  if (file.version === 1) return active
+  if (file.version === SKIN_STORE_VERSION && file.initialized === true) return active
+  return undefined
 }
 
 /** 创建 skins.json 存储实例（首次访问惰性加载；原子替换写入） */
 export function createGalaSkinStore(filePath: string): GalaSkinStore {
-  let active: string | null = null
+  let active: string | null | undefined
   let dirty = false
 
   const read = (): void => {
@@ -64,16 +68,18 @@ export function createGalaSkinStore(filePath: string): GalaSkinStore {
         `gala: skins.json 解析失败 ${filePath}: ${cause instanceof Error ? cause.message : String(cause)}`,
       )
     }
-    if (!isSkinStoreFile(parsed)) {
+    const stored = storedActive(parsed)
+    if (stored === undefined) {
       throw new Error(`gala: skins.json 校验失败 ${filePath}`)
     }
-    active = parsed.active
+    active = stored
   }
 
   const write = (): void => {
     if (!dirty) return
     mkdirSync(dirname(filePath), { recursive: true })
-    const payload: GalaSkinStoreFile = { version: SKIN_STORE_VERSION, active }
+    if (active === undefined) return
+    const payload: GalaSkinStoreFile = { version: SKIN_STORE_VERSION, initialized: true, active }
     const tmp = `${filePath}.tmp`
     writeFileSync(tmp, `${JSON.stringify(payload, null, 2)}\n`, 'utf8')
     renameSync(tmp, filePath)
@@ -83,7 +89,7 @@ export function createGalaSkinStore(filePath: string): GalaSkinStore {
   read()
 
   return {
-    getActive: () => active ?? undefined,
+    getActive: () => active,
     setActive: id => {
       active = id
       dirty = true
@@ -291,15 +297,14 @@ export function createGalaSkinService(options: GalaSkinOptions = {}): GalaSkinSe
     },
     apply: applySkin,
     revert: async () => {
-      if (activeKey === undefined) return
-      await host.removeCss(activeKey)
+      if (activeKey !== undefined) await host.removeCss(activeKey)
       active = undefined
       activeKey = undefined
       host.store.setActive(null)
     },
     restore: async () => {
       const id = host.store.getActive()
-      if (id === undefined) return
+      if (id === undefined || id === null) return
       if (!skins.has(id)) return // 皮肤包已卸载：跳过恢复
       await applySkin(id)
     },

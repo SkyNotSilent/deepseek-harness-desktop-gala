@@ -18,6 +18,7 @@ import {
   CHARACTER_BY_SKIN,
   CHARACTER_SKINS,
   DEFAULT_GALA_SKIN_ID,
+  fallbackSkinForCharacter,
   skinIdForCharacter,
 } from './gala-character-skins.ts'
 import { createGalaCollectionStore, type GalaCollectionStore } from './gala-collection.ts'
@@ -30,6 +31,7 @@ import {
   type GalaMarketService,
 } from './gala-market.ts'
 import {
+  STARS_GALA,
   OFFICIAL_GALAS,
   OFFICIAL_RECIPES,
   OFFICIALS_BY_ID,
@@ -37,6 +39,13 @@ import {
   SELECTABLE_GALAS,
 } from './gala-officials.ts'
 import { RARITY_LABELS } from './gala-panel-page.ts'
+import {
+  createGalaPersonaService,
+  createGalaPersonaStore,
+  personaProfileFor,
+  type GalaPersonaProfile,
+  type GalaPersonaService,
+} from './gala-persona.ts'
 import { createGalaRegistry, defaultGalaForPackage, type GalaRegistry } from './gala-registry.ts'
 import { mapSkinTokens, type TokenPair } from './gala-skin-map.ts'
 import {
@@ -49,6 +58,7 @@ import { galaSlug } from './protocols/market-manifest.ts'
 import { loadComposeRecipes, type ComposeRecipe } from './protocols/compose-protocol.ts'
 import { validateGalaJson, type GalaCharacter } from './protocols/gala-json.ts'
 import { validateSkinManifest, type SkinManifest } from './protocols/skin-protocol.ts'
+import type { GalaWorkspaceHost, PersonaPluginDescriptor } from './gala-workspace.ts'
 
 /** 用户数据目录下的 Gala 子目录（PRD §13.2） */
 export const GALA_DATA_DIRNAME = 'gala'
@@ -75,6 +85,8 @@ export interface GalaNative {
   registerShortcut?(accelerator: string, handler: () => void): () => void
   /** 确认对话框（合成前置确认，PRD §7.4） */
   confirm(message: string): Promise<boolean>
+  /** 切换角色工作台前的原生确认；明确告知会保存并重启。 */
+  confirmWorkspaceSwitch?(name: string): Promise<boolean>
   /** 选择 `.ggal` 文件；用户取消返回 undefined */
   chooseGgal(): Promise<string | undefined>
   /** id 冲突处置（PRD §11.6） */
@@ -103,6 +115,10 @@ export interface GalaLayerOptions {
   officialsDir?: string | undefined
   bundles: GalaBundleAccess
   native: GalaNative
+  /** Workspace-specific appearance document; defaults to the legacy shared file. */
+  appearanceStorePath?: string | undefined
+  /** Optional Desktop Profile coordinator. */
+  workspaces?: GalaWorkspaceHost | undefined
 }
 
 /** 面板用的卡片：GalleryCard + 已解析的可显示形象 */
@@ -121,6 +137,8 @@ export interface PickerGirl {
   skinId: string
   characterId: string
   name: string
+  /** 产品默认 IP（目前只有全体集合）。 */
+  isDefault: boolean
   /** 装备台词（lines.onEquip；无则空串） */
   quote: string
   rarity: string
@@ -129,6 +147,8 @@ export interface PickerGirl {
   /** 立绘地址（asset 路由或 SVG data URL） */
   art: string
   active: boolean
+  /** 人设原型（无人设为空串） */
+  archetype: string
 }
 
 /** 选肤弹层里的一套经典配色 */
@@ -164,6 +184,15 @@ export interface PickerState {
   activeSkinId: string | null
   logo: PickerLogo | null
   persona: PickerPersona | null
+  workspaceMode: 'shared' | 'isolated'
+  activeWorkspace: { personaId: string; name: string; profileName: string } | null
+  activeAppearance: string | null
+  restartRequired: boolean
+  plugins: readonly PersonaPluginDescriptor[]
+  /** 角色人设对话开关 */
+  personaEnabled: boolean
+  /** 当前外观对应的人设摘要（原装 / 经典配色 / 全员为 null） */
+  activePersona: GalaPersonaProfile | null
 }
 
 /** 装配完成的 Gala 层 */
@@ -174,6 +203,8 @@ export interface GalaLayer {
   skin: GalaSkinService
   compose: GalaComposeService
   market: GalaMarketService
+  /** 角色人设（提示词段落 + 开关） */
+  persona: GalaPersonaService
   events: GalaEventHub
   /** 市场目录（PRD §13.2 gala/market） */
   marketDir: string
@@ -219,13 +250,14 @@ function messageOf(cause: unknown): string {
 
 /** 按 PRD §4.1 的注入顺序装配整个 Gala 层 */
 export function createGalaLayer(options: GalaLayerOptions): GalaLayer {
-  const { userDataDir, profileDir, packages, officialsDir, bundles, native } = options
+  const { userDataDir, profileDir, packages, officialsDir, bundles, native, workspaces } = options
   const dataDir = join(userDataDir, GALA_DATA_DIRNAME)
   const marketDir = join(dataDir, 'market')
   const events = createGalaEventHub()
 
   const registry = createGalaRegistry()
   // 官方全家桶先播种；layer 包的 gala.json（同 id）可覆盖
+  registry.register(STARS_GALA.character)
   for (const entry of OFFICIAL_GALAS) registry.register(entry.character)
   for (const source of packages) registry.register(characterForPackage(source))
 
@@ -247,7 +279,7 @@ export function createGalaLayer(options: GalaLayerOptions): GalaLayer {
   // ── 皮肤 ──────────────────────────────────────────────────────────
   let activeSkinDir: string | undefined
   const skinDirs = new Map<string, string>()
-  const skinStore = createGalaSkinStore(join(dataDir, 'skins.json'))
+  const skinStore = createGalaSkinStore(options.appearanceStorePath ?? join(dataDir, 'skins.json'))
   const skin = createGalaSkinService({
     host: {
       insertCss: css => native.insertCss(css),
@@ -262,6 +294,20 @@ export function createGalaLayer(options: GalaLayerOptions): GalaLayer {
   for (const manifest of BUILTIN_SKINS) skin.register(manifest)
   // 默认全员 + 一人一肤：选中形象 = 换上对应主题
   for (const manifest of CHARACTER_SKINS) skin.register(manifest)
+  const characterBySkin = new Map(CHARACTER_BY_SKIN)
+
+  const registerCharacterSkins = (): void => {
+    const registered = new Set(skin.list().map(manifest => manifest.id))
+    for (const character of registry.list()) {
+      if (character.type !== 'character') continue
+      const skinId = skinIdForCharacter(character.id)
+      characterBySkin.set(skinId, character.id)
+      if (registered.has(skinId)) continue
+      skin.register(fallbackSkinForCharacter(character))
+      registered.add(skinId)
+    }
+  }
+  registerCharacterSkins()
 
   /** 当前皮肤映射到官方 UI 的双值层（皮肤变更时重算并广播） */
   let dswLayer: Record<string, TokenPair> = {}
@@ -293,8 +339,23 @@ export function createGalaLayer(options: GalaLayerOptions): GalaLayer {
     refreshSkinBridge()
   }
   const revertSkin = async (): Promise<void> => {
-    await applySkin(DEFAULT_GALA_SKIN_ID)
+    await skin.revert()
+    activeSkinDir = undefined
+    refreshSkinBridge()
   }
+
+  // ── 人设：当前皮肤 → 角色 → 提示词段落 ─────────────────────────────
+  const activeCharacter = (): GalaCharacter | undefined => {
+    const skinId = skin.current()?.id
+    if (skinId === undefined) return undefined
+    const characterId = characterBySkin.get(skinId)
+    return characterId === undefined ? undefined : registry.get(characterId)
+  }
+  const personaService = createGalaPersonaService({
+    store: createGalaPersonaStore(join(dataDir, 'persona.json')),
+    current: activeCharacter,
+    onChange: () => { events.publish('persona-changed') },
+  })
 
   // ── 图鉴与形象 ────────────────────────────────────────────────────
   const assetRoot = (packageId: string): string | undefined => {
@@ -354,19 +415,20 @@ export function createGalaLayer(options: GalaLayerOptions): GalaLayer {
   /** 选肤弹层状态：默认全员 + 10 位少女 + 3 套经典配色 + 当前 logo */
   const pickerState = (): PickerState => {
     const activeSkinId = skin.current()?.id ?? null
-    const girls = SELECTABLE_GALAS.map(entry => {
-      const character = registry.get(entry.character.id) ?? entry.character
+    const girls = registry.list().filter(character => character.type === 'character').map(character => {
       const skinId = skinIdForCharacter(character.id)
       return {
         skinId,
         characterId: character.id,
         name: character.name,
+        isDefault: character.id === STARS_GALA.character.id,
         quote: character.lines?.onEquip ?? '',
         rarity: character.rarity,
         rarityLabel: RARITY_LABELS[character.rarity],
         family: character.family,
         art: artFor(character, character.assets?.avatar ?? ''),
         active: activeSkinId === skinId,
+        archetype: personaProfileFor(character)?.archetype ?? '',
       }
     })
     const classics = BUILTIN_SKINS.map(manifest => ({
@@ -376,7 +438,7 @@ export function createGalaLayer(options: GalaLayerOptions): GalaLayer {
       swatch: manifest.tokens['--gala-color-primary'] ?? '#888888',
       active: activeSkinId === manifest.id,
     }))
-    const characterId = activeSkinId === null ? undefined : CHARACTER_BY_SKIN.get(activeSkinId)
+    const characterId = activeSkinId === null ? undefined : characterBySkin.get(activeSkinId)
     const logoCharacter = characterId === undefined
       ? undefined
       : registry.get(characterId) ?? OFFICIALS_BY_ID.get(characterId)
@@ -386,16 +448,44 @@ export function createGalaLayer(options: GalaLayerOptions): GalaLayer {
     const official = characterId === undefined
       ? undefined
       : SELECTABLE_GALAS.find(entry => entry.character.id === characterId)
-    const persona = official === undefined
-      ? null
-      : {
+    const customCharacter = characterId === undefined ? undefined : registry.get(characterId)
+    const persona = official !== undefined
+      ? {
           characterId: official.character.id,
           name: official.character.name,
           headline: official.presentation.headline,
           tagline: official.presentation.tagline,
           backdrop: optionalAssetFor(official.character.id, official.presentation.backdrop),
         }
-    return { girls, classics, activeSkinId, logo, persona }
+      : customCharacter?.type === 'character'
+        ? {
+            characterId: customCharacter.id,
+            name: customCharacter.name,
+            headline: `与${customCharacter.name}同行`,
+            tagline: customCharacter.description,
+            backdrop: optionalAssetFor(customCharacter.id, customCharacter.assets.avatar),
+          }
+        : null
+    const workspace = workspaces?.summary() ?? {
+      mode: 'shared' as const,
+      activeWorkspace: null,
+      restartRequired: false,
+      plugins: [],
+    }
+    return {
+      girls,
+      classics,
+      activeSkinId,
+      logo,
+      persona,
+      workspaceMode: workspace.mode,
+      activeWorkspace: workspace.activeWorkspace,
+      activeAppearance: activeSkinId,
+      restartRequired: workspace.restartRequired,
+      plugins: workspace.plugins,
+      personaEnabled: personaService.isEnabled(),
+      activePersona: personaService.profile(),
+    }
   }
 
   const compose = createGalaComposeService({
@@ -416,6 +506,7 @@ export function createGalaLayer(options: GalaLayerOptions): GalaLayer {
     skin: { ...skin, apply: applySkin, revert: revertSkin },
     compose,
     market,
+    persona: personaService,
     events,
     marketDir,
     panelCards,
@@ -435,6 +526,7 @@ export function createGalaLayer(options: GalaLayerOptions): GalaLayer {
           return false
         }
         registerMarketSkins()
+        registerCharacterSkins()
         events.publish('collection-changed')
         native.notify('嘎啦包已导入', `${result.id} 已加入图鉴。`)
         return true
@@ -448,9 +540,9 @@ export function createGalaLayer(options: GalaLayerOptions): GalaLayer {
       releaseShortcut = gallery.registerGalleryShortcut()
       const stored = skinStore.getActive()
       try {
-        activeSkinDir = stored === undefined ? undefined : skinDirs.get(stored)
+        activeSkinDir = typeof stored === 'string' ? skinDirs.get(stored) : undefined
         await skin.restore()
-        if (skin.current() === undefined) await applySkin(DEFAULT_GALA_SKIN_ID)
+        if (stored === undefined) await applySkin(DEFAULT_GALA_SKIN_ID)
         else refreshSkinBridge()
       } catch (cause) {
         native.notify('皮肤恢复失败', messageOf(cause))

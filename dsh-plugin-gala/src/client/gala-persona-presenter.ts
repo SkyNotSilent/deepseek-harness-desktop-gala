@@ -12,8 +12,66 @@ export const DEFAULT_WELCOME_HEADLINE = '探索未至之境'
 export const DEFAULT_PREVIEW_LABEL = '预览版'
 export const WELCOME_HEADLINE_FINGERPRINTS = [DEFAULT_WELCOME_HEADLINE, 'Into the Unknown'] as const
 export const PREVIEW_LABEL_FINGERPRINTS = [DEFAULT_PREVIEW_LABEL, 'Preview'] as const
+export const DEFAULT_COMPOSER_PLACEHOLDERS = [
+  '给智能体发消息',
+  'Message the agent',
+  '描述你想要构建的内容',
+  'Describe what you want to build',
+] as const
 export const PERSONA_TAGLINE_CLASS = 'gala-persona-tagline'
 export const PERSONA_BACKDROP_CLASS = 'gala-persona-backdrop'
+/** 挂到舞台元素上的作用域 class：只有它存在时，可读性样式才生效。 */
+export const PERSONA_STAGE_CLASS = 'gala-backdrop-stage'
+
+const PERSONA_STYLE_KEY = 'dsh-plugin-gala/persona-backdrop'
+
+/**
+ * 立绘蒙版：色标全部基于 `--dsw-alias-bg-base`（gala 皮肤把 `--gala-color-bg`
+ * 映射到它，theme 服务按明暗模式落地），因此自动跟随角色主题色与深浅色模式。
+ * 右端保留 38% 不透明度作为可读性下限——把立绘拉进主题明度域，局部对比再由
+ * 消息毛玻璃卡兜底。
+ */
+export function backdropBackgroundImage(backdropUrl: string): string {
+  return 'linear-gradient(90deg, '
+    + 'color-mix(in srgb, var(--dsw-alias-bg-base) 94%, transparent) 0%, '
+    + 'color-mix(in srgb, var(--dsw-alias-bg-base) 72%, transparent) 38%, '
+    + 'color-mix(in srgb, var(--dsw-alias-bg-base) 50%, transparent) 64%, '
+    + 'color-mix(in srgb, var(--dsw-alias-bg-base) 38%, transparent) 100%), '
+    + `url("${backdropUrl.replaceAll('"', '%22')}")`
+}
+
+/**
+ * 立绘背景下的消息可读性样式。选择器只用自有 stage class 加上游注册常量属性
+ * `data-chat-flow-kind`（无构建哈希，可长期依赖）；正向枚举非 user 项，user
+ * 气泡自带实色底保持原生。卡底不透明度 78% 是唯一调优旋钮：浅色立绘高光区
+ * 若对比不足，优先升到 82–85%，不要动 gala-skin-map 的全局文字对比度目标。
+ */
+export const PERSONA_READABILITY_CSS = `
+.${PERSONA_STAGE_CLASS} [data-chat-flow-kind="assistant-step"],
+.${PERSONA_STAGE_CLASS} [data-chat-flow-kind="tool-call"],
+.${PERSONA_STAGE_CLASS} [data-chat-flow-kind="context"],
+.${PERSONA_STAGE_CLASS} [data-chat-flow-kind="command"],
+.${PERSONA_STAGE_CLASS} [data-chat-flow-kind="steering"],
+.${PERSONA_STAGE_CLASS} [data-chat-flow-kind="compaction"],
+.${PERSONA_STAGE_CLASS} [data-chat-flow-kind="turn-error"] {
+  background: color-mix(in srgb, var(--dsw-alias-bg-base) 78%, transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 8px 14px;
+  margin-inline: -14px;
+}
+`
+
+/** 幂等注入可读性样式表；规则被 stage class 完全钳制，常驻无副作用。 */
+export function ensurePersonaStyles(doc: Document): void {
+  if (doc.head.querySelector(`style[data-plugin-css="${PERSONA_STYLE_KEY}"]`) !== null) return
+  const style = doc.createElement('style')
+  style.dataset.plugin = 'dsh-plugin-gala'
+  style.dataset.pluginCss = PERSONA_STYLE_KEY
+  style.textContent = PERSONA_READABILITY_CSS
+  doc.head.appendChild(style)
+}
 
 export interface GalaPersonaInfo {
   characterId: string
@@ -43,6 +101,26 @@ export function parsePickerPersona(payload: unknown): GalaPersonaInfo | null {
   return { characterId, name, headline, tagline, backdrop: backdrop as string | null }
 }
 
+/**
+ * 个性化人物开启时，输入框邀请语跟随当前角色；未开启、群星/经典配色或原装都留空。
+ * 这里只读取已激活的 persona，不把单纯的外观选择误当成模型人格。
+ */
+export function parsePickerComposerPlaceholder(payload: unknown): string {
+  if (typeof payload !== 'object' || payload === null) return ''
+  const picker = (payload as { picker?: unknown }).picker
+  if (typeof picker !== 'object' || picker === null) return ''
+  const state = picker as { personaEnabled?: unknown, activePersona?: unknown }
+  if (state.personaEnabled !== true || typeof state.activePersona !== 'object' || state.activePersona === null) return ''
+  const name = (state.activePersona as { name?: unknown }).name
+  if (typeof name !== 'string' || name.trim() === '') return ''
+  return `想和${name.trim()}说点什么？`
+}
+
+/** 只接管上游默认邀请语；计划、离线、排队等状态提示必须继续由上游显示。 */
+export function isDefaultComposerPlaceholder(value: string): boolean {
+  return DEFAULT_COMPOSER_PLACEHOLDERS.includes(value as typeof DEFAULT_COMPOSER_PLACEHOLDERS[number])
+}
+
 interface TextReplacement {
   element: HTMLElement
   original: string
@@ -57,6 +135,7 @@ interface StageStyleSnapshot {
 
 export interface GalaPersonaPresenter {
   apply(persona: GalaPersonaInfo | null): void
+  setComposerPlaceholder(value: string): void
   dispose(): void
 }
 
@@ -118,12 +197,48 @@ function conversationStageFor(doc: Document, anchor?: HTMLElement): HTMLElement 
 /** 创建一个可反复 apply / 完整 dispose 的 DOM 呈现器。 */
 export function createGalaPersonaPresenter(doc: Document): GalaPersonaPresenter {
   let current: GalaPersonaInfo | null = null
+  let composerPlaceholder = ''
   let observer: MutationObserver | undefined
   let scheduled = false
   const textReplacements: TextReplacement[] = []
   const taglines = new Set<HTMLElement>()
   let backdrop: HTMLElement | undefined
   let stageSnapshot: StageStyleSnapshot | undefined
+
+  const restoreComposerPlaceholders = (): void => {
+    for (const textarea of doc.querySelectorAll<HTMLTextAreaElement>('[data-composer-card] textarea')) {
+      const applied = textarea.dataset.galaComposerPlaceholder
+      const original = textarea.dataset.galaComposerPlaceholderOriginal
+      if (applied !== undefined && original !== undefined && (textarea.getAttribute('placeholder') ?? '') === applied) {
+        textarea.setAttribute('placeholder', original)
+      }
+      delete textarea.dataset.galaComposerPlaceholder
+      delete textarea.dataset.galaComposerPlaceholderOriginal
+    }
+  }
+
+  const syncComposerPlaceholders = (): void => {
+    for (const textarea of doc.querySelectorAll<HTMLTextAreaElement>('[data-composer-card] textarea')) {
+      const currentPlaceholder = textarea.getAttribute('placeholder') ?? ''
+      const previousApplied = textarea.dataset.galaComposerPlaceholder
+      if (previousApplied !== undefined) {
+        if (currentPlaceholder === previousApplied) {
+          if (currentPlaceholder !== composerPlaceholder) {
+            textarea.setAttribute('placeholder', composerPlaceholder)
+            textarea.dataset.galaComposerPlaceholder = composerPlaceholder
+          }
+          continue
+        }
+        // React 已切换到计划、离线或排队等特殊状态：立即交还控制权。
+        delete textarea.dataset.galaComposerPlaceholder
+        delete textarea.dataset.galaComposerPlaceholderOriginal
+      }
+      if (!isDefaultComposerPlaceholder(currentPlaceholder)) continue
+      textarea.dataset.galaComposerPlaceholderOriginal = currentPlaceholder
+      textarea.setAttribute('placeholder', composerPlaceholder)
+      textarea.dataset.galaComposerPlaceholder = composerPlaceholder
+    }
+  }
 
   const restore = (): void => {
     for (const replacement of textReplacements) {
@@ -139,6 +254,7 @@ export function createGalaPersonaPresenter(doc: Document): GalaPersonaPresenter 
       element.style.position = position
       element.style.isolation = isolation
       element.style.zIndex = zIndex
+      element.classList.remove(PERSONA_STAGE_CLASS)
       stageSnapshot = undefined
     }
   }
@@ -171,18 +287,21 @@ export function createGalaPersonaPresenter(doc: Document): GalaPersonaPresenter 
     layer.style.inset = '0'
     layer.style.zIndex = '-1'
     layer.style.pointerEvents = 'none'
-    layer.style.backgroundColor = '#eee8ff'
-    layer.style.backgroundImage = `linear-gradient(90deg, rgba(250,248,255,.86) 0%, rgba(247,241,255,.64) 38%, rgba(229,216,255,.34) 64%, rgba(71,45,127,.12) 100%), url("${persona.backdrop.replaceAll('"', '%22')}")`
+    layer.style.backgroundColor = 'var(--dsw-alias-bg-base)'
+    layer.style.backgroundImage = backdropBackgroundImage(persona.backdrop)
     layer.style.backgroundPosition = 'center, right center'
     layer.style.backgroundRepeat = 'no-repeat'
     layer.style.backgroundSize = '100% 100%, cover'
     layer.style.filter = 'saturate(0.86) contrast(0.94)'
     stage.prepend(layer)
     backdrop = layer
+    ensurePersonaStyles(doc)
+    stage.classList.add(PERSONA_STAGE_CLASS)
   }
 
   const scan = (): void => {
     scheduled = false
+    syncComposerPlaceholders()
     if (current === null) return
     const headline = findExactText(doc, WELCOME_HEADLINE_FINGERPRINTS)
     attachBackdrop(current, headline)
@@ -220,6 +339,7 @@ export function createGalaPersonaPresenter(doc: Document): GalaPersonaPresenter 
         element.style.position = position
         element.style.isolation = isolation
         element.style.zIndex = zIndex
+        element.classList.remove(PERSONA_STAGE_CLASS)
       }
       stageSnapshot = undefined
       // 会话切换会重建右侧主区；在同一次扫描里直接挂回新舞台。
@@ -236,7 +356,12 @@ export function createGalaPersonaPresenter(doc: Document): GalaPersonaPresenter 
   const ensureObserver = (): void => {
     if (observer !== undefined || typeof MutationObserver === 'undefined') return
     observer = new MutationObserver(scheduleScan)
-    observer.observe(doc.body, { childList: true, subtree: true })
+    observer.observe(doc.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['placeholder'],
+    })
   }
 
   return {
@@ -247,11 +372,17 @@ export function createGalaPersonaPresenter(doc: Document): GalaPersonaPresenter 
       scan()
       ensureObserver()
     },
+    setComposerPlaceholder: value => {
+      composerPlaceholder = value
+      scan()
+      ensureObserver()
+    },
     dispose: () => {
       observer?.disconnect()
       observer = undefined
       current = null
       restore()
+      restoreComposerPlaceholders()
     },
   }
 }
@@ -275,8 +406,13 @@ export function startGalaPersonaPresenter(io: PersonaPresenterIo = {}): () => vo
     try {
       const response = await fetchImpl(GALA_PICKER_PATH, { cache: 'no-store' })
       if (!response.ok) return
-      const persona = parsePickerPersona(await response.json())
-      if (!stopped) presenter.apply(persona)
+      const payload: unknown = await response.json()
+      const persona = parsePickerPersona(payload)
+      const placeholder = parsePickerComposerPlaceholder(payload)
+      if (!stopped) {
+        presenter.apply(persona)
+        presenter.setComposerPlaceholder(placeholder)
+      }
     } catch {
       // Gala 不可用时不影响主界面。
     }

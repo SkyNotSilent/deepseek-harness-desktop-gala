@@ -279,6 +279,34 @@ describe('Gala HTTP · RPC', () => {
     expect(JSON.parse(res.body())).toEqual({ ok: false, error: '皮肤注入失败，已回滚' })
   })
 
+  it('persona-toggle 需要布尔 enabled；缺实现 404；成功回显 enabled', async () => {
+    const missing = makeHandler().handler
+    const notImplemented = fakeResponse()
+    await missing(fakeRequest('POST', path('/rpc/persona-toggle'), JSON_HEADERS, '{"enabled":false}'), notImplemented)
+    expect(notImplemented.statusCode).toBe(404)
+
+    const toggles: boolean[] = []
+    const withPersona = makeHandler({
+      rpc: {
+        open: () => {},
+        toggleFavorite: () => false,
+        applySkin: async () => {},
+        revertSkin: async () => {},
+        importPackage: async () => false,
+        compose: async () => false,
+        setPersonaEnabled: async enabled => { toggles.push(enabled) },
+      },
+    }).handler
+    const bad = fakeResponse()
+    await withPersona(fakeRequest('POST', path('/rpc/persona-toggle'), JSON_HEADERS, '{"enabled":"no"}'), bad)
+    expect(bad.statusCode).toBe(400)
+    const ok = fakeResponse()
+    await withPersona(fakeRequest('POST', path('/rpc/persona-toggle'), JSON_HEADERS, '{"enabled":false}'), ok)
+    expect(ok.statusCode).toBe(200)
+    expect(JSON.parse(ok.body())).toEqual({ ok: true, enabled: false })
+    expect(toggles).toEqual([false])
+  })
+
   it('favorite 缺 id 400', async () => {
     const { handler } = makeHandler()
     const res = fakeResponse()

@@ -8,7 +8,6 @@
  */
 
 import type { GalaLayer } from './gala-host.ts'
-import { DEFAULT_GALA_SKIN_ID } from './gala-character-skins.ts'
 import { PANEL_SCRIPT } from './gala-panel-script.ts'
 import { PANEL_STYLE, RARITY_COLORS } from './gala-panel-style.ts'
 import type { GalaRarity } from './protocols/gala-json.ts'
@@ -35,7 +34,6 @@ export function escapeHtml(value: string): string {
 /** 面板视图模型（页面渲染与 JSON 载荷共用） */
 export interface PanelViewModel {
   view: string
-  defaultSkinId: string
   cards: readonly {
     id: string
     name: string
@@ -45,8 +43,12 @@ export interface PanelViewModel {
     rarityColor: string
     art: string
     favorite: boolean
+    isDefault: boolean
     description: string
     quote: string
+    /** 人设原型 / 故事（无人设为空串） */
+    archetype: string
+    story: string
     recipes: readonly { id: string; name: string }[]
   }[]
   skins: readonly {
@@ -102,7 +104,6 @@ export function panelViewModel(layer: GalaLayer, view: string): PanelViewModel {
   }
   return {
     view,
-    defaultSkinId: DEFAULT_GALA_SKIN_ID,
     cards: layer.panelCards().map(card => {
       let detail: ReturnType<GalaLayer['panelDetail']>
       try {
@@ -121,8 +122,11 @@ export function panelViewModel(layer: GalaLayer, view: string): PanelViewModel {
         rarityColor: RARITY_COLORS[card.rarity] ?? '#a8b0bc',
         art: card.art,
         favorite: card.favorite,
+        isDefault: card.isDefault,
         description: detail?.description ?? '',
         quote: character?.lines?.onEquip ?? '',
+        archetype: character?.persona?.archetype ?? '',
+        story: character?.persona?.story ?? '',
         recipes: detail?.recipes.map(recipe => ({ id: recipe.id, name: recipe.name })) ?? [],
       }
     }),
@@ -147,6 +151,7 @@ function galaCardMarkup(card: PanelViewModel['cards'][number]): string {
   return [
     `<article class="gala-card" data-gala-id="${escapeHtml(card.id)}" data-rarity="${card.rarity}" style="--rarity:${card.rarityColor}">`,
     card.favorite ? '<span class="star">★</span>' : '',
+    card.isDefault ? '<span class="default-chip">默认</span>' : '',
     `<img alt="" src="${escapeHtml(card.art)}" draggable="false" />`,
     `<h3 class="name">${escapeHtml(card.name)}</h3>`,
     `<span class="rarity">${escapeHtml(card.rarityLabel)}</span>`,
@@ -270,7 +275,7 @@ export function renderPanelPage(model: PanelViewModel, nonce: string): string {
     '<div class="skin-section-heading classic-heading"><span>CLASSIC PALETTES</span><h2>经典配色</h2><p>只调整界面颜色，不代表角色。</p></div>',
     `<div id="classic-skins">${classicSkins.map(classicSkinMarkup).join('')}</div>`,
     '</div>',
-    '<p style="margin-top:18px"><button class="btn" id="skin-revert">恢复全员默认</button></p>',
+    '<p style="margin-top:18px"><button class="btn" id="skin-revert">恢复原装</button></p>',
     '</section>',
     '<section id="view-compose" hidden>',
     '<div class="atelier-hero">',
@@ -291,6 +296,7 @@ export function renderPanelPage(model: PanelViewModel, nonce: string): string {
     '<h2 id="detail-name"></h2>',
     '<div class="meta"><span class="chip" id="detail-family"></span><span class="chip" id="detail-rarity" style="--chip:var(--blush)"></span></div>',
     '<p class="desc" id="detail-desc"></p>',
+    '<p class="persona" id="detail-persona" hidden><span class="chip" id="detail-archetype"></span><span id="detail-story"></span></p>',
     '<p class="quote" id="detail-quote"></p>',
     '<p class="recipes" id="detail-recipes"></p>',
     '<div class="actions">',

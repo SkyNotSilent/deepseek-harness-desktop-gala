@@ -29,7 +29,7 @@ describe('gala almanac list（G4）', () => {
     expect(alpha?.avatar).toMatch(/^assets\//)
   })
 
-  it('sorts cards by id and auto-records first appearance into collection', () => {
+  it('preserves registry product order and auto-records first appearance into collection', () => {
     const dir = mkdtempSync(join(tmpdir(), 'g04-'))
     const registry = createGalaRegistry()
     registry.register(defaultGalaForPackage('zeta'))
@@ -44,7 +44,7 @@ describe('gala almanac list（G4）', () => {
 
     const cards = gallery.list()
 
-    expect(cards.map(card => card.id)).toEqual(['gala:alpha', 'gala:zeta'])
+    expect(cards.map(card => card.id)).toEqual(['gala:zeta', 'gala:alpha'])
     expect(collection.list()).toHaveLength(2)
     expect(collection.get('gala:alpha')?.firstSeenAt).toBeTruthy()
   })

@@ -14,6 +14,36 @@ export type GalaType = 'character' | 'skin' | 'bundle'
 /** 稀有度枚举（PRD §8.2） */
 export type GalaRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary'
 
+/**
+ * 角色人设（对话语气包装）。缺省表示该形象没有人设：全员集合与原装都不带人设；
+ * 自定义角色缺省时由 description 生成轻量人设。
+ */
+export interface GalaPersona {
+  /** 一句话原型，如「傲娇天才少女」 */
+  archetype: string
+  /** 背景故事（图鉴 / 下载站展示，也进入提示词） */
+  story: string
+  /** 说话风格规则（逐条给模型） */
+  voice: string[]
+  /** 口头禅 / 代表台词 */
+  catchphrases: string[]
+  /** 第一人称自称 */
+  selfReference?: string
+  /** 对用户的称呼 */
+  addressUser?: string
+}
+
+/** 人设字段长度上限（schema 与提示词共用） */
+export const PERSONA_LIMITS = {
+  archetype: 32,
+  story: 400,
+  voiceItems: 8,
+  voiceItem: 120,
+  catchphraseItems: 6,
+  catchphrase: 64,
+  reference: 16,
+} as const
+
 /** 嘎啦角色元数据（PRD §8.2 gala.json） */
 export interface GalaCharacter {
   id: string
@@ -40,6 +70,7 @@ export interface GalaCharacter {
     onFuse?: string
   }
   tags?: string[]
+  persona?: GalaPersona
   author: string
   version: string
 }
@@ -83,6 +114,28 @@ export const GALA_JSON_SCHEMA: AnySchemaObject = {
       },
     },
     tags: { type: 'array', items: { type: 'string' } },
+    persona: {
+      type: 'object',
+      required: ['archetype', 'story', 'voice', 'catchphrases'],
+      properties: {
+        archetype: { type: 'string', minLength: 1, maxLength: PERSONA_LIMITS.archetype },
+        story: { type: 'string', minLength: 1, maxLength: PERSONA_LIMITS.story },
+        voice: {
+          type: 'array',
+          minItems: 1,
+          maxItems: PERSONA_LIMITS.voiceItems,
+          items: { type: 'string', minLength: 1, maxLength: PERSONA_LIMITS.voiceItem },
+        },
+        catchphrases: {
+          type: 'array',
+          minItems: 1,
+          maxItems: PERSONA_LIMITS.catchphraseItems,
+          items: { type: 'string', minLength: 1, maxLength: PERSONA_LIMITS.catchphrase },
+        },
+        selfReference: { type: 'string', minLength: 1, maxLength: PERSONA_LIMITS.reference },
+        addressUser: { type: 'string', minLength: 1, maxLength: PERSONA_LIMITS.reference },
+      },
+    },
     author: { type: 'string' },
     version: { type: 'string', pattern: '^\\d+\\.\\d+\\.\\d+$' },
   },

@@ -8,6 +8,7 @@ import {
   createDisabledGalaService,
   type GalaHostAdapter,
   type GalaNative,
+  type GalaWorkspaceHost,
 } from '../src/index.ts'
 
 function fixture(): { adapter: GalaHostAdapter; native: GalaNative; detach: ReturnType<typeof vi.fn> } {
@@ -71,5 +72,49 @@ describe('Gala Cordis service contract', () => {
     expect(service.panel.picker().girls).toEqual([])
     await expect(service.rpc.applySkin('gala:missing')).rejects.toThrow('broken assets')
     expect(() => service.dispose()).not.toThrow()
+  })
+
+  it('isolated mode prepares a persona Profile before switching appearance', async () => {
+    const { adapter: baseAdapter, native } = fixture()
+    const switchWorkspace = vi.fn(async () => ({ restarted: true, profileName: 'gala-dsh-llm' }))
+    const disable = vi.fn(async () => ({ restarted: true, profileName: 'desktop' }))
+    native.confirmWorkspaceSwitch = vi.fn(async () => true)
+    const workspaces: GalaWorkspaceHost = {
+      appearanceStorePath: join(baseAdapter.userDataDir, 'appearance.json'),
+      summary: () => ({
+        mode: 'isolated',
+        sharedProfile: 'desktop',
+        activeWorkspace: null,
+        restartRequired: false,
+        plugins: [],
+      }),
+      enable: async () => ({ mode: 'isolated', sharedProfile: 'desktop', activeWorkspace: null, restartRequired: false, plugins: [] }),
+      disable,
+      switchWorkspace,
+      stagePlugins: async () => ({ mode: 'isolated', sharedProfile: 'desktop', activeWorkspace: null, restartRequired: false, plugins: [] }),
+      applyPlugins: async () => {},
+    }
+    const adapter: GalaHostAdapter = { ...baseAdapter, workspaces }
+    const layer = createGalaLayer({
+      userDataDir: adapter.userDataDir,
+      profileDir: adapter.profileDir,
+      packages: adapter.packages,
+      bundles: adapter.bundles,
+      native,
+      workspaces,
+      appearanceStorePath: workspaces.appearanceStorePath,
+    })
+    const service = createGalaService(adapter, layer, 'http://127.0.0.1:4321')
+
+    await service.rpc.applySkin('gala:skin-dsh-llm')
+    expect(native.confirmWorkspaceSwitch).toHaveBeenCalledWith('灵灵')
+    expect(switchWorkspace).toHaveBeenCalledWith(
+      { personaId: 'gala:dsh-llm', name: '灵灵' },
+      'gala:skin-dsh-llm',
+    )
+    expect(layer.skin.current()).toBeUndefined()
+
+    await service.rpc.restoreOriginal?.('exit-isolated')
+    expect(disable).toHaveBeenCalledWith(null)
   })
 })

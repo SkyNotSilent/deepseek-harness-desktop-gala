@@ -13,6 +13,7 @@
 import { SELECTABLE_GALAS } from './gala-officials.ts'
 import { galaSlug } from './protocols/market-manifest.ts'
 import type { SkinManifest } from './protocols/skin-protocol.ts'
+import type { GalaCharacter } from './protocols/gala-json.ts'
 
 /** 一套角色主题的 light 六色（dark 由映射层推导） */
 interface CharacterTheme {
@@ -28,8 +29,8 @@ interface CharacterTheme {
 
 /** 角色 id → 手工调校的主题色（键齐 OFFICIAL_GALAS，测试兜底校验） */
 const CHARACTER_THEMES: Record<string, CharacterTheme> = {
-  'gala:ensemble': {
-    themeName: 'Gala全员·共赴星海',
+  'gala:stars': {
+    themeName: 'GALA·群星·共赴星海',
     primary: '#6758d8',
     primaryHover: '#5849c5',
     bg: '#f7f6ff',
@@ -134,8 +135,8 @@ export function skinIdForCharacter(characterId: string): string {
   return `gala:skin-${galaSlug(characterId)}`
 }
 
-/** 首次进入及“恢复默认”使用的全员皮肤。 */
-export const DEFAULT_GALA_SKIN_ID = skinIdForCharacter('gala:ensemble')
+/** 首次进入使用的全员皮肤；“恢复原装”不会应用它。 */
+export const DEFAULT_GALA_SKIN_ID = skinIdForCharacter('gala:stars')
 
 /** 官方角色皮肤目录（默认全员在首位，其后为十位单角色） */
 export const CHARACTER_SKINS: readonly SkinManifest[] = SELECTABLE_GALAS.map(entry => {
@@ -170,3 +171,37 @@ export const CHARACTER_SKINS: readonly SkinManifest[] = SELECTABLE_GALAS.map(ent
 export const CHARACTER_BY_SKIN: ReadonlyMap<string, string> = new Map(
   SELECTABLE_GALAS.map(entry => [skinIdForCharacter(entry.character.id), entry.character.id]),
 )
+
+const FALLBACK_THEMES = [
+  ['#6758d8', '#5849c5', '#f7f6ff', '#eeebff', '#e5e0ff', '#dcd5fb'],
+  ['#1f9e8e', '#1a8a7c', '#f2fbfa', '#e2f5f3', '#d3efec', '#c4e9e5'],
+  ['#d1548a', '#bd4579', '#fff6f9', '#ffebf2', '#ffe0eb', '#fdd4e3'],
+  ['#c9821f', '#b57318', '#fffaf0', '#fdf3e0', '#fbecd2', '#f8e4c0'],
+] as const
+
+/** Deterministic local theme for imported character IPs that carry no skin manifest. */
+export function fallbackSkinForCharacter(character: GalaCharacter): SkinManifest {
+  const hash = [...character.id].reduce((value, letter) => (value * 31 + letter.codePointAt(0)!) >>> 0, 7)
+  const colors = FALLBACK_THEMES[hash % FALLBACK_THEMES.length]!
+  return {
+    id: skinIdForCharacter(character.id),
+    name: `${character.name}·专属空间`,
+    type: 'skin',
+    family: character.family,
+    rarity: character.rarity,
+    ...(character.tier === undefined ? {} : { tier: character.tier }),
+    description: character.description,
+    target: '@deepseek-ai/dsh-web-app',
+    scope: 'global',
+    tokens: {
+      '--gala-color-primary': colors[0],
+      '--gala-color-primary-hover': colors[1],
+      '--gala-color-bg': colors[2],
+      '--gala-color-surface': colors[3],
+      '--gala-color-bubble': colors[4],
+      '--gala-color-hover': colors[5],
+    },
+    author: character.author,
+    version: character.version,
+  }
+}

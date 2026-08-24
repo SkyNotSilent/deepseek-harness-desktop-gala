@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
+  DEFAULT_COMPOSER_PLACEHOLDERS,
+  isDefaultComposerPlaceholder,
+  parsePickerComposerPlaceholder,
   parsePickerPersona,
   PREVIEW_LABEL_FINGERPRINTS,
   startGalaPersonaPresenter,
@@ -34,18 +37,49 @@ describe('picker persona 解析', () => {
   })
 })
 
+describe('输入框邀请语', () => {
+  it('只在个性化人物已开启且存在当前角色时显示角色邀请语', () => {
+    expect(parsePickerComposerPlaceholder({
+      picker: { personaEnabled: true, activePersona: { name: ' 灵灵 ' } },
+    })).toBe('想和灵灵说点什么？')
+    expect(parsePickerComposerPlaceholder({
+      picker: { personaEnabled: false, activePersona: { name: '灵灵' } },
+    })).toBe('')
+    expect(parsePickerComposerPlaceholder({ picker: { personaEnabled: true, activePersona: null } })).toBe('')
+    expect(parsePickerComposerPlaceholder(undefined)).toBe('')
+  })
+
+  it('只识别中英文上游默认文案，不覆盖特殊状态提示', () => {
+    expect(DEFAULT_COMPOSER_PLACEHOLDERS).toEqual([
+      '给智能体发消息',
+      'Message the agent',
+      '描述你想要构建的内容',
+      'Describe what you want to build',
+    ])
+    expect(isDefaultComposerPlaceholder('给智能体发消息')).toBe(true)
+    expect(isDefaultComposerPlaceholder('Message the agent')).toBe(true)
+    expect(isDefaultComposerPlaceholder('描述你想要构建的内容')).toBe(true)
+    expect(isDefaultComposerPlaceholder('Describe what you want to build')).toBe(true)
+    expect(isDefaultComposerPlaceholder('当前会话不可用')).toBe(false)
+    expect(isDefaultComposerPlaceholder('选择一个工作区开始')).toBe(false)
+    expect(isDefaultComposerPlaceholder('发送消息以调整排队中的轮次')).toBe(false)
+  })
+})
+
 describe('startGalaPersonaPresenter', () => {
   it('启动同步、皮肤事件刷新、停止时还原', async () => {
     const payloads: unknown[] = [
-      { picker: { persona: LINGLING } },
-      { picker: { persona: null } },
+      { picker: { persona: LINGLING, personaEnabled: true, activePersona: { name: '灵灵' } } },
+      { picker: { persona: null, personaEnabled: false, activePersona: null } },
     ]
     const applied: (GalaPersonaInfo | null)[] = []
+    const placeholders: string[] = []
     let disposed = 0
     let closed = 0
     let listener: ((event: { data: unknown }) => void) | undefined
     const presenter: GalaPersonaPresenter = {
       apply: persona => { applied.push(persona) },
+      setComposerPlaceholder: value => { placeholders.push(value) },
       dispose: () => { disposed += 1 },
     }
     const stop = startGalaPersonaPresenter({
@@ -59,9 +93,11 @@ describe('startGalaPersonaPresenter', () => {
 
     await vi.waitFor(() => { expect(applied).toHaveLength(1) })
     expect(applied[0]).toEqual(LINGLING)
+    expect(placeholders).toEqual(['想和灵灵说点什么？'])
     listener?.({ data: 'skin-changed' })
     await vi.waitFor(() => { expect(applied).toHaveLength(2) })
     expect(applied[1]).toBeNull()
+    expect(placeholders).toEqual(['想和灵灵说点什么？', ''])
 
     stop()
     expect(disposed).toBe(1)

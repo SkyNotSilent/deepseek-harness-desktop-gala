@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { existsSync, mkdtempSync, readFileSync } from 'node:fs'
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createGalaSkinService, createGalaSkinStore } from '../src/gala-skin.ts'
@@ -56,7 +56,8 @@ describe('G11 · 皮肤持久化（重启后上次皮肤仍生效）', () => {
 
     expect(existsSync(file)).toBe(true)
     const saved = JSON.parse(readFileSync(file, 'utf8')) as { version: number; active: string | null }
-    expect(saved.version).toBe(1)
+    expect(saved.version).toBe(2)
+    expect((saved as { initialized?: boolean }).initialized).toBe(true)
     expect(saved.active).toBe('gala:ocean')
   })
 
@@ -113,6 +114,27 @@ describe('G11 · 皮肤持久化（重启后上次皮肤仍生效）', () => {
 
     expect(host.injectCount).toBe(0)
     expect(skin.current()).toBeUndefined()
+  })
+
+  it('明确恢复原装与从未初始化是两个不同状态', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'g11-original-'))
+    const file = join(dir, 'skins.json')
+    const host = createFakeHost(file)
+    const skin = createGalaSkinService({ host })
+
+    expect(host.store.getActive()).toBeUndefined()
+    await skin.revert()
+    expect(host.store.getActive()).toBeNull()
+
+    const restored = createGalaSkinStore(file)
+    expect(restored.getActive()).toBeNull()
+  })
+
+  it('v1 的 null 迁移为用户明确选择原装', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'g11-v1-'))
+    const file = join(dir, 'skins.json')
+    writeFileSync(file, '{"version":1,"active":null}\n', 'utf8')
+    expect(createGalaSkinStore(file).getActive()).toBeNull()
   })
 
   it('restore 时上次皮肤已卸载则跳过', async () => {
