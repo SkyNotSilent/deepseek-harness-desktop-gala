@@ -9,4 +9,13 @@
       <image:title>DeepSeek Harness Desktop Gala — 灵灵角色舞台</image:title>
     </image:image>
   </url>
+  <url>
+    <loc>https://skynotsilent.github.io/deepseek-harness-desktop-gala/en/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://skynotsilent.github.io/deepseek-harness-desktop-gala/assets/characters/stars-hero.webp</image:loc>
+      <image:title>DeepSeek Harness Desktop Gala — GALA Stars</image:title>
+    </image:image>
+  </url>
 </urlset>
