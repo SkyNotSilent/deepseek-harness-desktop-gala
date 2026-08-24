@@ -67,6 +67,9 @@ jobs:
     needs: [windows, macos]
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
@@ -79,16 +82,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
         run: |
-          printf '%s\n' \
-            'Unsigned public Preview.' \
-            '' \
-            'Windows: Microsoft Defender SmartScreen is expected to warn because this Preview is not Authenticode signed.' \
-            'macOS: Gatekeeper blocks the first launch because this Preview is not signed or notarized. Open System Settings → Privacy & Security and click "Open Anyway" (on macOS 14 and earlier, right-click → Open also works).' \
-            '' \
-            'Preview builds use manual GitHub Release upgrades and never download or execute an update automatically.' \
-            > release-notes.md
           gh release create "$TAG" artifacts/* \
             --repo "${{ github.repository }}" \
             --prerelease \
             --title "DeepSeek Harness Desktop Gala ${TAG#v}" \
-            --notes-file release-notes.md
+            --notes-file "docs/releases/${TAG#v}.md"
