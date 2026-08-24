@@ -87,6 +87,7 @@
     --accent: #5b5bd6; --accent-hover: #4a4ac2;
     --bg: #f6f6ff; --surface: #ececff; --bubble: #e2e2fd; --hover: #d8d8fa;
     --ink: #3a3050; --ink-soft: #6f6786; --ink-faint: rgba(58,48,80,.14);
+    --frame: #151515;
     --paper: #ffffff;
     --bounce: cubic-bezier(.34,1.56,.64,1);
     --font: "Noto Sans SC", "Inter", "PingFang SC", "Hiragino Sans GB", system-ui, sans-serif;
@@ -132,21 +133,35 @@
 
   .hero { padding: clamp(8px, 4vh, 40px) clamp(18px, 4vw, 56px) 48px; max-width: 1240px; }
 
-  .wardrobe { display: flex; gap: 10px; overflow-x: auto; padding: 6px 6px 14px; margin: 0 -6px 26px; scrollbar-width: none; }
+  .wardrobe { display: flex; gap: 10px; overflow-x: auto; padding: 16px 6px 16px; margin: 0 -6px 26px; scrollbar-width: none; }
   .wardrobe::-webkit-scrollbar { display: none; }
   .chip {
-    flex: none; width: 64px; height: 64px; padding: 0; border-radius: 18px; border: 2.5px solid var(--ink); background: var(--paper);
-    box-shadow: 0 3px 0 var(--ink); cursor: pointer; overflow: hidden; position: relative;
+    flex: none; width: 64px; height: 64px; padding: 0; border-radius: 18px; border: 2.5px solid var(--frame); background: var(--paper);
+    box-shadow: 0 3px 0 var(--frame); cursor: pointer; overflow: hidden; position: relative;
     transition: transform .18s var(--bounce), box-shadow .18s;
   }
   .chip img { width: 100%; height: 100%; object-fit: cover; }
   .chip::after { content: ""; position: absolute; inset: 4px; border-radius: 13px; border: 2px dashed var(--rarity, #a8b0bc); opacity: .55; pointer-events: none; }
-  .chip:hover { transform: translateY(-3px) rotate(-2deg); box-shadow: 0 6px 0 var(--ink); }
-  .chip[aria-checked="true"] { transform: translateY(-4px) scale(1.06); box-shadow: 0 6px 0 var(--ink), 0 0 0 4px var(--accent); }
-  .chip:active { transform: translateY(1px); box-shadow: 0 2px 0 var(--ink); }
+  .chip:hover { transform: translateY(-3px) rotate(-2deg); box-shadow: 0 6px 0 var(--frame); }
+  .chip[aria-checked="true"] { transform: scale(1.06); box-shadow: 0 0 0 4px var(--selection-frame, var(--accent)), 0 8px 0 var(--frame); }
+  .chip[aria-checked="true"]::after { border-color: var(--selection-frame, var(--accent)); opacity: .85; }
+  .chip:active { transform: translateY(1px); box-shadow: 0 2px 0 var(--frame); }
   .chip[aria-checked="true"]::before {
-    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 5px; z-index: 1; background: var(--accent);
-    transform-origin: left center; transform: scaleX(0); animation: chip-progress var(--auto-ms, 8000ms) linear forwards;
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 5px; z-index: 1; background: var(--selection-frame, var(--accent));
+    transform-origin: left center; transform: scaleX(0); animation: chip-progress var(--auto-ms, 2800ms) linear forwards;
+  }
+  .chip[data-slug="stars"] {
+    border: 3px solid transparent;
+    background:
+      linear-gradient(var(--paper), var(--paper)) padding-box,
+      conic-gradient(from 210deg, #5cc8ff, #7768ff, #d96dff, #ff6f91, #ff9f43, #ffe066, #59d38c, #5cc8ff) border-box;
+    box-shadow: 0 3px 0 rgba(21,21,21,.65);
+  }
+  .chip[data-slug="stars"]::after { border-color: rgba(255,255,255,.9); }
+  .chip[data-slug="stars"]:hover { box-shadow: 0 6px 0 rgba(21,21,21,.7); }
+  .chip[data-slug="stars"][aria-checked="true"] { border-width: 5px; box-shadow: 0 7px 0 rgba(21,21,21,.72); }
+  .chip[data-slug="stars"][aria-checked="true"]::before {
+    background: linear-gradient(90deg, #5cc8ff, #7768ff, #d96dff, #ff6f91, #ff9f43, #ffe066, #59d38c);
   }
   .wardrobe.manual .chip[aria-checked="true"]::before { display: none; }
   .wardrobe.paused .chip[aria-checked="true"]::before { animation-play-state: paused; }
@@ -185,6 +200,14 @@
   .btn-primary:hover { background: var(--accent-hover); }
   .btn small { display: block; font-weight: 500; font-size: 12px; opacity: .85; margin-top: 5px; font-family: var(--num); }
   .btn svg { width: 22px; height: 22px; flex: none; }
+  .btn-platform { flex: 0 1 294px; min-height: 76px; justify-content: flex-start; }
+  .platform-icon {
+    width: 42px; height: 42px; flex: none; display: grid; place-items: center; border: 2px solid var(--ink); border-radius: 12px;
+    background: var(--surface); transition: background .45s ease;
+  }
+  .platform-icon svg { width: 24px; height: 24px; }
+  .platform-copy strong { display: block; font-size: 16px; }
+  .platform-copy small { color: var(--ink-soft); opacity: 1; }
   .btn[aria-disabled="true"] { opacity: .55; pointer-events: none; }
   .btn[hidden], [hidden] { display: none !important; }
   .meta { margin-top: 16px; font-size: 13px; color: var(--ink-soft); display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; font-family: var(--num); }
@@ -316,12 +339,15 @@
     <div class="quote" id="quote"><img id="quote-avatar" src="assets/characters/stars-portrait.webp" alt=""><span id="quote-text">大家都在，今天也一起出发吧！</span></div>
     <span class="character-name"><span id="character-name">当前角色 <b>GALA·群星</b> · GALA·群星·共赴星海</span><span class="arch" id="archetype" hidden></span></span>
 
-    <div class="cta" id="download">
-      <a class="btn btn-primary" id="primary" href="https://github.com/SkyNotSilent/deepseek-harness-desktop-gala/releases" aria-disabled="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
-        <span id="primary-label">正在读取最新版本…</span>
+    <div class="cta" id="download" aria-label="选择电脑系统下载">
+      <a class="btn btn-platform" id="mac-download" href="https://github.com/SkyNotSilent/deepseek-harness-desktop-gala/releases" aria-disabled="true">
+        <span class="platform-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></span>
+        <span class="platform-copy"><strong id="mac-title">下载 macOS 版</strong><small id="mac-detail">Apple Silicon · 正在读取版本…</small></span>
       </a>
-      <a class="btn" id="secondary" href="https://github.com/SkyNotSilent/deepseek-harness-desktop-gala/releases" hidden></a>
+      <a class="btn btn-platform" id="windows-download" href="https://github.com/SkyNotSilent/deepseek-harness-desktop-gala/releases" aria-disabled="true">
+        <span class="platform-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 4.4 10.5 3v8.2H3V4.4Zm8.5-1.6L21 1v10.2h-9.5V2.8ZM3 12.2h7.5V21L3 19.6v-7.4Zm8.5 0H21V23l-9.5-1.8v-9Z"/></svg></span>
+        <span class="platform-copy"><strong id="windows-title">下载 Windows 版</strong><small id="windows-detail">Windows x64 · 正在读取版本…</small></span>
+      </a>
     </div>
     <div class="meta" id="meta"></div>
 
@@ -401,7 +427,7 @@
   const REPO = 'SkyNotSilent/deepseek-harness-desktop-gala';
   const RELEASES = `https://github.com/${REPO}/releases`;
   const DEFAULT = 'stars';
-  const AUTO_MS = 8000;          // 轮播间隔
+  const AUTO_MS = 2800;          // 轮播间隔：首屏保持轻快，让角色变化一进页就能被感知
   const IDLE_RESUME_MS = 20000;  // 用户操作后多久恢复轮播
   const RARITY = { common: ['普通', '#a8b0bc'], uncommon: ['精良', '#5fd0a5'], rare: ['稀有', '#6fa8ff'], epic: ['史诗', '#c084fc'], legendary: ['传说', '#ffb703'] };
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -415,6 +441,7 @@
   let autoTimer = null;
   let resumeTimer = null;
   let autoWanted = true;         // 用户是否允许自动轮播（暂停按钮）
+  let hoverPausedAuto = false;
   let artFront = $('art'), artBack = $('art-next');
   const themeMeta = document.querySelector('meta[name="theme-color"]');
 
@@ -466,6 +493,7 @@
       chip.setAttribute('aria-checked', on);
       chip.tabIndex = on ? 0 : -1;
     }
+    requestAnimationFrame(() => centerActiveChip(slug));
     for (const card of document.querySelectorAll('.card, .persona')) card.setAttribute('aria-pressed', card.dataset.slug === slug);
     starColor = c.light.primary;
   }
@@ -474,6 +502,13 @@
   const wardrobe = $('wardrobe');
   const autoHint = $('auto-hint'), autoLabel = $('auto-label'), autoToggle = $('auto-toggle');
   wardrobe.style.setProperty('--auto-ms', `${AUTO_MS}ms`);
+  function centerActiveChip(slug) {
+    const chip = wardrobe.querySelector(`[data-slug="${slug}"]`);
+    if (!chip || wardrobe.scrollWidth <= wardrobe.clientWidth) return;
+    const chipLeft = chip.offsetLeft - wardrobe.offsetLeft;
+    const left = chipLeft - (wardrobe.clientWidth - chip.offsetWidth) / 2;
+    wardrobe.scrollTo({ left: Math.max(0, left), behavior: reduced ? 'auto' : 'smooth' });
+  }
   function renderAutoState() {
     autoHint.hidden = reduced || characters.length === 0;
     wardrobe.classList.toggle('manual', !autoTimer);
@@ -498,6 +533,7 @@
   /** 用户主动选角：先停，空闲 IDLE_RESUME_MS 后再接着转。 */
   function userPicked(slug) {
     stopAuto();
+    hoverPausedAuto = false;
     dress(slug);
     if (autoWanted && !reduced) resumeTimer = setTimeout(startAuto, IDLE_RESUME_MS);
     renderAutoState();
@@ -507,14 +543,29 @@
     autoWanted ? startAuto() : stopAuto();
     renderAutoState();
   });
-  wardrobe.addEventListener('mouseenter', () => wardrobe.classList.add('paused'));
-  wardrobe.addEventListener('mouseleave', () => wardrobe.classList.remove('paused'));
+  wardrobe.addEventListener('mouseenter', () => {
+    wardrobe.classList.add('paused');
+    if (autoTimer) {
+      clearInterval(autoTimer);
+      autoTimer = null;
+      hoverPausedAuto = true;
+      renderAutoState();
+    }
+  });
+  wardrobe.addEventListener('mouseleave', () => {
+    wardrobe.classList.remove('paused');
+    if (hoverPausedAuto) {
+      hoverPausedAuto = false;
+      startAuto();
+    }
+  });
 
   for (const c of characters) {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'chip'; b.setAttribute('role', 'radio'); b.dataset.slug = c.slug;
     b.title = c.persona ? `${c.name} · ${c.persona.archetype}` : `${c.name} · ${c.themeName}`; b.setAttribute('aria-label', `${c.name}（${RARITY[c.rarity]?.[0] ?? ''}）`);
     b.style.setProperty('--rarity', RARITY[c.rarity]?.[1] ?? '#a8b0bc');
+    b.style.setProperty('--selection-frame', c.slug === DEFAULT ? '#ffffff' : c.light.primary);
     b.innerHTML = `<img src="assets/characters/${c.slug}-portrait.webp" alt="" loading="lazy" width="64" height="64">`;
     b.addEventListener('click', () => userPicked(c.slug));
     b.addEventListener('mouseenter', () => preload(c.slug));
@@ -613,13 +664,24 @@
   renderAutoState();
 
   /* ---------- 下载按钮 ---------- */
-  const primary = $('primary'), primaryLabel = $('primary-label'), secondary = $('secondary'), meta = $('meta'), notice = $('notice');
-  const isWin = /Windows/.test(navigator.userAgent);
+  const macDownload = $('mac-download'), macDetail = $('mac-detail');
+  const windowsDownload = $('windows-download'), windowsDetail = $('windows-detail');
+  const meta = $('meta'), notice = $('notice');
   const kinds = {
-    mac: { test: a => /-arm64\.dmg$/.test(a.name), label: 'macOS（Apple Silicon）' },
+    mac: { test: a => /-arm64\.dmg$/.test(a.name), label: 'Apple Silicon' },
     win: { test: a => /-x64-Setup\.exe$/.test(a.name), label: 'Windows x64' },
   };
-  const fail = (msg) => { primary.removeAttribute('aria-disabled'); primaryLabel.textContent = '前往 GitHub Releases 下载'; meta.textContent = msg || ''; };
+  const platformLinks = [
+    { key: 'mac', button: macDownload, detail: macDetail },
+    { key: 'win', button: windowsDownload, detail: windowsDetail },
+  ];
+  const fail = (msg) => {
+    for (const item of platformLinks) {
+      item.button.removeAttribute('aria-disabled');
+      item.detail.textContent = '前往 GitHub Releases 选择安装包';
+    }
+    meta.textContent = msg || '';
+  };
 
   let releases;
   try {
@@ -633,15 +695,19 @@
   if (!release) return fail('还没有发布任何安装包，敬请期待。');
 
   const pick = k => release.assets.find(kinds[k].test);
-  const order = isWin ? ['win', 'mac'] : ['mac', 'win'];
-  const [p, s] = order.map(k => ({ k, a: pick(k) }));
-  const fmt = x => `${kinds[x.k].label}${x.a ? ' · ' + (x.a.size / 1048576).toFixed(0) + ' MB' : ''}`;
   const version = release.tag_name.replace(/^v/, '');
 
-  primary.removeAttribute('aria-disabled');
-  if (p.a) { primary.href = p.a.browser_download_url; primaryLabel.innerHTML = `下载 ${version}<small>${fmt(p)}</small>`; }
-  else { primary.href = release.html_url; primaryLabel.innerHTML = `查看 ${release.tag_name}<small>此平台暂无安装包</small>`; }
-  if (s.a) { secondary.hidden = false; secondary.href = s.a.browser_download_url; secondary.textContent = fmt(s); }
+  for (const item of platformLinks) {
+    const asset = pick(item.key);
+    item.button.removeAttribute('aria-disabled');
+    if (asset) {
+      item.button.href = asset.browser_download_url;
+      item.detail.textContent = `${version} · ${kinds[item.key].label} · ${(asset.size / 1048576).toFixed(0)} MB`;
+    } else {
+      item.button.href = release.html_url;
+      item.detail.textContent = '此版本暂无该平台安装包';
+    }
+  }
 
   const date = new Date(release.published_at).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
   meta.innerHTML = `<span class="tag">${release.prerelease ? 'Preview' : 'Stable'}</span><span>发布于 ${date}</span><a href="${release.html_url}">发布说明 · SHA256SUMS</a><a href="${RELEASES}">历史版本</a>`;
