@@ -24,6 +24,10 @@ git push origin main v2.1.0-preview.2
 
 Preview 安装包的 `desktopUpdateMode` 固定为 `manual-release`：应用发现新版只会打开 Release 页面。
 
+### `2.1.0-preview.2` 专项验收
+
+发布前除常规 `check`/打包验证外，必须完成：v1 `skins.json` 迁移、首次全员默认、恢复原装后重启、开启独立空间后两个角色往返、角色插件状态隔离、关闭独立空间回公共 Profile，以及一次人为破坏目标 bundle 的 last-known-good 回滚。不得覆盖或改写既有 `v2.1.0-preview.1` Release。
+
 ## 发正式版（签名）
 
 `signed-release.yml` 由 `vX.Y.Z` 形式的 tag 触发，需要以下 GitHub Actions Secrets：
