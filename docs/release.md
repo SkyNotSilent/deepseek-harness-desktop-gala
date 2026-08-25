@@ -6,7 +6,7 @@
 
 根目录、`dsh-plugin-desktop`、`dsh-plugin-gala` 三个 `package.json` 的 `version` 必须一致。预发布用 `X.Y.Z-preview.N`，正式版用 `X.Y.Z`。工作流会校验 tag 与 `version` 一致，不一致直接失败。
 
-## 发 Preview（未签名）
+## 发 Preview（ad-hoc 临时签名）
 
 ```sh
 # 1. 改三个 package.json 的 version，例如 2.1.0-preview.2
@@ -19,7 +19,7 @@ git push origin main v2.1.0-preview.2
 `preview-release.yml` 会：
 
 1. 在 Windows x64 runner 上生成 NSIS 安装包；
-2. 在 macOS 14（Apple Silicon）runner 上生成 DMG 与 ZIP；
+2. 在 macOS 14（Apple Silicon）runner 上对完整 App 做 ad-hoc 临时签名，生成 DMG 与 ZIP，并用 `codesign --deep --strict` 与 `hdiutil verify` 阻止结构不完整的包进入 Release；
 3. 计算 `SHA256SUMS.txt`，创建标记为 *Prerelease* 的 GitHub Release，Release 说明里注明 Gatekeeper / SmartScreen 提示。
 
 Preview 安装包的 `desktopUpdateMode` 固定为 `manual-release`：应用发现新版只会打开 Release 页面。

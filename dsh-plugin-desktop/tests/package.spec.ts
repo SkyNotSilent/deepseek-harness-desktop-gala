@@ -230,6 +230,19 @@ describe('published package surface', () => {
     expect(manifest.devDependencies?.['@electron/asar']).toBe('3.4.1')
   })
 
+  it('ad-hoc signs and verifies public Preview macOS artifacts', () => {
+    const previewWorkflow = readFileSync(
+      new URL('.github/workflows/preview-release.yml', workspaceRoot),
+      'utf8',
+    )
+
+    expect(previewWorkflow).toContain('Build ad-hoc signed artifacts')
+    expect(previewWorkflow).toContain('--config.mac.identity=-')
+    expect(previewWorkflow).toContain('--config.forceCodeSigning=true')
+    expect(previewWorkflow).toContain('codesign --verify --deep --strict --verbose=4')
+    expect(previewWorkflow).toContain('hdiutil verify "$dmg"')
+  })
+
   it('keeps one fixed brand-blue tray source for generated native assets', () => {
     const source = readFileSync(new URL('build/tray-icon.svg', packageRoot), 'utf8')
 
