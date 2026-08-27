@@ -128,10 +128,10 @@
 
   <section class="install">
     <h2>Install the Preview.</h2>
-    <p class="section-copy">Public Preview builds are free and open source. The macOS build is ad-hoc signed but not Developer ID signed or notarized, and the Windows build is unsigned, so Gatekeeper or SmartScreen will ask you to confirm the first launch.</p>
+    <p class="section-copy">Public Preview builds are free and open source. The macOS build is Developer ID signed and Apple-notarized, so it installs normally. The Windows Preview is currently unsigned and may trigger a Microsoft Defender SmartScreen confirmation.</p>
     <ol class="steps">
       <li><span>Download the Apple Silicon <code>.dmg</code> or Windows x64 <code>Setup.exe</code> from the release page.</span></li>
-      <li><span>Install normally, then approve the one-time system warning described in the release notes.</span></li>
+      <li><span>Install normally. On Windows, approve the one-time SmartScreen warning described in the release notes if it appears.</span></li>
       <li><span>Open Settings → Models, enter your DeepSeek API key and start chatting.</span></li>
     </ol>
   </section>

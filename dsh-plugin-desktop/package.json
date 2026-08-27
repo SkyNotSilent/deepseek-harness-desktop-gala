@@ -286,6 +286,8 @@
       ],
       "artifactName": "DeepSeek-Harness-Desktop-Gala-${version}-${arch}.${ext}",
       "category": "public.app-category.developer-tools",
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.inherit.plist",
       "hardenedRuntime": false,
       "icon": "build/app-icon-mac.png",
       "notarize": false

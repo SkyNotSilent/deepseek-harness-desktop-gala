@@ -72,7 +72,7 @@
         { "@type": "Question", "name": "DeepSeek Harness 有桌面版 / 客户端吗？", "acceptedAnswer": { "@type": "Answer", "text": "有。DeepSeek Harness Desktop Gala 是社区制作的 DeepSeek Harness（DSH）桌面客户端，提供 macOS（Apple Silicon）与 Windows x64 安装包，自带运行时，双击即用，不需要安装 Node.js。" } },
         { "@type": "Question", "name": "DeepSeek Harness Desktop Gala 和官方 DeepSeek Harness 是什么关系？", "acceptedAnswer": { "@type": "Answer", "text": "它基于开源的 DeepSeek Harness 构建，保留官方的 Agent、模型、工具、会话与插件生态，在此之上加入桌面壳与 Gala 角色皮肤系统。它是社区项目，不是 DeepSeek 官方产品。" } },
         { "@type": "Question", "name": "DSH 皮肤 / 换肤是怎么实现的？", "acceptedAnswer": { "@type": "Answer", "text": "Gala 角色皮肤通过 DeepSeek Harness 的官方主题 token 与界面扩展点接入：选中角色后，侧边栏头像、欢迎页标题、整片对话舞台背景与配色一起换装；切回经典配色即可恢复原样。" } },
-        { "@type": "Question", "name": "怎么下载和安装 DeepSeek Harness Desktop Gala？", "acceptedAnswer": { "@type": "Answer", "text": "在本页点击与你系统对应的下载按钮，或前往 GitHub Releases。macOS 下载 .dmg 拖入应用程序；Windows 运行 Setup.exe。Preview 版本未经 Developer ID 签名和 Apple 公证，macOS 首次打开需在「系统设置 → 隐私与安全性」点击「仍要打开」；Windows 未签名，在 SmartScreen 选择「仍要运行」。" } },
+        { "@type": "Question", "name": "怎么下载和安装 DeepSeek Harness Desktop Gala？", "acceptedAnswer": { "@type": "Answer", "text": "在本页点击与你系统对应的下载按钮，或前往 GitHub Releases。macOS 下载 .dmg 拖入应用程序；当前 macOS 安装包已经 Developer ID 签名并通过 Apple 公证，可正常打开。Windows 运行 Setup.exe；当前 Windows Preview 未签名，若 SmartScreen 提示，请选择「更多信息 → 仍要运行」。" } },
         { "@type": "Question", "name": "需要 DeepSeek API Key 吗？", "acceptedAnswer": { "@type": "Answer", "text": "需要。首次发送消息前，在「设置 → 模型」填入 DeepSeek API Key，密钥只保存在本机。账户余额不足时界面会直接提示并给出充值入口。" } },
         { "@type": "Question", "name": "支持图片输入（多模态）吗？", "acceptedAnswer": { "@type": "Answer", "text": "支持。跟随 DeepSeek Harness 0.1.1，可以拖入图片并选择 DeepSeek-V4 Flash Vision 等视觉模型进行对话。" } },
         { "@type": "Question", "name": "换了角色皮肤，AI 的回答方式会变吗？", "acceptedAnswer": { "@type": "Answer", "text": "开启「个性化人物」后会。十位官方角色各自带有专属人物设定：傲娇天才阿念、御姐大姐姐阿基、粘人管理员忆忆、星海巫女灵灵等。开启后换上谁的皮肤，模型就用谁的语气回答；代码、命令与事实不受影响。该功能默认关闭，可在「设置 → 插件 → 角色空间」或换肤弹层一键开启；全员群星、经典配色与原装始终不带人物语气。" } },
@@ -352,11 +352,11 @@
     <div class="meta" id="meta"></div>
 
     <details class="notice" id="notice" hidden>
-      <summary>首次打开会被系统拦一次（Preview 未认证）</summary>
+      <summary>Preview 安装说明与校验</summary>
       <div>
-        <b>macOS</b>：系统设置 → 隐私与安全性 → 底部「仍要打开」（macOS 14 及更早可右键 → 打开）。<br>
-        <b>Windows</b>：SmartScreen 弹窗 → 更多信息 → 仍要运行。<br>
-        校验文件请核对 Release 页的 <code>SHA256SUMS.txt</code>。签名正式版发布后这些提示会消失。
+        <b>macOS</b>：安装包已经 Developer ID 签名并通过 Apple 公证，可正常拖入「应用程序」后打开。<br>
+        <b>Windows</b>：当前 Preview 未签名；若出现 SmartScreen 弹窗，请选择「更多信息 → 仍要运行」。<br>
+        两个平台都可以使用 Release 页的 <code>SHA256SUMS.txt</code> 核对安装包完整性。
       </div>
     </details>
   </main>
@@ -401,7 +401,7 @@
     <details><summary>DeepSeek Harness 有桌面版 / 客户端吗？</summary><p>有。DeepSeek Harness Desktop Gala 是社区制作的 DSH 桌面客户端，提供 macOS（Apple Silicon）与 Windows x64 安装包，自带运行时，不需要安装 Node.js。</p></details>
     <details><summary>和官方 DeepSeek Harness 是什么关系？</summary><p>基于开源的 DeepSeek Harness 构建，保留官方的 Agent、模型、工具、会话与插件生态，在此之上加入桌面壳与 Gala 角色皮肤。它是社区项目，不是 DeepSeek 官方产品。</p></details>
     <details><summary>DSH 皮肤 / 换肤是怎么做到的？</summary><p>Gala 通过 DeepSeek Harness 的官方主题 token 与界面扩展点接入：选中角色后，侧边栏头像、欢迎页标题、整片对话舞台背景与配色一起换装；切回经典配色即可恢复。</p></details>
-    <details><summary>怎么下载安装？</summary><p>点击本页与你系统对应的下载按钮，或前往 <a href="https://github.com/SkyNotSilent/deepseek-harness-desktop-gala/releases">GitHub Releases</a>。macOS 下载 .dmg 拖入应用程序；Windows 运行 Setup.exe。Preview 未经 Developer ID 签名和 Apple 公证：macOS 首次打开到「系统设置 → 隐私与安全性」点「仍要打开」；Windows 未签名，在 SmartScreen 选「仍要运行」。</p></details>
+    <details><summary>怎么下载安装？</summary><p>点击本页与你系统对应的下载按钮，或前往 <a href="https://github.com/SkyNotSilent/deepseek-harness-desktop-gala/releases">GitHub Releases</a>。macOS 下载 .dmg 拖入「应用程序」即可；当前 macOS 安装包已经 Developer ID 签名并通过 Apple 公证。Windows 运行 Setup.exe；当前 Windows Preview 未签名，若 SmartScreen 提示，请选择「更多信息 → 仍要运行」。</p></details>
     <details><summary>需要 DeepSeek API Key 吗？</summary><p>需要。首次发送消息前在「设置 → 模型」填入，密钥只保存在本机；余额不足时界面会直接提示并给出充值入口。</p></details>
     <details><summary>支持图片输入吗？</summary><p>支持。跟随 DeepSeek Harness 0.1.1，拖入图片并选择 DeepSeek-V4 Flash Vision 等视觉模型即可。</p></details>
     <details><summary>换了角色皮肤，AI 的回答方式会变吗？</summary><p>开启「个性化人物」后会。十位官方角色各自带有专属人物设定：傲娇天才阿念、御姐大姐姐阿基、粘人管理员忆忆、星海巫女灵灵……开启后换上谁的皮肤，模型就用谁的语气回答；代码、命令与事实不受影响。该功能默认关闭，可在「设置 → 插件 → 角色空间」或换肤弹层一键开启；全员群星、经典配色与原装始终不带人物语气。</p></details>

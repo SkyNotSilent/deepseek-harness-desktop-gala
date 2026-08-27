@@ -71,9 +71,11 @@ export function verifyMacRelease(
   let failure: unknown
 
   try {
+    options.run('hdiutil', ['verify', dmgPath])
     options.run('hdiutil', ['attach', dmgPath, '-mountpoint', mountPoint, '-nobrowse', '-readonly'])
     mounted = true
     options.run('codesign', ['--verify', '--deep', '--strict', '--verbose=2', appPath])
+    options.run('syspolicy_check', ['distribution', appPath])
     options.run('spctl', ['--assess', '--type', 'execute', '--verbose=4', appPath])
     options.run('xcrun', ['stapler', 'validate', appPath])
   } catch (cause) {

@@ -10,12 +10,11 @@
 
 ### 系统安全提示
 
-Preview 版本未签名，首次启动会被系统拦一次：
+当前 macOS Preview 已经 Developer ID 签名并通过 Apple 公证，可以正常安装打开；Windows Preview 尚未签名：
 
 | 系统 | 怎么做 |
 | --- | --- |
-| macOS 15+ | 系统设置 → 隐私与安全性 → 底部「仍要打开」 |
-| macOS 14 及更早 | 右键应用图标 → 打开 |
+| macOS 12+（Apple Silicon） | 打开 DMG，拖入「应用程序」，然后正常打开 |
 | Windows | SmartScreen 弹窗 → 更多信息 → 仍要运行 |
 
 ## 配置 DeepSeek API Key

@@ -31,6 +31,10 @@ describe('macOS release artifact verification', () => {
     expect(harness.calls).toEqual([
       {
         command: 'hdiutil',
+        args: ['verify', '/release/dist/DeepSeek Harness Desktop Gala-2.0.0-arm64.dmg'],
+      },
+      {
+        command: 'hdiutil',
         args: [
           'attach', '/release/dist/DeepSeek Harness Desktop Gala-2.0.0-arm64.dmg',
           '-mountpoint', '/private/tmp/dsh-desktop-dmg-test', '-nobrowse', '-readonly',
@@ -39,6 +43,10 @@ describe('macOS release artifact verification', () => {
       {
         command: 'codesign',
         args: ['--verify', '--deep', '--strict', '--verbose=2', '/private/tmp/dsh-desktop-dmg-test/DeepSeek Harness Desktop Gala.app'],
+      },
+      {
+        command: 'syspolicy_check',
+        args: ['distribution', '/private/tmp/dsh-desktop-dmg-test/DeepSeek Harness Desktop Gala.app'],
       },
       {
         command: 'spctl',

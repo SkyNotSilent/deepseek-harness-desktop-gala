@@ -38,9 +38,9 @@ Preview 安装包的 `desktopUpdateMode` 固定为 `manual-release`：应用发�
 | macOS | `MAC_CERT_P12_BASE64`、`MACOS_SIGN_IDENTITY`、`MAC_CSC_KEY_PASSWORD` | Developer ID Application 证书、签名身份、导出密码 |
 | macOS | `APPLE_ID`、`APPLE_APP_SPECIFIC_PASSWORD`、`APPLE_TEAM_ID` | 公证凭据 |
 
-macOS 任务运行 `yarn dist:mac`：先跑完整 `check`，再签名、公证、盖票，最后用 `codesign` / `spctl` / `stapler` 校验 DMG 与 ZIP。Windows 任务校验 Authenticode 签名。正式版安装包的 `desktopUpdateMode` 写入 `signed-auto`，应用据此启用 electron-updater（下载与安装前各确认一次）。
+macOS 任务运行 `yarn dist:mac`：先跑完整 `check`，再签名、公证、盖票，最后用 `hdiutil` / `codesign` / `syspolicy_check` / `spctl` / `stapler` 校验 DMG 和其中的 App。Windows 任务校验 Authenticode 签名。正式版安装包的 `desktopUpdateMode` 写入 `signed-auto`，应用据此启用 electron-updater（下载与安装前各确认一次）。
 
-签名正式版发布前需要在 `dsh-plugin-desktop/package.json` 打开 `mac.hardenedRuntime` 并提供 `build/entitlements.mac.plist` 与 `entitlements.mac.inherit.plist`（允许 JIT 与未签名可执行内存），否则公证会被 Apple 拒绝。
+`yarn dist:mac` 会强制打开 Hardened Runtime 与公证，并使用 `build/entitlements.mac.plist` 和 `entitlements.mac.inherit.plist` 为 Electron 主进程及 Helper 提供 JIT、未签名可执行内存与动态库加载权限。普通 Preview 仍由工作流显式使用 ad-hoc 签名和非 Hardened Runtime。
 
 ## 下载站
 

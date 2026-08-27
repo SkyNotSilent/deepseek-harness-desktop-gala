@@ -79,5 +79,5 @@ electron-builder 把完整依赖树放在 `app.asar.unpacked`，`afterPack` 钩�
 - 增删 profile bundle、切换模式、切换 profile 都需要重启；运行中的一代不会热替换 Loader 行或原生材质。
 - Linux 只有兼容模式，也没有托盘终端。
 - 托盘终端的 `dsh` / `pnpm` / `node` 只对该终端生效；Windows 下它们是 `.cmd` shim，`spawn('pnpm', { shell: false })` 这类直接调用不可移植。
-- Preview 安装包未签名；macOS 的 Gatekeeper 与 Windows 的 SmartScreen 提示是预期行为。
+- 当前 macOS Preview 使用 Developer ID 签名并通过 Apple 公证；Windows Preview 尚未签名，SmartScreen 提示是预期行为。
 - 渲染进程与 Host 之间是回环 HTTP + WebSocket，不是 Electron IPC。

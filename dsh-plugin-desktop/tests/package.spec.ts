@@ -25,7 +25,15 @@ const manifest = JSON.parse(readFileSync(new URL('package.json', packageRoot), '
     publish?: unknown
     electronFuses?: unknown
     files?: unknown
-    mac?: { artifactName?: unknown; hardenedRuntime?: unknown; icon?: unknown; notarize?: unknown; target?: unknown }
+    mac?: {
+      artifactName?: unknown
+      entitlements?: unknown
+      entitlementsInherit?: unknown
+      hardenedRuntime?: unknown
+      icon?: unknown
+      notarize?: unknown
+      target?: unknown
+    }
     win?: { icon?: unknown; target?: unknown }
     nsis?: Record<string, unknown>
     linux?: { icon?: unknown }
@@ -223,6 +231,8 @@ describe('published package surface', () => {
       .toBe('yarn workspace dsh-plugin-desktop dist:win')
     expect(manifest.build?.afterPack).toBe('./scripts/verify-packaged-runtime.ts')
     expect(manifest.build?.mac).toEqual(expect.objectContaining({
+      entitlements: 'build/entitlements.mac.plist',
+      entitlementsInherit: 'build/entitlements.mac.inherit.plist',
       hardenedRuntime: false,
       notarize: false,
       target: ['dmg', 'zip'],
