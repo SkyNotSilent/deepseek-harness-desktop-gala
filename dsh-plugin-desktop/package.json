@@ -1,6 +1,6 @@
 {
   "name": "dsh-plugin-desktop",
-  "version": "2.1.0-preview.2",
+  "version": "2.1.0-preview.3",
   "desktopUpdateMode": "manual-release",
   "description": "DeepSeek Harness Desktop Gala: an Electron shell composed as a DeepSeek Harness Cordis plugin",
   "license": "MIT",
