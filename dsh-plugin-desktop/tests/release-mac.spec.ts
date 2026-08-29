@@ -30,6 +30,7 @@ function baseOptions(
     run: (command, args, cwd, commandEnv) => {
       calls.push({ command, args: [...args], cwd, env: { ...commandEnv } })
     },
+    findDmgArtifact: () => '/repo/dsh-plugin-desktop/dist/release.dmg',
     log: message => logs.push(message),
   }
 }
@@ -50,7 +51,7 @@ describe('macOS release command boundary', () => {
     }, calls, identityEnvironments, logs))
 
     expect(identityEnvironments).toEqual([{ PATH: '/usr/bin', SAFE_BUILD_VALUE: 'kept' }])
-    expect(calls).toHaveLength(3)
+    expect(calls).toHaveLength(6)
     expect(calls[0]).toEqual({
       command: 'yarn',
       args: ['run', 'check'],
@@ -74,6 +75,34 @@ describe('macOS release command boundary', () => {
       },
     })
     expect(calls[2]).toEqual({
+      command: 'xcrun',
+      args: [
+        'notarytool', 'submit', '/repo/dsh-plugin-desktop/dist/release.dmg',
+        '--apple-id', 'developer@example.test', '--password', appPassword,
+        '--team-id', 'TEAM123456', '--wait',
+      ],
+      cwd: '/repo/dsh-plugin-desktop',
+      env: {
+        PATH: '/usr/bin',
+        SAFE_BUILD_VALUE: 'kept',
+        APPLE_ID: 'developer@example.test',
+        APPLE_APP_SPECIFIC_PASSWORD: appPassword,
+        APPLE_TEAM_ID: 'TEAM123456',
+      },
+    })
+    expect(calls[3]).toEqual({
+      command: 'xcrun',
+      args: ['stapler', 'staple', '/repo/dsh-plugin-desktop/dist/release.dmg'],
+      cwd: '/repo/dsh-plugin-desktop',
+      env: { PATH: '/usr/bin', SAFE_BUILD_VALUE: 'kept' },
+    })
+    expect(calls[4]).toEqual({
+      command: process.execPath,
+      args: ['scripts/refresh-mac-release-metadata.ts'],
+      cwd: '/repo/dsh-plugin-desktop',
+      env: { PATH: '/usr/bin', SAFE_BUILD_VALUE: 'kept' },
+    })
+    expect(calls[5]).toEqual({
       command: process.execPath,
       args: ['scripts/verify-mac-release.ts'],
       cwd: '/repo/dsh-plugin-desktop',
@@ -105,14 +134,44 @@ describe('macOS release command boundary', () => {
 
     releaseMac(options)
 
-    expect(calls).toHaveLength(3)
+    expect(calls).toHaveLength(6)
     expect(calls[0]?.env).toEqual({ PATH: '/usr/bin' })
     expect(calls[1]?.env.CSC_LINK).toBe(`data:application/x-pkcs12;base64,${p12}`)
     expect(calls[1]?.env.CSC_NAME).toBe('Example Developer (TEAM123456)')
     expect(calls[1]?.env.CSC_KEY_PASSWORD).toBe(p12Password)
     expect(calls[1]?.env.MAC_CERT_P12_BASE64).toBeUndefined()
     expect(calls[1]?.env.MACOS_SIGN_IDENTITY).toBeUndefined()
-    expect(calls[2]?.env).toEqual({ PATH: '/usr/bin', DSH_MAC_RELEASE_TEAM_ID: 'TEAM123456' })
+    expect(calls[2]?.args).toEqual([
+      'notarytool', 'submit', '/repo/dsh-plugin-desktop/dist/release.dmg',
+      '--key', '/private/AuthKey.p8', '--key-id', 'KEY123', '--issuer', 'issuer-id', '--wait',
+    ])
+    expect(calls[3]?.env).toEqual({ PATH: '/usr/bin' })
+    expect(calls[4]?.env).toEqual({ PATH: '/usr/bin' })
+    expect(calls[5]?.env).toEqual({ PATH: '/usr/bin', DSH_MAC_RELEASE_TEAM_ID: 'TEAM123456' })
+  })
+
+  it('submits and staples the final DMG with the configured Keychain profile', () => {
+    const calls: CommandCall[] = []
+
+    releaseMac(baseOptions({
+      PATH: '/usr/bin',
+      APPLE_KEYCHAIN_PROFILE: 'dsh-notary',
+      APPLE_KEYCHAIN: '/private/release.keychain-db',
+    }, calls))
+
+    expect(calls[2]).toMatchObject({
+      command: 'xcrun',
+      args: [
+        'notarytool', 'submit', '/repo/dsh-plugin-desktop/dist/release.dmg',
+        '--keychain-profile', 'dsh-notary', '--keychain', '/private/release.keychain-db', '--wait',
+      ],
+    })
+    expect(calls[3]).toEqual({
+      command: 'xcrun',
+      args: ['stapler', 'staple', '/repo/dsh-plugin-desktop/dist/release.dmg'],
+      cwd: '/repo/dsh-plugin-desktop',
+      env: { PATH: '/usr/bin' },
+    })
   })
 
   it('rejects development signing before running any command', () => {

@@ -1,7 +1,8 @@
-/** Build a signed and notarized macOS DMG from validated release credentials. */
+/** Build signed and notarized macOS DMG/ZIP artifacts from validated release credentials. */
 
 import { spawnSync } from 'node:child_process'
-import { dirname, resolve } from 'node:path'
+import { readFileSync } from 'node:fs'
+import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
   adaptMacReleaseEnvironment,
@@ -26,6 +27,8 @@ export interface MacReleaseOptions {
     cwd: string,
     env: NodeJS.ProcessEnv,
   ) => void
+  /** Resolve the final DMG that must receive its own notarization ticket. */
+  readonly findDmgArtifact: (desktopRoot: string) => string
   /** Report non-secret release progress. */
   readonly log: (message: string) => void
 }
@@ -50,6 +53,47 @@ function run(command: string, args: readonly string[], cwd: string, env: NodeJS.
   }
 }
 
+function findDmgArtifact(desktopRoot: string): string {
+  const manifest = JSON.parse(readFileSync(join(desktopRoot, 'package.json'), 'utf8')) as { version: string }
+  return join(
+    desktopRoot,
+    'dist',
+    `DeepSeek-Harness-Desktop-Gala-${manifest.version}-arm64.dmg`,
+  )
+}
+
+function requiredEnvironmentValue(env: NodeJS.ProcessEnv, name: string): string {
+  const value = env[name]?.trim()
+  if (value === undefined || value.length === 0) {
+    throw new Error(`Missing ${name} while preparing the DMG notarization command`)
+  }
+  return value
+}
+
+function dmgNotarizationArguments(
+  dmgPath: string,
+  source: 'api-key' | 'apple-id' | 'keychain-profile',
+  env: NodeJS.ProcessEnv,
+): readonly string[] {
+  const credentials = source === 'keychain-profile'
+    ? [
+        '--keychain-profile', requiredEnvironmentValue(env, 'APPLE_KEYCHAIN_PROFILE'),
+        ...(env.APPLE_KEYCHAIN?.trim() ? ['--keychain', env.APPLE_KEYCHAIN.trim()] : []),
+      ]
+    : source === 'apple-id'
+      ? [
+          '--apple-id', requiredEnvironmentValue(env, 'APPLE_ID'),
+          '--password', requiredEnvironmentValue(env, 'APPLE_APP_SPECIFIC_PASSWORD'),
+          '--team-id', requiredEnvironmentValue(env, 'APPLE_TEAM_ID'),
+        ]
+      : [
+          '--key', requiredEnvironmentValue(env, 'APPLE_API_KEY'),
+          '--key-id', requiredEnvironmentValue(env, 'APPLE_API_KEY_ID'),
+          '--issuer', requiredEnvironmentValue(env, 'APPLE_API_ISSUER'),
+        ]
+  return ['notarytool', 'submit', dmgPath, ...credentials, '--wait']
+}
+
 function defaultReleaseOptions(): MacReleaseOptions {
   return {
     env: process.env,
@@ -57,12 +101,13 @@ function defaultReleaseOptions(): MacReleaseOptions {
     desktopRoot: resolve(dirname(fileURLToPath(import.meta.url)), '..'),
     listCodeSigningIdentities,
     run,
+    findDmgArtifact,
     log: message => console.log(message),
   }
 }
 
 /**
- * Build the macOS artifact while exposing release secrets only to Electron Builder.
+ * Build the macOS artifacts while exposing release secrets only to the signing/notarization steps.
  * @param options - Injectable process and command boundaries.
  */
 export function releaseMac(options: MacReleaseOptions = defaultReleaseOptions()): void {
@@ -89,6 +134,20 @@ export function releaseMac(options: MacReleaseOptions = defaultReleaseOptions())
     '--config.forceCodeSigning=true', '--config.mac.hardenedRuntime=true',
     '--config.mac.notarize=true', '--config.extraMetadata.desktopUpdateMode=signed-auto',
   ], options.desktopRoot, releaseEnvironment)
+  const dmgPath = options.findDmgArtifact(options.desktopRoot)
+  options.run(
+    'xcrun',
+    dmgNotarizationArguments(dmgPath, result.notarization, releaseEnvironment),
+    options.desktopRoot,
+    releaseEnvironment,
+  )
+  options.run('xcrun', ['stapler', 'staple', dmgPath], options.desktopRoot, buildEnvironment)
+  options.run(
+    process.execPath,
+    ['scripts/refresh-mac-release-metadata.ts'],
+    options.desktopRoot,
+    buildEnvironment,
+  )
   options.run(process.execPath, ['scripts/verify-mac-release.ts'], options.desktopRoot, {
     ...buildEnvironment,
     DSH_MAC_RELEASE_TEAM_ID: teamId,
