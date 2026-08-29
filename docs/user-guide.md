@@ -69,7 +69,7 @@ dsh plugin update
 
 ## 终端
 
-托盘 **Open DeepSeek Harness Desktop Gala Terminal** 会打开一个已经配好 `dsh`、`pnpm`、`node` 路径的终端（macOS 用 Terminal，Windows 优先 Windows Terminal）。这些路径只对该终端进程生效，不会改动你的系统 PATH 或 shell 配置。
+应用里的 Bash 代码工具和托盘 **Open DeepSeek Harness Desktop Gala Terminal** 都能直接使用安装包自带的 `node` 与 `pnpm`；不提供伪装的 `npm` / `npx`。Finder 启动时，应用只读取 `/etc/paths`、`/etc/paths.d/*` 和实际存在的常用目录来补 PATH，不执行 `.zshrc`、`.bashrc` 等启动文件，也不会改动系统 PATH 或 shell 配置。用户自行安装的其他 CLI 只有位于这些标准 PATH 目录时才可见。
 
 ## 兼容模式与高级模式
 
@@ -95,3 +95,4 @@ dsh plugin update
 | 终端里找不到 `dsh` | 用托盘重新打开终端；系统自带终端没有这些路径 |
 | 没有收到更新提示 | 后台检查失败会静默；用托盘手动检查看结果 |
 | 角色背景没铺满 | 切回经典配色再选一次角色；仍有问题请附截图提 Issue |
+| macOS 使用代码工具时报错或退出 | 查看 `~/Library/Logs/DeepSeek Harness Desktop Gala/main.log`；日志最多保留两个 2 MiB 文件，不记录对话正文、API Key 或完整工具输出 |

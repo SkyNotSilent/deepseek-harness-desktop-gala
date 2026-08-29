@@ -56,7 +56,7 @@ Get the installer for your platform from the [download page](https://skynotsilen
 - **macOS (Apple Silicon)**: `DeepSeek-Harness-Desktop-Gala-<version>-arm64.dmg`
 - **Windows x64**: `DeepSeek-Harness-Desktop-Gala-<version>-x64-Setup.exe`
 
-Preview builds are **unsigned**. On macOS open **System Settings → Privacy & Security** and click "Open Anyway"; on Windows choose "More info → Run anyway" in the SmartScreen dialog. Every release ships a `SHA256SUMS.txt`.
+The Apple Silicon macOS Preview is Developer ID signed and Apple-notarized, so it opens normally after being copied to Applications. The Windows Preview is not Authenticode-signed; choose "More info → Run anyway" in the SmartScreen dialog. Every release ships a `SHA256SUMS.txt`.
 
 Before the first message, enter your DeepSeek API key under **Settings → Models**. It is stored locally in `~/.dsh/.credentials.yaml`.
 

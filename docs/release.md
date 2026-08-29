@@ -6,27 +6,38 @@
 
 根目录、`dsh-plugin-desktop`、`dsh-plugin-gala` 三个 `package.json` 的 `version` 必须一致。预发布用 `X.Y.Z-preview.N`，正式版用 `X.Y.Z`。工作流会校验 tag 与 `version` 一致，不一致直接失败。
 
-## 发 Preview（ad-hoc 临时签名）
+## 发 Preview（草稿 + 本机 Developer ID macOS 包）
 
 ```sh
-# 1. 改三个 package.json 的 version，例如 2.1.0-preview.2
+# 1. 改三个 package.json 的 version，例如 2.1.0-preview.3
 corepack yarn check
-git commit -am "chore: release 2.1.0-preview.2"
-git tag -a v2.1.0-preview.2 -m "2.1.0-preview.2"
-git push origin main v2.1.0-preview.2
+corepack yarn package:dir
+git add package.json dsh-plugin-desktop/package.json dsh-plugin-gala/package.json docs/releases/v2.1.0-preview.3.md
+git commit -m "chore: release 2.1.0-preview.3"
+git tag -a v2.1.0-preview.3 -m "2.1.0-preview.3"
+git push origin main v2.1.0-preview.3
 ```
 
 `preview-release.yml` 会：
 
 1. 在 Windows x64 runner 上生成 NSIS 安装包；
-2. 在 macOS 14（Apple Silicon）runner 上对完整 App 做 ad-hoc 临时签名，生成 DMG 与 ZIP，并用 `codesign --deep --strict` 与 `hdiutil verify` 阻止结构不完整的包进入 Release；
-3. 计算 `SHA256SUMS.txt`，创建标记为 *Prerelease* 的 GitHub Release，Release 说明里注明 Gatekeeper / SmartScreen 提示。
+2. 在 macOS 14（Apple Silicon）runner 上跑 desktop 单测和 ad-hoc 打包/PTY 冒烟；该 macOS 包只保留为短期 Actions artifact，不进入 Release；
+3. 只把 Windows 安装包放进一个尚未公开的 draft prerelease。
+
+草稿出现后，在持有 Developer ID Application 证书和公证凭据的 Apple Silicon Mac 上执行：
+
+```sh
+corepack yarn dist:mac
+DSH_MAC_RELEASE_TEAM_ID=<10位Team ID> corepack yarn publish:preview
+```
+
+`dist:mac` 会生成 Developer ID 签名、Hardened Runtime 和 Apple 公证的 DMG/ZIP。`publish:preview` 只接受现有 draft prerelease：上传签名 macOS 资产后回下载全部文件，生成并再次回下载 `SHA256SUMS.txt`，检查资产白名单、大小、更新元数据、签名、公证、隔离属性和真实 PTY；全部通过后才将草稿公开。任何失败都会保留草稿，不覆盖旧 Preview。
 
 Preview 安装包的 `desktopUpdateMode` 固定为 `manual-release`：应用发现新版只会打开 Release 页面。
 
-### `2.1.0-preview.2` 专项验收
+### `2.1.0-preview.3` 专项验收
 
-发布前除常规 `check`/打包验证外，必须完成：v1 `skins.json` 迁移、首次全员默认、恢复原装后重启、开启独立空间后两个角色往返、角色插件状态隔离、关闭独立空间回公共 Profile，以及一次人为破坏目标 bundle 的 last-known-good 回滚。不得覆盖或改写既有 `v2.1.0-preview.1` Release。
+发布前除常规 `check`/打包验证外，必须从 Finder 启动后完成普通聊天、让 AI 创建并运行纯 HTML 小游戏、内置 `node`/`pnpm` 最小项目和多短进程构建；再在另一台 Apple Silicon Mac 从浏览器下载并重复验收。不得覆盖或删除 `v2.1.0-preview.2` Release。
 
 ## 发正式版（签名）
 
@@ -40,7 +51,7 @@ Preview 安装包的 `desktopUpdateMode` 固定为 `manual-release`：应用发�
 
 macOS 任务运行 `yarn dist:mac`：先跑完整 `check`，再签名、公证、盖票，最后用 `hdiutil` / `codesign` / `syspolicy_check` / `spctl` / `stapler` 校验 DMG 和其中的 App。Windows 任务校验 Authenticode 签名。正式版安装包的 `desktopUpdateMode` 写入 `signed-auto`，应用据此启用 electron-updater（下载与安装前各确认一次）。
 
-`yarn dist:mac` 会强制打开 Hardened Runtime 与公证，并使用 `build/entitlements.mac.plist` 和 `entitlements.mac.inherit.plist` 为 Electron 主进程及 Helper 提供 JIT、未签名可执行内存与动态库加载权限。普通 Preview 仍由工作流显式使用 ad-hoc 签名和非 Hardened Runtime。
+`yarn dist:mac` 会强制打开 Hardened Runtime 与公证，并使用 `build/entitlements.mac.plist` 和 `entitlements.mac.inherit.plist` 为 Electron 主进程及 Helper 提供 JIT、未签名可执行内存与动态库加载权限。CI 的 macOS Preview 冒烟包仍是 ad-hoc 签名且绝不上传到 Release；公开的 macOS Preview 必须来自本机签名发布流程。
 
 ## 下载站
 

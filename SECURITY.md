@@ -15,7 +15,7 @@ We will acknowledge a complete report as soon as practical, keep the reporter in
 
 ## Supported versions
 
-The newest published release is the only version that receives security fixes. Public Preview builds are unsigned and intended for evaluation; verify every installer against the accompanying `SHA256SUMS.txt` before running it.
+The newest published release is the only version that receives security fixes. macOS Preview artifacts are Developer ID signed and Apple-notarized; Windows Preview artifacts are currently unsigned. Verify every installer against the accompanying `SHA256SUMS.txt` before running it.
 
 ## Scope
 

@@ -60,12 +60,10 @@ DeepSeek Harness 是一个"万物皆插件"的 Agent 运行时，官方提供命
 
 ### 首次启动的系统提示
 
-当前 Preview 版本**未签名**，系统会拦一次：
+- macOS Preview 使用 Developer ID 签名并通过 Apple 公证，拖入「应用程序」后可正常打开；当前只支持 Apple Silicon。
+- Windows Preview 尚未做 Authenticode 签名；SmartScreen 弹窗中点击「更多信息 → 仍要运行」。
 
-- macOS：打开 **系统设置 → 隐私与安全性**，在底部点击「仍要打开」（macOS 14 及更早也可右键应用 → 打开）。
-- Windows：SmartScreen 弹窗中点击「更多信息 → 仍要运行」。
-
-签名正式版发布后这些提示会消失。每个 Release 都附带 `SHA256SUMS.txt` 供校验。
+每个 Release 都附带 `SHA256SUMS.txt` 供校验。
 
 ### 配置 API Key
 
