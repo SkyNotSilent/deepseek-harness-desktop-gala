@@ -4,6 +4,8 @@ import { existsSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { isAbsolute, join, relative, sep } from 'node:path'
 import { listPackage } from '@electron/asar'
+import { verifyMacSmoke } from './verify-mac-smoke.ts'
+import { verifyPackagedNodePty } from './verify-packaged-node-pty.ts'
 
 /** AfterPack fields consumed without importing Electron Builder's incomplete declaration graph. */
 export interface PackagedRuntimeContext {
@@ -11,6 +13,8 @@ export interface PackagedRuntimeContext {
   readonly appOutDir: string
   /** Electron target platform selected by the packager. */
   readonly electronPlatformName: string
+  /** Electron Builder architecture enum (1=x64, 3=arm64) or an explicit architecture. */
+  readonly arch?: number | string
   /** Product metadata used to locate the macOS application bundle. */
   readonly packager: {
     readonly appInfo: {
@@ -31,7 +35,9 @@ export const REQUIRED_PACKAGED_RUNTIME_ENTRIES = [
   'lib/profiles.js',
   'lib/desktop-cli.js',
   'lib/desktop-runtime-environment.js',
+  'lib/desktop-fault-log.js',
   'lib/desktop-terminal.js',
+  'lib/gui-path.js',
   'lib/terminal.js',
   'lib/update-checker.js',
   'lib/updates.js',
@@ -58,6 +64,8 @@ export const REQUIRED_UNPACKED_RUNTIME_ENTRIES = [
   'lib/profile.js',
   'lib/profile-manager.js',
   'lib/profile-service.js',
+  'lib/desktop-fault-log.js',
+  'lib/gui-path.js',
   'lib/pnpm.js',
   'lib/profiles.js',
   'lib/terminal.js',
@@ -116,6 +124,9 @@ export type FileProbe = (filename: string) => boolean
 
 /** Injectable Node package resolver used by focused tests. */
 export type PackageResolver = (specifier: string) => string
+
+/** Injectable node-pty verifier used by focused runtime-layout tests. */
+export type NodePtyVerifier = (unpackedRoot: string, platform: string, arch: string) => void
 
 /**
  * Resolve the platform-specific archive produced by Electron Builder.
@@ -231,6 +242,7 @@ export function verifyPackagedRuntime(
   list: ArchiveLister = listPackage,
   exists: FileProbe = existsSync,
   resolvePackage?: PackageResolver,
+  verifyNodePty: NodePtyVerifier = verifyPackagedNodePty,
 ): void {
   verifyPackagedAsar(resolvePackagedAsarPath(context), list)
   const unpackedRoot = resolvePackagedUnpackedRoot(context)
@@ -244,6 +256,14 @@ export function verifyPackagedRuntime(
     )
   }
   verifyUnpackedPackageResolution(unpackedRoot, resolvePackage)
+  const architecture = context.arch === 1
+    ? 'x64'
+    : context.arch === 3
+      ? 'arm64'
+      : typeof context.arch === 'string'
+        ? context.arch
+        : process.arch
+  verifyNodePty(unpackedRoot, context.electronPlatformName, architecture)
 }
 
 /**
@@ -253,6 +273,12 @@ export function verifyPackagedRuntime(
  */
 export async function afterPack(context: PackagedRuntimeContext): Promise<void> {
   verifyPackagedRuntime(context)
+  if (context.electronPlatformName === 'darwin') {
+    verifyMacSmoke(join(
+      context.appOutDir,
+      `${context.packager.appInfo.productFilename}.app`,
+    ))
+  }
 }
 
 export default afterPack

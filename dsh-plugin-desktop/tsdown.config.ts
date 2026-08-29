@@ -16,6 +16,8 @@ export default defineConfig([
       runtime: 'src/runtime.ts',
       'electron-runtime': 'src/electron-runtime.ts',
       'desktop-runtime-environment': 'src/desktop-runtime-environment.ts',
+      'desktop-fault-log': 'src/desktop-fault-log.ts',
+      'gui-path': 'src/gui-path.ts',
       'desktop-terminal': 'src/desktop-terminal.ts',
       'desktop-cli': 'src/desktop-cli.ts',
       terminal: 'src/terminal.ts',

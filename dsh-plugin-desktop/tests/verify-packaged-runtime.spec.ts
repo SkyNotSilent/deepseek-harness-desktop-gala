@@ -12,6 +12,7 @@ import {
   type FileProbe,
   type PackageResolver,
   type PackagedRuntimeContext,
+  type NodePtyVerifier,
 } from '../scripts/verify-packaged-runtime.ts'
 
 function context(appOutDir: string, electronPlatformName: string): PackagedRuntimeContext {
@@ -46,8 +47,9 @@ describe('packaged desktop runtime verification', () => {
     const exists = vi.fn<FileProbe>(() => true)
     const unpackedRoot = `${expectedPath}.unpacked`
     const resolvePackage = vi.fn<PackageResolver>(completePackageResolver(unpackedRoot))
+    const verifyNodePty = vi.fn<NodePtyVerifier>()
 
-    verifyPackagedRuntime(context('/build', platform), list, exists, resolvePackage)
+    verifyPackagedRuntime(context('/build', platform), list, exists, resolvePackage, verifyNodePty)
 
     expect(resolvePackagedAsarPath(context('/build', platform))).toBe(expectedPath)
     expect(list).toHaveBeenCalledOnce()
@@ -59,6 +61,7 @@ describe('packaged desktop runtime verification', () => {
     )
     expect(resolvePackage.mock.calls.map(([specifier]) => specifier))
       .toEqual(REQUIRED_UNPACKED_PACKAGE_SPECIFIERS)
+    expect(verifyNodePty).toHaveBeenCalledWith(unpackedRoot, platform, process.arch)
   })
 
   it('rejects an unsupported platform instead of guessing an archive layout', () => {

@@ -1,0 +1,33 @@
+diff --git a/lib/unixTerminal.js b/lib/unixTerminal.js
+index e51df414ec452bca239f243103deceb356c8cbe1..28b61efb1de2654c45519137703f5d5c535e7437 100644
+--- a/lib/unixTerminal.js
++++ b/lib/unixTerminal.js
+@@ -30,8 +30,12 @@ var native = (0, utils_1.loadNativeModule)('pty');
+ var pty = native.module;
+ var helperPath = native.dir + '/spawn-helper';
+ helperPath = path.resolve(__dirname, helperPath);
+-helperPath = helperPath.replace('app.asar', 'app.asar.unpacked');
+-helperPath = helperPath.replace('node_modules.asar', 'node_modules.asar.unpacked');
++if (!helperPath.includes('app.asar.unpacked')) {
++    helperPath = helperPath.replace('app.asar', 'app.asar.unpacked');
++}
++if (!helperPath.includes('node_modules.asar.unpacked')) {
++    helperPath = helperPath.replace('node_modules.asar', 'node_modules.asar.unpacked');
++}
+ var DEFAULT_FILE = 'sh';
+ var DEFAULT_NAME = 'xterm';
+ var DESTROY_SOCKET_TIMEOUT_MS = 200;
+@@ -91,6 +95,13 @@ var UnixTerminal = /** @class */ (function (_super) {
+             _this.emit('exit', code, signal);
+         };
+         // fork
++        if (!fs.existsSync(helperPath)) {
++            var helperError = new Error("node-pty: spawn-helper not found at ".concat(helperPath));
++            process.emitWarning(helperError.message, {
++                code: 'NODE_PTY_SPAWN_HELPER_MISSING'
++            });
++            throw helperError;
++        }
+         var term = pty.fork(file, args, parsedEnv, cwd, _this._cols, _this._rows, uid, gid, (encoding === 'utf8'), helperPath, onexit);
+         _this._socket = new tty.ReadStream(term.fd);
+         if (encoding !== null) {

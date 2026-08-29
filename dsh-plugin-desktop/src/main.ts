@@ -1,6 +1,6 @@
 /** DeepSeek Harness Desktop Gala executable: minimal Electron bootstrap around the Host Cordis root. */
 
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, crashReporter, dialog } from 'electron'
 import type { Context } from '@deepseek-ai/cordis'
 import {
   defaultOfficialsDir,
@@ -19,7 +19,9 @@ import { provideCmdline } from '@deepseek-ai/dsh-cmdline'
 import { resolveDshHome } from '@deepseek-ai/dsh-home-paths'
 import { DSH_LAUNCH_ENVIRONMENT_KEY } from '@deepseek-ai/dsh-launch-environment'
 import { installDesktopPnpmRuntime } from './desktop-runtime-environment.ts'
-import { ElectronDesktopRuntime } from './electron-runtime.ts'
+import { installDesktopFaultMonitor, openDesktopFaultLog } from './desktop-fault-log.ts'
+import { recoverGuiPath } from './gui-path.ts'
+import { desktopProductVersion, ElectronDesktopRuntime } from './electron-runtime.ts'
 import { createGalaHostAdapter } from './gala-electron.ts'
 import { createGalaWorkspaceCoordinator } from './gala-workspaces.ts'
 import { readProfileBundles, writeProfileBundles } from './profile-bundles.ts'
@@ -159,7 +161,47 @@ function openSplashWindow(presentation: SplashPresentation): SplashController {
 /** Start one Electron process and leave lifetime to the mounted desktop plugin. */
 async function start(): Promise<void> {
   app.setName(PRODUCT_NAME)
+  const faultLog = openDesktopFaultLog({
+    logDir: app.getPath('logs'),
+    version: desktopProductVersion(),
+    platform: process.platform,
+    homeDir: app.getPath('home'),
+    bundleRoot: process.resourcesPath,
+  })
+  const removeFaultMonitor = installDesktopFaultMonitor(process, faultLog)
+  const helperWarning = (warning: Error): void => {
+    if ((warning as Error & { code?: string }).code === 'NODE_PTY_SPAWN_HELPER_MISSING') {
+      faultLog.write('pty-creation-failure', warning)
+    }
+  }
+  process.on('warning', helperWarning)
+  const removeFaultObservers = (): void => {
+    process.off('warning', helperWarning)
+    removeFaultMonitor()
+  }
+  crashReporter.start({
+    companyName: 'SkyNotSilent',
+    productName: PRODUCT_NAME,
+    uploadToServer: false,
+    compress: false,
+  })
+  faultLog.write('process-start', undefined, { packaged: app.isPackaged })
+  app.on('render-process-gone', (_event, _contents, details) => {
+    faultLog.write('render-process-gone', undefined, {
+      reason: details.reason,
+      exitCode: details.exitCode,
+    })
+  })
+  app.on('child-process-gone', (_event, details) => {
+    faultLog.write('child-process-gone', undefined, {
+      type: details.type,
+      reason: details.reason,
+      exitCode: details.exitCode,
+      ...(details.serviceName === undefined ? {} : { serviceName: details.serviceName }),
+    })
+  })
   if (!app.requestSingleInstanceLock()) {
+    removeFaultObservers()
     app.quit()
     return
   }
@@ -177,7 +219,10 @@ async function start(): Promise<void> {
       relaunch: () => { app.relaunch() },
       exit: code => { app.exit(code) },
     },
-    () => { removeShutdownRequests?.() },
+    () => {
+      removeShutdownRequests?.()
+      removeFaultObservers()
+    },
   )
   let restartRequested = false
   runtime = new ElectronDesktopRuntime(async () => {
@@ -194,6 +239,7 @@ async function start(): Promise<void> {
     }
     if (report.status === 'healthy') {
       markDesktopProfileHealthy(profileStatePath, profileStartup.profileName)
+      faultLog.write('renderer-healthy')
     } else {
       markDesktopProfileFailed(profileStatePath, profileStartup.profileName)
     }
@@ -228,8 +274,14 @@ async function start(): Promise<void> {
   const failLoudProcess: FailLoudProcess = {
     on: (event, handler) => process.on(event, handler),
     off: (event, handler) => process.off(event, handler),
-    stderr: process.stderr,
-    exit: finalExit,
+    stderr: faultLog.failLoudStderr(process.stderr),
+    exit: code => {
+      dialog.showErrorBox(
+        'DeepSeek Harness Desktop Gala 遇到内部错误',
+        `应用已安全停止。诊断日志保存在：\n${faultLog.path}`,
+      )
+      finalExit(code)
+    },
   }
   installFailLoud(BIN_NAME, failLoudProcess, async () => {
     try {
@@ -268,6 +320,19 @@ async function start(): Promise<void> {
     })
     const releasePnpmRuntime = (): void => { pnpmRuntime.dispose() }
     disposePnpmRuntime = releasePnpmRuntime
+    if (app.isPackaged && process.platform === 'darwin') {
+      const recoveredPath = recoverGuiPath({
+        platform: process.platform,
+        currentPath: process.env.PATH,
+        appCommandDir: pnpmRuntime.pathDir,
+        homeDir: app.getPath('home'),
+      })
+      process.env.PATH = recoveredPath.value
+      faultLog.write('gui-path-recovered', undefined, {
+        source: recoveredPath.source,
+        added: recoveredPath.added,
+      })
+    }
     const prepared = prepareDesktopProfile(
       process.env.DSH_TELEMETRY_DISABLED,
       homeDir,
@@ -380,6 +445,7 @@ async function start(): Promise<void> {
     }
   } catch (cause) {
     splash.settle()
+    faultLog.write('startup-failure', cause)
     process.stderr.write(`${BIN_NAME}: ${cause instanceof Error ? cause.stack ?? cause.message : String(cause)}\n`)
     let exitCode = 1
     if (profileStartup !== undefined && profileStatePath !== undefined) {

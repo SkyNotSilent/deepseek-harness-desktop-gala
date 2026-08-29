@@ -4,12 +4,15 @@ import { randomUUID } from 'node:crypto'
 import {
   chmodSync,
   lstatSync,
+  mkdtempSync,
   mkdirSync,
   readdirSync,
+  rmSync,
   renameSync,
   unlinkSync,
   writeFileSync,
 } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { basename, dirname, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
@@ -35,18 +38,22 @@ export interface DesktopPnpmRuntimeOptions {
   stateDir: string
   /** Parent environment whose PATH is updated; defaults to `process.env`. */
   environment?: NodeJS.ProcessEnv
+  /** Parent directory for one private package-manager cache; defaults to the OS temp area. */
+  tempDir?: string
 }
 
 /** Files and reversible PATH update created for the Host runtime. */
 export interface DesktopPnpmRuntimeInstallation {
-  /** Public directory prepended to the Host PATH; it contains only pnpm. */
+  /** Public directory prepended to the Host PATH; it contains node and pnpm. */
   pathDir: string
   /** Public pnpm command shim. */
   pnpmShimPath: string
-  /** Private directory made visible only inside the pnpm process tree. */
+  /** Directory containing the bundled Node command; equal to `pathDir`. */
   nodeBinDir: string
-  /** Private Node command shim used by pnpm lifecycle scripts. */
+  /** Public Node command shim used by Bash and pnpm lifecycle scripts. */
   nodeShimPath: string
+  /** Private temporary package-manager cache writable by a workspace sandbox. */
+  cacheDir: string
   /** Preloaded module that removes Electron RunAsNode from child environments. */
   clearEnvironmentPath: string
   /** Remove this installation's PATH entry without deleting persistent generated files. */
@@ -181,12 +188,16 @@ function posixPnpmShim(
   nodeBinDir: string,
   nodeShimPath: string,
   clearEnvironmentUrl: string,
+  cacheDir: string,
 ): string {
   return [
     '#!/bin/sh',
     [
       `PATH=${quoteSh(nodeBinDir)}:"\${PATH:-}"`,
       `NODE=${quoteSh(nodeShimPath)}`,
+      `npm_config_cache=${quoteSh(join(cacheDir, 'npm'))}`,
+      `npm_config_store_dir=${quoteSh(join(cacheDir, 'pnpm-store'))}`,
+      `XDG_CACHE_HOME=${quoteSh(join(cacheDir, 'xdg'))}`,
       `${RUN_AS_NODE}=1`,
       'npm_config_runtime=electron',
       `npm_config_target=${quoteSh(options.electronVersion)}`,
@@ -215,12 +226,16 @@ function windowsPnpmShim(
   nodeBinDir: string,
   nodeShimPath: string,
   clearEnvironmentUrl: string,
+  cacheDir: string,
 ): string {
   return [
     '@echo off',
     'setlocal DisableDelayedExpansion',
     `set "PATH=${escapeBatchSetValue(nodeBinDir)};%PATH%"`,
     `set "NODE=${escapeBatchSetValue(nodeShimPath)}"`,
+    `set "npm_config_cache=${escapeBatchSetValue(join(cacheDir, 'npm'))}"`,
+    `set "npm_config_store_dir=${escapeBatchSetValue(join(cacheDir, 'pnpm-store'))}"`,
+    `set "XDG_CACHE_HOME=${escapeBatchSetValue(join(cacheDir, 'xdg'))}"`,
     `set "${RUN_AS_NODE}=1"`,
     'set "npm_config_runtime=electron"',
     `set "npm_config_target=${escapeBatchSetValue(options.electronVersion)}"`,
@@ -313,11 +328,10 @@ export function installDesktopPnpmRuntime(options: DesktopPnpmRuntimeOptions): D
 
   const pathDir = join(options.stateDir, 'bin')
   const privateDir = join(options.stateDir, 'private')
-  const nodeBinDir = join(privateDir, 'node-bin')
+  const nodeBinDir = pathDir
   preparePrivateDirectory(options.stateDir)
   preparePrivateDirectory(pathDir)
   preparePrivateDirectory(privateDir)
-  preparePrivateDirectory(nodeBinDir)
 
   const windows = options.platform === 'win32'
   const pnpmShimName = windows ? 'pnpm.cmd' : 'pnpm'
@@ -325,34 +339,48 @@ export function installDesktopPnpmRuntime(options: DesktopPnpmRuntimeOptions): D
   removeStaleTemporaryFiles(pathDir, pnpmShimName)
   removeStaleTemporaryFiles(nodeBinDir, nodeShimName)
   removeStaleTemporaryFiles(privateDir, 'clear-env.mjs')
-  assertOwnedDirectoryEntries(pathDir, [pnpmShimName])
-  assertOwnedDirectoryEntries(nodeBinDir, [nodeShimName])
-  const pnpmShimPath = join(pathDir, pnpmShimName)
-  const nodeShimPath = join(nodeBinDir, nodeShimName)
-  const clearEnvironmentPath = join(privateDir, 'clear-env.mjs')
-  replacePrivateFile(clearEnvironmentPath, clearEnvironmentModule(), PRIVATE_FILE_MODE)
-  const clearEnvironmentUrl = pathToFileURL(clearEnvironmentPath).href
-  replacePrivateFile(
-    nodeShimPath,
-    windows
-      ? windowsNodeShim(options.appExecutable, clearEnvironmentUrl)
-      : posixNodeShim(options.appExecutable, clearEnvironmentUrl),
-    windows ? PRIVATE_FILE_MODE : EXECUTABLE_FILE_MODE,
-  )
-  replacePrivateFile(
-    pnpmShimPath,
-    windows
-      ? windowsPnpmShim(options, nodeBinDir, nodeShimPath, clearEnvironmentUrl)
-      : posixPnpmShim(options, nodeBinDir, nodeShimPath, clearEnvironmentUrl),
-    windows ? PRIVATE_FILE_MODE : EXECUTABLE_FILE_MODE,
-  )
+  assertOwnedDirectoryEntries(pathDir, [pnpmShimName, nodeShimName])
+  const cacheDir = mkdtempSync(join(options.tempDir ?? tmpdir(), 'dsh-desktop-pnpm-'))
+  try {
+    preparePrivateDirectory(cacheDir)
+    const pnpmShimPath = join(pathDir, pnpmShimName)
+    const nodeShimPath = join(nodeBinDir, nodeShimName)
+    const clearEnvironmentPath = join(privateDir, 'clear-env.mjs')
+    replacePrivateFile(clearEnvironmentPath, clearEnvironmentModule(), PRIVATE_FILE_MODE)
+    const clearEnvironmentUrl = pathToFileURL(clearEnvironmentPath).href
+    replacePrivateFile(
+      nodeShimPath,
+      windows
+        ? windowsNodeShim(options.appExecutable, clearEnvironmentUrl)
+        : posixNodeShim(options.appExecutable, clearEnvironmentUrl),
+      windows ? PRIVATE_FILE_MODE : EXECUTABLE_FILE_MODE,
+    )
+    replacePrivateFile(
+      pnpmShimPath,
+      windows
+        ? windowsPnpmShim(options, nodeBinDir, nodeShimPath, clearEnvironmentUrl, cacheDir)
+        : posixPnpmShim(options, nodeBinDir, nodeShimPath, clearEnvironmentUrl, cacheDir),
+      windows ? PRIVATE_FILE_MODE : EXECUTABLE_FILE_MODE,
+    )
 
-  return {
-    pathDir,
-    pnpmShimPath,
-    nodeBinDir,
-    nodeShimPath,
-    clearEnvironmentPath,
-    dispose: installPathDirectory(options.environment ?? process.env, pathDir, options.platform),
+    const disposePath = installPathDirectory(options.environment ?? process.env, pathDir, options.platform)
+    let disposed = false
+    return {
+      pathDir,
+      pnpmShimPath,
+      nodeBinDir,
+      nodeShimPath,
+      cacheDir,
+      clearEnvironmentPath,
+      dispose: () => {
+        if (disposed) return
+        disposed = true
+        disposePath()
+        rmSync(cacheDir, { force: true, recursive: true })
+      },
+    }
+  } catch (cause) {
+    rmSync(cacheDir, { force: true, recursive: true })
+    throw cause
   }
 }

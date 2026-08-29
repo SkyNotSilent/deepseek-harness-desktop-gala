@@ -52,7 +52,7 @@ afterEach(() => {
 })
 
 describe('desktop Host pnpm runtime', () => {
-  it.each(['darwin', 'linux'] as const)('creates a pnpm-only public PATH on %s', (platform) => {
+  it.each(['darwin', 'linux'] as const)('creates a public Node and pnpm PATH on %s', (platform) => {
     const stateDir = join(temporaryDirectory(), 'runtime state')
     const environment: NodeJS.ProcessEnv = {
       PATH: '/usr/local/bin:/usr/bin:/bin',
@@ -64,8 +64,8 @@ describe('desktop Host pnpm runtime', () => {
 
     const installation = installDesktopPnpmRuntime(options(stateDir, platform, environment))
 
-    expect(readdirSync(installation.pathDir)).toEqual(['pnpm'])
-    expect(readdirSync(installation.nodeBinDir)).toEqual(['node'])
+    expect(readdirSync(installation.pathDir).sort()).toEqual(['node', 'pnpm'])
+    expect(installation.nodeBinDir).toBe(installation.pathDir)
     expect(lstatSync(stateDir).mode & 0o777).toBe(0o700)
     expect(lstatSync(installation.pathDir).mode & 0o777).toBe(0o700)
     expect(lstatSync(installation.nodeBinDir).mode & 0o777).toBe(0o700)
@@ -77,6 +77,9 @@ describe('desktop Host pnpm runtime', () => {
     const pnpm = readFileSync(installation.pnpmShimPath, 'utf8')
     expect(pnpm).toContain(`PATH='${installation.nodeBinDir}':"\${PATH:-}"`)
     expect(pnpm).toContain(`NODE='${installation.nodeShimPath}'`)
+    expect(pnpm).toContain(`npm_config_cache='${join(installation.cacheDir, 'npm')}'`)
+    expect(pnpm).toContain(`npm_config_store_dir='${join(installation.cacheDir, 'pnpm-store')}'`)
+    expect(pnpm).toContain(`XDG_CACHE_HOME='${join(installation.cacheDir, 'xdg')}'`)
     expect(pnpm).toContain('ELECTRON_RUN_AS_NODE=1 npm_config_runtime=electron')
     expect(pnpm).toContain("npm_config_target='43.4.0'")
     expect(pnpm).toContain("npm_config_disturl='https://electronjs.org/headers'")
@@ -100,6 +103,7 @@ describe('desktop Host pnpm runtime', () => {
     installation.dispose()
     installation.dispose()
     expect(environment).toEqual(original)
+    expect(() => lstatSync(installation.cacheDir)).toThrow()
   })
 
   it('clears every RunAsNode casing before the requested Node entry executes', () => {
@@ -170,7 +174,7 @@ describe('desktop Host pnpm runtime', () => {
     installation.dispose()
   })
 
-  it('creates Windows batch shims without publishing the private Node directory', () => {
+  it('creates public Windows Node and pnpm batch shims', () => {
     const stateDir = join(temporaryDirectory(), 'runtime-state')
     const environment: NodeJS.ProcessEnv = {
       Path: 'C:\\Windows\\System32;C:\\Windows',
@@ -180,13 +184,15 @@ describe('desktop Host pnpm runtime', () => {
 
     const installation = installDesktopPnpmRuntime(options(stateDir, 'win32', environment))
 
-    expect(readdirSync(installation.pathDir)).toEqual(['pnpm.cmd'])
-    expect(readdirSync(installation.nodeBinDir)).toEqual(['node.cmd'])
+    expect(readdirSync(installation.pathDir).sort()).toEqual(['node.cmd', 'pnpm.cmd'])
+    expect(installation.nodeBinDir).toBe(installation.pathDir)
     const clearEnvironmentUrl = pathToFileURL(installation.clearEnvironmentPath).href
     const escapedClearEnvironmentUrl = clearEnvironmentUrl.replaceAll('%', '%%')
     const pnpm = readFileSync(installation.pnpmShimPath, 'utf8')
     expect(pnpm).toContain(`set "PATH=${installation.nodeBinDir};%PATH%"`)
     expect(pnpm).toContain(`set "NODE=${installation.nodeShimPath}"`)
+    expect(pnpm).toContain(`set "npm_config_cache=${join(installation.cacheDir, 'npm')}"`)
+    expect(pnpm).toContain(`set "npm_config_store_dir=${join(installation.cacheDir, 'pnpm-store')}"`)
     expect(pnpm).toContain('set "ELECTRON_RUN_AS_NODE=1"')
     expect(pnpm).toContain('set "npm_config_runtime=electron"')
     expect(pnpm).toContain('set "npm_config_target=43.4.0"')
@@ -269,11 +275,11 @@ describe('desktop Host pnpm runtime', () => {
     const stateDir = join(root, 'runtime')
     const pathDir = join(stateDir, 'bin')
     mkdirSync(pathDir, { recursive: true })
-    writeFileSync(join(pathDir, 'node'), 'unexpected')
+    writeFileSync(join(pathDir, 'npm'), 'unexpected')
     const environment: NodeJS.ProcessEnv = { PATH: '/usr/bin' }
 
     expect(() => installDesktopPnpmRuntime(options(stateDir, 'linux', environment)))
-      .toThrow('directory contains unexpected entries: node')
+      .toThrow('directory contains unexpected entries: npm')
     expect(environment).toEqual({ PATH: '/usr/bin' })
   })
 
@@ -288,7 +294,7 @@ describe('desktop Host pnpm runtime', () => {
 
     const installation = installDesktopPnpmRuntime(options(stateDir, 'linux', environment))
 
-    expect(readdirSync(pathDir)).toEqual(['pnpm'])
+    expect(readdirSync(pathDir).sort()).toEqual(['node', 'pnpm'])
     installation.dispose()
   })
 
