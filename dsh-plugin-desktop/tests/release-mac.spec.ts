@@ -60,7 +60,7 @@ describe('macOS release command boundary', () => {
     expect(calls[1]).toEqual({
       command: 'yarn',
       args: [
-        'exec', 'electron-builder', '--mac', 'dmg', 'zip',
+        'exec', 'electron-builder', '--mac', 'dmg', 'zip', '--arm64',
         '--config.forceCodeSigning=true', '--config.mac.hardenedRuntime=true',
         '--config.mac.notarize=true', '--config.extraMetadata.desktopUpdateMode=signed-auto',
       ],
@@ -77,7 +77,7 @@ describe('macOS release command boundary', () => {
       command: process.execPath,
       args: ['scripts/verify-mac-release.ts'],
       cwd: '/repo/dsh-plugin-desktop',
-      env: { PATH: '/usr/bin', SAFE_BUILD_VALUE: 'kept' },
+      env: { PATH: '/usr/bin', SAFE_BUILD_VALUE: 'kept', DSH_MAC_RELEASE_TEAM_ID: 'TEAM123456' },
     })
     expect(logs).toHaveLength(1)
     expect(logs[0]).toContain('signing via keychain; notarization via apple-id')
@@ -112,7 +112,7 @@ describe('macOS release command boundary', () => {
     expect(calls[1]?.env.CSC_KEY_PASSWORD).toBe(p12Password)
     expect(calls[1]?.env.MAC_CERT_P12_BASE64).toBeUndefined()
     expect(calls[1]?.env.MACOS_SIGN_IDENTITY).toBeUndefined()
-    expect(calls[2]?.env).toEqual({ PATH: '/usr/bin' })
+    expect(calls[2]?.env).toEqual({ PATH: '/usr/bin', DSH_MAC_RELEASE_TEAM_ID: 'TEAM123456' })
   })
 
   it('rejects development signing before running any command', () => {

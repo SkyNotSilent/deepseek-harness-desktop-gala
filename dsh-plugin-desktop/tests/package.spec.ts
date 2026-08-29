@@ -29,6 +29,7 @@ const manifest = JSON.parse(readFileSync(new URL('package.json', packageRoot), '
       artifactName?: unknown
       entitlements?: unknown
       entitlementsInherit?: unknown
+      extendInfo?: unknown
       hardenedRuntime?: unknown
       icon?: unknown
       notarize?: unknown
@@ -127,6 +128,8 @@ describe('published package surface', () => {
     expect(config).toContain("'windows-acl-runner': 'src/windows-acl-runner.ts'")
     expect(config).toContain("'desktop-cli': 'src/desktop-cli.ts'")
     expect(config).toContain("'desktop-runtime-environment': 'src/desktop-runtime-environment.ts'")
+    expect(config).toContain("'desktop-fault-log': 'src/desktop-fault-log.ts'")
+    expect(config).toContain("'gui-path': 'src/gui-path.ts'")
     expect(config).toContain("'desktop-terminal': 'src/desktop-terminal.ts'")
     expect(config).toContain("'profile-manager': 'src/profile-manager.ts'")
     expect(config).toContain("'profile-service': 'src/profile-service.ts'")
@@ -137,7 +140,7 @@ describe('published package surface', () => {
     expect(config).toContain("updates: 'src/updates.ts'")
   })
 
-  it('installs the private pnpm PATH after the launch snapshot and before profile boot', () => {
+  it('installs the bundled Node/pnpm PATH after the launch snapshot and before profile boot', () => {
     const main = readFileSync(new URL('src/main.ts', packageRoot), 'utf8')
     const snapshot = main.indexOf('const environment = loadLayeredEnv')
     const install = main.indexOf('const pnpmRuntime = installDesktopPnpmRuntime')
@@ -150,6 +153,9 @@ describe('published package surface', () => {
     expect(boot).toBeGreaterThan(prepare)
     expect(main).toContain("'dsh-plugin-desktop: packaged pnpm runtime PATH'")
     expect(main).toContain('disposePnpmRuntime?.()')
+    expect(main).toContain("faultLog.write('pty-creation-failure', warning)")
+    expect(main).toContain('uploadToServer: false')
+    expect(main).not.toContain("process.on('unhandledRejection'")
   })
 
   it('fixes the installed application identity', () => {
@@ -192,6 +198,12 @@ describe('published package surface', () => {
     ])
     expect(manifest.build?.mac?.icon).toBe('build/app-icon-mac.png')
     expect(manifest.build?.mac?.artifactName).toBe('DeepSeek-Harness-Desktop-Gala-${version}-${arch}.${ext}')
+    expect(manifest.build?.mac?.extendInfo).toEqual({
+      NSDocumentsFolderUsageDescription: '用于读取和写入你明确选择的 Documents 工作区。',
+      NSDesktopFolderUsageDescription: '用于读取和写入你明确选择的 Desktop 工作区。',
+      NSDownloadsFolderUsageDescription: '用于读取和写入你明确选择的 Downloads 工作区。',
+    })
+    expect(JSON.stringify(manifest.build?.mac)).not.toContain('NSAppleEventsUsageDescription')
     expect(manifest.build?.win?.icon).toBe('build/app-icon.png')
     expect(manifest.build?.win?.target).toEqual([{
       target: 'nsis',
@@ -217,6 +229,8 @@ describe('published package surface', () => {
     expect(manifest.scripts?.['package:dir']).toBe('yarn run build && node scripts/package-dir.mjs')
     expect(packageDir).toContain("CSC_IDENTITY_AUTO_DISCOVERY: 'false'")
     expect(manifest.scripts?.['dist:mac']).toBe('node scripts/release-mac.ts')
+    expect(manifest.scripts?.['publish:preview']).toBe('node scripts/publish-preview.ts')
+    expect(manifest.scripts?.['verify:mac-smoke']).toBe('node scripts/verify-mac-smoke.ts')
     expect(manifest.scripts?.['dist:win']).toBe('node scripts/package-win.ts')
     expect(manifest.scripts?.['check:win-package']).toContain('yarn run build')
     expect(manifest.scripts?.['check:win-package']).toContain('yarn run typecheck')
@@ -229,6 +243,8 @@ describe('published package surface', () => {
     expect(workspaceManifest.scripts?.['dist:mac']).toBe('yarn workspace dsh-plugin-desktop dist:mac')
     expect(workspaceManifest.scripts?.['dist:win'])
       .toBe('yarn workspace dsh-plugin-desktop dist:win')
+    expect(workspaceManifest.scripts?.['publish:preview'])
+      .toBe('yarn workspace dsh-plugin-desktop publish:preview')
     expect(manifest.build?.afterPack).toBe('./scripts/verify-packaged-runtime.ts')
     expect(manifest.build?.mac).toEqual(expect.objectContaining({
       entitlements: 'build/entitlements.mac.plist',
@@ -240,7 +256,16 @@ describe('published package surface', () => {
     expect(manifest.devDependencies?.['@electron/asar']).toBe('3.4.1')
   })
 
-  it('ad-hoc signs and verifies public Preview macOS artifacts', () => {
+  it('pins the node-pty asar-unpacked fix through one Yarn patch resolution', () => {
+    expect(workspaceManifest.resolutions?.['node-pty@npm:1.2.0-beta.15'])
+      .toBe('patch:node-pty@npm%3A1.2.0-beta.15#./patches/node-pty@1.2.0-beta.15.patch')
+    const patch = readFileSync(new URL('patches/node-pty@1.2.0-beta.15.patch', workspaceRoot), 'utf8')
+    expect(patch).toContain("!helperPath.includes('app.asar.unpacked')")
+    expect(patch).toContain("!helperPath.includes('node_modules.asar.unpacked')")
+    expect(patch).toContain('NODE_PTY_SPAWN_HELPER_MISSING')
+  })
+
+  it('keeps CI macOS packages as smoke artifacts and creates only a draft Release', () => {
     const previewWorkflow = readFileSync(
       new URL('.github/workflows/preview-release.yml', workspaceRoot),
       'utf8',
@@ -251,6 +276,12 @@ describe('published package surface', () => {
     expect(previewWorkflow).toContain('--config.forceCodeSigning=true')
     expect(previewWorkflow).toContain('codesign --verify --deep --strict --verbose=4')
     expect(previewWorkflow).toContain('hdiutil verify "$dmg"')
+    expect(previewWorkflow).toContain('node scripts/verify-mac-smoke.ts')
+    expect(previewWorkflow).toContain('corepack yarn workspace dsh-plugin-desktop test')
+    expect(previewWorkflow).toContain('name: windows')
+    expect(previewWorkflow).toContain('--draft')
+    expect(previewWorkflow).not.toContain('merge-multiple: true')
+    expect(previewWorkflow).not.toContain('Create checksums')
   })
 
   it('keeps one fixed brand-blue tray source for generated native assets', () => {

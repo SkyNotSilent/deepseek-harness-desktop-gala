@@ -95,12 +95,14 @@
     "verify:cli": "node scripts/verify-cli-runtime.mjs",
     "verify:loader": "node scripts/verify-loader-boot.mjs",
     "verify:profile": "node scripts/verify-profile-boot.mjs",
+    "verify:mac-smoke": "node scripts/verify-mac-smoke.ts",
     "check": "yarn run build && yarn run typecheck && yarn run test && yarn run verify:closure && yarn run verify:cli && yarn run verify:loader && yarn run verify:profile",
     "check:win-package": "yarn run build && yarn run typecheck && vitest run tests/package.spec.ts tests/package-win.spec.ts tests/update-checker.spec.ts tests/updates.spec.ts tests/verify-win-installer.spec.ts tests/verify-packaged-runtime.spec.ts tests/windows-pwsh-sandbox.spec.ts tests/window-options.spec.ts && yarn run verify:closure",
     "start": "node lib/bin.js",
     "dev": "yarn run build && node lib/bin.js",
     "package:dir": "yarn run build && node scripts/package-dir.mjs",
     "dist:mac": "node scripts/release-mac.ts",
+    "publish:preview": "node scripts/publish-preview.ts",
     "dist:win": "node scripts/package-win.ts",
     "prepack": "yarn run check"
   },
@@ -286,6 +288,11 @@
       ],
       "artifactName": "DeepSeek-Harness-Desktop-Gala-${version}-${arch}.${ext}",
       "category": "public.app-category.developer-tools",
+      "extendInfo": {
+        "NSDocumentsFolderUsageDescription": "用于读取和写入你明确选择的 Documents 工作区。",
+        "NSDesktopFolderUsageDescription": "用于读取和写入你明确选择的 Desktop 工作区。",
+        "NSDownloadsFolderUsageDescription": "用于读取和写入你明确选择的 Downloads 工作区。"
+      },
       "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.inherit.plist",
       "hardenedRuntime": false,

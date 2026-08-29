@@ -76,16 +76,23 @@ export function releaseMac(options: MacReleaseOptions = defaultReleaseOptions())
   options.log(
     `macOS release preflight passed: ${result.identity}; signing via ${result.signing}; notarization via ${result.notarization}`,
   )
+  const teamId = /\(([A-Z0-9]{10})\)$/u.exec(result.identity)?.[1]
+  if (teamId === undefined) {
+    throw new Error(`macOS release identity does not contain a 10-character Team ID: ${result.identity}`)
+  }
 
   // The workspace check includes the package build and repository-layout gate. Signing
   // material is withheld from every build, test, Loader smoke, and layout subprocess.
   options.run('yarn', ['run', 'check'], resolve(options.desktopRoot, '..'), buildEnvironment)
   options.run('yarn', [
-    'exec', 'electron-builder', '--mac', 'dmg', 'zip',
+    'exec', 'electron-builder', '--mac', 'dmg', 'zip', '--arm64',
     '--config.forceCodeSigning=true', '--config.mac.hardenedRuntime=true',
     '--config.mac.notarize=true', '--config.extraMetadata.desktopUpdateMode=signed-auto',
   ], options.desktopRoot, releaseEnvironment)
-  options.run(process.execPath, ['scripts/verify-mac-release.ts'], options.desktopRoot, buildEnvironment)
+  options.run(process.execPath, ['scripts/verify-mac-release.ts'], options.desktopRoot, {
+    ...buildEnvironment,
+    DSH_MAC_RELEASE_TEAM_ID: teamId,
+  })
 }
 
 const invokedPath = process.argv[1]
