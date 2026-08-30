@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createGalaWorkspaceCoordinator, readGalaWorkspaceMarker } from '../src/gala-workspaces.ts'
 
 const roots: string[] = []
+const RUNTIME_VERSION = '0.1.1-rc.2'
 
 function fixture() {
   const root = mkdtempSync(join(tmpdir(), 'gala-workspaces-'))
@@ -18,8 +19,8 @@ function fixture() {
     name: 'dsh-profile-desktop',
     private: true,
     dependencies: {
-      '@deepseek-ai/dsh-base': '0.1.1-rc.2',
-      '@deepseek-ai/dsh-web-app': '0.1.1-rc.2',
+      '@deepseek-ai/dsh-base': RUNTIME_VERSION,
+      '@deepseek-ai/dsh-web-app': RUNTIME_VERSION,
       'third-party-bundle': '1.2.3',
     },
     dsh: { profile: { bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', 'third-party-bundle'] } },
