@@ -235,6 +235,8 @@ describe('published package surface', () => {
     expect(manifest.scripts?.['publish:preview']).toBe('node scripts/publish-preview.ts')
     expect(manifest.scripts?.['verify:mac-smoke']).toBe('node scripts/verify-mac-smoke.ts')
     expect(manifest.scripts?.['dist:win']).toBe('node scripts/package-win.ts')
+    expect(manifest.scripts?.['check:win-package'])
+      .toMatch(/^yarn workspace dsh-plugin-gala build && yarn run build/)
     expect(manifest.scripts?.['check:win-package']).toContain('yarn run build')
     expect(manifest.scripts?.['check:win-package']).toContain('yarn run typecheck')
     expect(manifest.scripts?.['check:win-package']).toContain('tests/package-win.spec.ts')
@@ -285,6 +287,15 @@ describe('published package surface', () => {
     expect(previewWorkflow).toContain('--draft')
     expect(previewWorkflow).not.toContain('merge-multiple: true')
     expect(previewWorkflow).not.toContain('Create checksums')
+  })
+
+  it('runs the real assembled Linux renderer check with a virtual display', () => {
+    const ciWorkflow = readFileSync(
+      new URL('.github/workflows/ci.yml', workspaceRoot),
+      'utf8',
+    )
+
+    expect(ciWorkflow).toContain('run: xvfb-run -a corepack yarn check')
   })
 
   it('keeps one fixed brand-blue tray source for generated native assets', () => {

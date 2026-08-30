@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
+  MAC_SMOKE_TIMEOUT_MS,
+  PACKAGED_COMMAND_TIMEOUT_MS,
   PACKAGED_PTY_PROBE,
+  PACKAGED_PTY_TIMEOUT_MS,
   verifyMacSmoke,
   type MacSmokeOptions,
 } from '../scripts/verify-mac-smoke.ts'
@@ -40,6 +43,13 @@ describe('packaged macOS PTY smoke', () => {
         DSH_PACKAGED_UNPACKED_ROOT: '/Applications/Gala.app/Contents/Resources/app.asar.unpacked',
         DSH_PTY_SMOKE_ROOT: '/private/tmp/dsh-pty-smoke-test',
       }),
+      MAC_SMOKE_TIMEOUT_MS,
+    )
+    expect(PACKAGED_PTY_PROBE).toContain(`}, ${PACKAGED_PTY_TIMEOUT_MS});`)
+    expect(PACKAGED_PTY_PROBE.match(new RegExp(`timeout: ${PACKAGED_COMMAND_TIMEOUT_MS}`, 'gu')))
+      .toHaveLength(3)
+    expect(MAC_SMOKE_TIMEOUT_MS).toBeGreaterThan(
+      PACKAGED_PTY_TIMEOUT_MS + (3 * PACKAGED_COMMAND_TIMEOUT_MS),
     )
     expect(harness.remove).toHaveBeenCalledOnce()
   })

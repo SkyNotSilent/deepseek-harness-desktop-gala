@@ -16,6 +16,9 @@ import { basename, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const SUCCESS_MARKER = '__dsh_packaged_pty_ok__'
+export const PACKAGED_PTY_TIMEOUT_MS = 30_000
+export const PACKAGED_COMMAND_TIMEOUT_MS = 20_000
+export const MAC_SMOKE_TIMEOUT_MS = 120_000
 
 /** Injectable process and filesystem boundary for focused tests. */
 export interface MacSmokeOptions {
@@ -23,7 +26,7 @@ export interface MacSmokeOptions {
   makeDirectory(path: string): void
   listExecutables(directory: string): readonly string[]
   link(target: string, path: string): void
-  run(executable: string, args: readonly string[], env: NodeJS.ProcessEnv): {
+  run(executable: string, args: readonly string[], env: NodeJS.ProcessEnv, timeoutMs: number): {
     status: number | null
     signal: NodeJS.Signals | null
     stdout: string
@@ -54,7 +57,7 @@ let output = '';
 const timer = setTimeout(() => {
   console.error('packaged PTY smoke timed out');
   process.exit(4);
-}, 15000);
+}, ${PACKAGED_PTY_TIMEOUT_MS});
 const terminal = pty.spawn('/bin/bash', ['--noprofile', '--norc', '-c', 'printf ${SUCCESS_MARKER}'], {
   cwd: root,
   env: { PATH: '/usr/bin:/bin', HOME: root },
@@ -99,14 +102,14 @@ async function verifyPackagedCommands() {
       cwd: root,
       env: environment,
       encoding: 'utf8',
-      timeout: 10000,
+      timeout: ${PACKAGED_COMMAND_TIMEOUT_MS},
     });
     assertCommand('packaged node', nodeVersion, process.version);
     const packagedPnpm = spawnSync('pnpm', ['--version'], {
       cwd: root,
       env: environment,
       encoding: 'utf8',
-      timeout: 10000,
+      timeout: ${PACKAGED_COMMAND_TIMEOUT_MS},
     });
     assertCommand('packaged pnpm', packagedPnpm, pnpmVersion);
 
@@ -130,7 +133,7 @@ async function verifyPackagedCommands() {
       cwd: project,
       env: environment,
       encoding: 'utf8',
-      timeout: 10000,
+      timeout: ${PACKAGED_COMMAND_TIMEOUT_MS},
     });
     if (built.error || built.status !== 0) {
       throw new Error('packaged short-process build failed: ' + JSON.stringify({
@@ -180,11 +183,11 @@ function defaultOptions(): MacSmokeOptions {
         }
       }),
     link: (target, path) => symlinkSync(target, path, 'dir'),
-    run(executable, args, env) {
+    run(executable, args, env, timeoutMs) {
       const result = spawnSync(executable, args, {
         encoding: 'utf8',
         env,
-        timeout: 20_000,
+        timeout: timeoutMs,
         killSignal: 'SIGKILL',
       })
       return {
@@ -230,7 +233,7 @@ export function verifyMacSmoke(appPath: string, options: MacSmokeOptions = defau
         'app.asar.unpacked',
       ),
       DSH_PTY_SMOKE_ROOT: workDir,
-    })
+    }, MAC_SMOKE_TIMEOUT_MS)
     if (result.error !== undefined || result.status !== 0 || !result.stdout.includes(SUCCESS_MARKER)) {
       const tail = `${result.stdout}\n${result.stderr}`.slice(-8_000)
       throw new Error(

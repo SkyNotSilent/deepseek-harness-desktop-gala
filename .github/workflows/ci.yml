@@ -28,7 +28,8 @@ jobs:
       - run: corepack enable
       - run: corepack yarn install --immutable
       - run: corepack yarn verify:dsh-runtime:registry
-      - run: corepack yarn check
+      - name: Run build, types, tests, real renderer, Loader, profile, CLI and closure gates
+        run: xvfb-run -a corepack yarn check
 
   windows-preview:
     name: Windows x64 unsigned NSIS
