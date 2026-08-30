@@ -1,4 +1,4 @@
-import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
+import type { Context } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-client-ui-theme/client'
 import type {} from './contracts.ts'
 import type { DesktopClientEnvironment } from './environment.ts'
@@ -13,7 +13,7 @@ import { DesktopThemePresenter } from './theme-presenter.ts'
  * @param ctx - active browser Cordis context.
  * @param environment - validated mode and platform marker.
  */
-export function applyAdvancedShell(ctx: ClientContext, environment: DesktopClientEnvironment): void {
+export function applyAdvancedShell(ctx: Context, environment: DesktopClientEnvironment): void {
   if (environment.mode !== 'advanced') {
     throw new Error(`dsh-plugin-desktop: advanced shell received mode ${JSON.stringify(environment.mode)}`)
   }

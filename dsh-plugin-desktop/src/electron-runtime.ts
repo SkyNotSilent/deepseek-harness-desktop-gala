@@ -568,6 +568,7 @@ export class ElectronDesktopRuntime implements DesktopRuntime {
     window.once('ready-to-show', show)
     let tray: Tray | undefined
     try {
+      await this.authenticateRenderer(window, spec.authenticationUrl)
       await this.loadRenderer(window, spec.url)
       tray = new Tray(prepareTrayIcon(spec.trayIcons, this.platform))
       this.tray = tray
@@ -605,6 +606,19 @@ export class ElectronDesktopRuntime implements DesktopRuntime {
       if (!window.isDestroyed()) window.destroy()
       if (this.tray === mountedTray) this.tray = undefined
       if (this.window === window) this.window = undefined
+    }
+  }
+
+  /** Exchange the one-time launch token inside the exact Electron session used by the renderer. */
+  private async authenticateRenderer(window: BrowserWindow, authenticationUrl: string): Promise<void> {
+    const response = await window.webContents.session.fetch(authenticationUrl, {
+      method: 'GET',
+      credentials: 'include',
+      redirect: 'follow',
+      cache: 'no-store',
+    })
+    if (!response.ok) {
+      throw new Error(`dsh-plugin-desktop: renderer authentication failed with HTTP ${String(response.status)}`)
     }
   }
 

@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createGalaWorkspaceCoordinator, readGalaWorkspaceMarker } from '../src/gala-workspaces.ts'
 
 const roots: string[] = []
-const RUNTIME_VERSION = '0.1.1-rc.2'
+const RUNTIME_VERSION = '0.1.2-alpha.2'
 
 function fixture() {
   const root = mkdtempSync(join(tmpdir(), 'gala-workspaces-'))

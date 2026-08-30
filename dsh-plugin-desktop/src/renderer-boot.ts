@@ -1,4 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import type { ConnectionRequestRejection, ConnectionTrustRequest } from '@deepseek-ai/dsh-client-connection'
 import type { RendererBootReport } from './renderer-boot-contract.ts'
 
 export { RENDERER_BOOT_REPORT_PATH } from './renderer-boot-contract.ts'
@@ -57,7 +58,10 @@ export async function handleRendererBootRequest(
   res: ServerResponse,
   expectedOrigin: string,
   report: (value: RendererBootReport) => void,
+  requestRejection: (request: ConnectionTrustRequest) => ConnectionRequestRejection,
 ): Promise<void> {
+  const rejection = requestRejection(req)
+  if (rejection !== undefined) return finish(res, rejection)
   if (req.method !== 'POST') return finish(res, 405)
   if (req.headers.origin !== expectedOrigin) return finish(res, 403)
   if (req.headers['content-type']?.split(';', 1)[0]?.trim().toLowerCase() !== 'application/json') {

@@ -78,6 +78,7 @@ describe('G21 · 合成工坊装配验收', () => {
       native,
     })
     const handler = createGalaHttpHandler({
+      requestRejection: () => undefined,
       origin: ORIGIN,
       renderPanel: (view, nonce) => renderPanelPage(panelViewModel(layer, view), nonce),
       assetRoot: id => layer.assetRoot(id),

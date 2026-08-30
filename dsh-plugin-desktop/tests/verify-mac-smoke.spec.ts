@@ -37,6 +37,7 @@ describe('packaged macOS PTY smoke', () => {
       ['-e', PACKAGED_PTY_PROBE],
       expect.objectContaining({
         ELECTRON_RUN_AS_NODE: '1',
+        DSH_PACKAGED_UNPACKED_ROOT: '/Applications/Gala.app/Contents/Resources/app.asar.unpacked',
         DSH_PTY_SMOKE_ROOT: '/private/tmp/dsh-pty-smoke-test',
       }),
     )

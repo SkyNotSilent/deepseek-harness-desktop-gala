@@ -2,7 +2,6 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { Context } from '@deepseek-ai/cordis'
 import type { WebRoute } from '@deepseek-ai/dsh-host-webserver'
 import type { ThemePreference } from '@deepseek-ai/dsh-client-ui-theme'
-import { settingsNamespace } from '@deepseek-ai/dsh-settings'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   apply,
@@ -96,6 +95,10 @@ function createHarness(platform: DesktopRuntime['platform'] = 'darwin'): PluginH
   }
   const ctx = {
     desktopRuntime: runtime,
+    connection: {
+      authenticatedUrl: vi.fn((baseUrl: string) => `${baseUrl}/?token=launch-once`),
+      requestRejection: vi.fn(() => undefined),
+    },
     webServer: {
       host: '127.0.0.1',
       port: 43120,
@@ -126,7 +129,7 @@ function createHarness(platform: DesktopRuntime['platform'] = 'darwin'): PluginH
     notify: async (next, prev) => { await watcher?.(next, prev) },
     notifyTheme: (preference) => {
       themePreference = preference
-      settingsUpdated?.(settingsNamespace('ui-theme'), { preference })
+      settingsUpdated?.('ui-theme', { preference })
     },
   }
 }
@@ -158,6 +161,7 @@ describe('desktop Host plugin', () => {
     apply(harness.ctx, config)
 
     expect(inject).toContain('settings')
+    expect(inject).toContain('connection')
     expect(inject).not.toContain('loader')
     const register = vi.mocked(harness.ctx.settings.register)
     expect(register.mock.calls[0]?.[2]).toEqual(expect.objectContaining({ applies: 'restart' }))
@@ -166,6 +170,7 @@ describe('desktop Host plugin', () => {
     expect(harness.shell()).toEqual(expect.objectContaining({
       mode: 'compatibility',
       url: 'http://127.0.0.1:43120/?dsh-desktop-mode=compatibility&dsh-desktop-platform=darwin',
+      authenticationUrl: 'http://127.0.0.1:43120/?token=launch-once',
       productName: 'DeepSeek Harness Desktop Gala',
       windowTitle: 'DeepSeek Harness Desktop',
       iconPath: expect.stringMatching(/\/build\/app-icon-mac\.png$/u),

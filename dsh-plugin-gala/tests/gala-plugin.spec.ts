@@ -50,7 +50,7 @@ describe('Gala Cordis service contract', () => {
       bundles: adapter.bundles,
       native,
     })
-    const service = createGalaService(adapter, layer, 'http://127.0.0.1:4321')
+    const service = createGalaService(adapter, layer, 'http://127.0.0.1:4321', () => undefined)
 
     expect(service.panel.count()).toBeGreaterThan(0)
     service.rpc.open('gallery')
@@ -66,7 +66,7 @@ describe('Gala Cordis service contract', () => {
   })
 
   it('degrades assembly failure to an inert service', async () => {
-    const service = createDisabledGalaService(new Error('broken assets'))
+    const service = createDisabledGalaService(new Error('broken assets'), () => undefined)
     await expect(service.activate()).resolves.toBeUndefined()
     expect(service.panel.count()).toBe(0)
     expect(service.panel.picker().girls).toEqual([])
@@ -104,7 +104,7 @@ describe('Gala Cordis service contract', () => {
       workspaces,
       appearanceStorePath: workspaces.appearanceStorePath,
     })
-    const service = createGalaService(adapter, layer, 'http://127.0.0.1:4321')
+    const service = createGalaService(adapter, layer, 'http://127.0.0.1:4321', () => undefined)
 
     await service.rpc.applySkin('gala:skin-dsh-llm')
     expect(native.confirmWorkspaceSwitch).toHaveBeenCalledWith('灵灵')

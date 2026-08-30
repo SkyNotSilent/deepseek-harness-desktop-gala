@@ -10,7 +10,7 @@
  * Gala 层不可用（路由 404 / 网络错误）时静默不生效，官方 UI 不受影响（§7.4）。
  */
 
-import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
+import type { Context } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-client-ui-theme/client'
 
 /** 皮肤映射层端点 */
@@ -57,7 +57,7 @@ export function parseSkinTokens(payload: unknown): Record<string, { light: strin
  * 启动皮肤桥：取当前层 → overrideTokens；SSE skin-changed → 重取重调。
  * 返回清理函数（关 SSE + 撤销覆盖层）。
  */
-export function startGalaSkinBridge(ctx: ClientContext, io: SkinBridgeIo = {}): () => void {
+export function startGalaSkinBridge(ctx: Context, io: SkinBridgeIo = {}): () => void {
   const fetchImpl = io.fetchImpl ?? fetch.bind(globalThis)
   let disposeLayer: (() => void) | undefined
   let stopped = false

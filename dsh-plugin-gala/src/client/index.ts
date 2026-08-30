@@ -1,9 +1,11 @@
 /** Browser presentation owned by the private Gala workspace. */
 
-import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
+import type { Context } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-client-ui-layout/client'
+import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import type {} from '@deepseek-ai/dsh-client-ui-sidebar/client'
+import type {} from '@deepseek-ai/dsh-client-ui-slots'
 import type {} from '@deepseek-ai/dsh-client-ui-theme/client'
 import { GalaSkinDock, GalaWorkspaceSettings } from './GalaSkinDock.tsx'
 import { registerGalaBrandSlots, startGalaBrandSync } from './gala-brand.tsx'
@@ -13,7 +15,7 @@ import { startGalaSkinBridge } from './gala-skin-bridge.ts'
 export const inject = ['slots', 'theme']
 
 /** Register all Gala browser surfaces; every failure path preserves the official UI. */
-export function apply(ctx: ClientContext): void {
+export function apply(ctx: Context): void {
   ctx.effect(
     () => startGalaSkinBridge(ctx),
     'dsh-plugin-gala: skin bridge',
@@ -28,7 +30,10 @@ export function apply(ctx: ClientContext): void {
     'dsh-plugin-gala: persona presenter',
   )
   ctx.effect(
-    () => ctx.slots.register({ name: 'sidebar.footer.action', id: 'gala-skin-dock' }, GalaSkinDock),
+    () => ctx.slots.inject('sidebar.footer.action', () => ctx.slots.register(
+      { name: 'sidebar.footer.action', id: 'gala-skin-dock' },
+      GalaSkinDock,
+    )),
     'dsh-plugin-gala: skin dock',
   )
   ctx.effect(

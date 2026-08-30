@@ -1,0 +1,15 @@
+{
+  "format": 1,
+  "productVersion": "2.1.0-preview.4",
+  "runtimeVersion": "0.1.1-rc.2",
+  "sourceTag": "v2.1.0-preview.4",
+  "sourceCommit": "a42cc4dccfeb63d45d05f3c3f8f2115fc9b7d4f8",
+  "workspaceId": "d71a61ab-1be1-499b-93f5-3ebb8f10344f",
+  "sessionId": "session-preview-2-1-0-fixture",
+  "sessionDirectory": "--var-folders-0r-_djw0jks3ys50q4khgvqb5440000gn-T-dsh-preview-2.1.0-data-ajpZd4-workspace~0020with~0020spaces~0020~4E2D~6587--",
+  "files": {
+    "storages/workspace.json": "db67c0dbc701212d5389d507235805fcb2e85c497474f67ed386426e5178bfe6",
+    "storages/session_projcache.json": "3531db35b2acc283bf2e465b387826d8c18e90ff9a87a12ceb739138e727313b",
+    "session.jsonl.zstd": "22efb8fb9c50ef6ada547ee5fbc2ec27912dec1047db6c6363863b5e8ac122c9"
+  }
+}

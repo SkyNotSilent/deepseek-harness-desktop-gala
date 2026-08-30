@@ -12,7 +12,7 @@ import {
 } from '@deepseek-ai/dsh-launch-environment'
 import { installDesktopPnpmRuntime } from '../lib/desktop-runtime-environment.js'
 import { installProfilePackageResolver } from '../lib/module-resolution.js'
-import { prepareDesktopProfile } from '../lib/profile.js'
+import { healDesktopProfileModuleFallback, prepareDesktopProfile } from '../lib/profile.js'
 
 const BIN_NAME = 'dsh-plugin-desktop-loader-smoke'
 const THIRD_PARTY_NAME = 'dsh-desktop-loader-smoke-plugin'
@@ -49,7 +49,9 @@ try {
     stateDir: join(home, 'runtime-commands'),
     environment: process.env,
   })
+  await healDesktopProfileModuleFallback(home)
   const prepared = prepareDesktopProfile(undefined, home)
+  await healDesktopProfileModuleFallback(home, prepared.profile)
   const thirdPartyDir = join(prepared.profile.dir, 'node_modules', THIRD_PARTY_NAME)
   mkdirSync(thirdPartyDir, { recursive: true })
   writeFileSync(join(thirdPartyDir, 'package.json'), JSON.stringify({
@@ -117,6 +119,10 @@ try {
       })
       host.provide('webRuntime', {})
       host.provide('appExit', () => {})
+      host.provide('connection', {
+        authenticatedUrl: origin => `${origin}/authenticate-loader-smoke`,
+        requestRejection() {},
+      })
       host.provide('settings', {
         register() {
           return {
@@ -145,6 +151,9 @@ try {
   }
   if (mountedSpec?.url !== 'http://127.0.0.1:43120/?dsh-desktop-mode=compatibility&dsh-desktop-platform=darwin') {
     throw new Error(`desktop plugin produced an unexpected renderer URL: ${String(mountedSpec?.url)}`)
+  }
+  if (mountedSpec?.authenticationUrl !== 'http://127.0.0.1:43120/authenticate-loader-smoke') {
+    throw new Error(`desktop plugin produced an unexpected authentication URL: ${String(mountedSpec?.authenticationUrl)}`)
   }
 } finally {
   try {

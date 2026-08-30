@@ -13,6 +13,7 @@
 import { createReadStream, existsSync, statSync } from 'node:fs'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { extname, join, resolve, sep } from 'node:path'
+import type { ConnectionRequestRejection, ConnectionTrustRequest } from '@deepseek-ai/dsh-client-connection'
 import { isSafeEntryPath } from './gala-market.ts'
 
 /** Gala 路由前缀（index.ts 以 prefix 路由注册） */
@@ -92,6 +93,8 @@ export interface GalaHttpRpc {
 
 /** Gala HTTP 层依赖 */
 export interface GalaHttpOptions {
+  /** alpha.2 Connection Host/Origin and browser-session authentication fence. */
+  requestRejection(request: ConnectionTrustRequest): ConnectionRequestRejection
   /** 期望的同源 Origin（POST 校验，如 http://127.0.0.1:<port>） */
   origin: string
   /** 渲染面板页面；nonce 供受控内联脚本的 CSP 使用 */
@@ -293,6 +296,8 @@ export function createGalaHttpHandler(options: GalaHttpOptions): GalaHttpHandler
   const makeNonce = options.nonce ?? (() => crypto.randomUUID().replaceAll('-', ''))
 
   return async (req, res) => {
+    const rejection = options.requestRejection(req)
+    if (rejection !== undefined) return finish(res, rejection)
     const url = new URL(req.url ?? '/', options.origin)
     const subPath = url.pathname.startsWith(GALA_HTTP_PREFIX)
       ? url.pathname.slice(GALA_HTTP_PREFIX.length)

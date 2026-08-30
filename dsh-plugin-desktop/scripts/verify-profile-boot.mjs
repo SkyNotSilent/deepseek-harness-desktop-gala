@@ -13,12 +13,14 @@ import {
 import { DESKTOP_SETTINGS_NAMESPACE } from '../lib/index.js'
 import { installDesktopPnpmRuntime } from '../lib/desktop-runtime-environment.js'
 import { installProfilePackageResolver } from '../lib/module-resolution.js'
-import { prepareDesktopProfile } from '../lib/profile.js'
+import { healDesktopProfileModuleFallback, prepareDesktopProfile } from '../lib/profile.js'
 import { DesktopProfileService } from '../lib/profile-service.js'
 
 const BIN_NAME = 'dsh-plugin-desktop-profile-smoke'
 const HOST_SERVICE_PLUGIN_NAME = 'dsh-desktop-host-services-smoke-plugin'
 const HOST_SERVICE_PROBE_KEY = 'desktopHostServiceProbe'
+const LEGACY_SETTINGS_PLUGIN_NAME = 'dsh-legacy-settings-smoke-plugin'
+const LEGACY_SETTINGS_PROBE_KEY = 'legacySettingsProbe'
 const home = mkdtempSync(join(tmpdir(), 'dsh-desktop-profile-'))
 let ctx
 let releasePackageResolver
@@ -29,7 +31,9 @@ const trayItems = []
 
 try {
   writeFileSync(join(home, 'settings.yaml'), 'dsh-desktop:\n  mode: advanced\n')
+  await healDesktopProfileModuleFallback(home)
   const prepared = prepareDesktopProfile('1', home, 'win32')
+  await healDesktopProfileModuleFallback(home, prepared.profile)
   const hostServicePluginDir = join(
     prepared.profile.dir,
     'node_modules',
@@ -41,6 +45,16 @@ try {
     hostServicePluginDir,
     { recursive: true, force: false, errorOnExist: true },
   )
+  const legacySettingsPluginDir = join(
+    prepared.profile.dir,
+    'node_modules',
+    LEGACY_SETTINGS_PLUGIN_NAME,
+  )
+  cpSync(
+    fileURLToPath(new URL('../tests/fixtures/legacy-settings-smoke-plugin/', import.meta.url)),
+    legacySettingsPluginDir,
+    { recursive: true, force: false, errorOnExist: true },
+  )
   const patches = [
     // Deliberately compose the consumer before the desktop-pnpm provider row.
     // Its required injection must keep it pending until that service mounts.
@@ -48,6 +62,9 @@ try {
       insert: [{
         id: 'desktop-host-services-smoke-plugin',
         name: HOST_SERVICE_PLUGIN_NAME,
+      }, {
+        id: 'legacy-settings-smoke-plugin',
+        name: LEGACY_SETTINGS_PLUGIN_NAME,
       }],
     },
     ...prepared.patches,
@@ -168,6 +185,21 @@ try {
       `profile-local Host service plugin produced an unexpected probe: ${JSON.stringify(hostServiceProbe)}`,
     )
   }
+  const legacySettingsProbe = ctx.get(LEGACY_SETTINGS_PROBE_KEY)
+  if (legacySettingsProbe?.namespace !== 'legacy-settings-smoke'
+    || legacySettingsProbe.current?.().enabled !== true
+    || legacySettingsProbe.changes?.() < 1
+    || legacySettingsProbe.equal !== true
+    || ctx.settings.get('legacy-settings-smoke')?.enabled !== true) {
+    throw new Error(
+      `pre-alpha.2 settings plugin produced an unexpected probe: ${JSON.stringify({
+        namespace: legacySettingsProbe?.namespace,
+        current: legacySettingsProbe?.current?.(),
+        changes: legacySettingsProbe?.changes?.(),
+        equal: legacySettingsProbe?.equal,
+      })}`,
+    )
+  }
 
   const picker = ctx.directoryPicker.capability()
   if (picker.kind !== 'browse') {
@@ -203,7 +235,14 @@ try {
   if (profileMenu?.submenu?.()[0]?.label() !== 'desktop') {
     throw new Error('assembled desktop profile is missing the active profile tray submenu')
   }
-  const response = await fetch(expectedUrl)
+  const exchange = await fetch(mountedSpec.authenticationUrl, { redirect: 'manual' })
+  const setCookie = exchange.headers.get('set-cookie')
+  if (exchange.status !== 303 || exchange.headers.get('location') !== '/' || setCookie === null) {
+    throw new Error(`assembled Web authentication exchange failed with HTTP ${String(exchange.status)}`)
+  }
+  const response = await fetch(expectedUrl, {
+    headers: { cookie: setCookie.split(';', 1)[0] },
+  })
   const html = await response.text()
   if (response.status !== 200) {
     throw new Error(`assembled Web root returned HTTP ${String(response.status)}`)

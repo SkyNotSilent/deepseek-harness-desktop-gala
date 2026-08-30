@@ -2,6 +2,10 @@
 
 import { fileURLToPath } from 'node:url'
 import type { Context } from '@deepseek-ai/cordis'
+import type {
+  ConnectionRequestRejection,
+  ConnectionTrustRequest,
+} from '@deepseek-ai/dsh-client-connection'
 import type {} from '@deepseek-ai/dsh-host-webserver'
 import type {} from '@deepseek-ai/dsh-system-prompt'
 import {
@@ -34,7 +38,9 @@ export type { GalaCharacter, GalaPersona } from './protocols/gala-json.ts'
 export type { ConflictResolution } from './gala-market.ts'
 
 export const name = 'gala'
-export const inject = ['webServer']
+export const inject = ['webServer', 'connection']
+
+type GalaRequestRejection = (request: ConnectionTrustRequest) => ConnectionRequestRejection
 
 /** Desktop-owned inputs and native capabilities consumed by the Gala Host plugin. */
 export interface GalaHostAdapter {
@@ -83,7 +89,12 @@ export function defaultOfficialsDir(): string {
   return fileURLToPath(new URL('../assets/gala/officials', import.meta.url))
 }
 
-export function createGalaService(adapter: GalaHostAdapter, layer: GalaLayer, origin: string): GalaService {
+export function createGalaService(
+  adapter: GalaHostAdapter,
+  layer: GalaLayer,
+  origin: string,
+  requestRejection: GalaRequestRejection,
+): GalaService {
   const applyAppearance = async (id: string): Promise<void> => {
     const workspaces = adapter.workspaces
     const picker = layer.pickerState()
@@ -136,6 +147,7 @@ export function createGalaService(adapter: GalaHostAdapter, layer: GalaLayer, or
     skinTokens: () => layer.skinTokens(),
   }
   const httpHandler = createGalaHttpHandler({
+    requestRejection,
     origin,
     renderPanel: (view, nonce) => renderPanelPage(panelViewModel(layer, view), nonce),
     assetRoot: packageId => layer.assetRoot(packageId),
@@ -175,7 +187,10 @@ export function createGalaService(adapter: GalaHostAdapter, layer: GalaLayer, or
 }
 
 /** Failure isolation keeps the official Desktop usable when Gala cannot assemble. */
-export function createDisabledGalaService(cause: unknown): GalaService {
+export function createDisabledGalaService(
+  cause: unknown,
+  requestRejection: GalaRequestRejection,
+): GalaService {
   const message = cause instanceof Error ? cause.message : String(cause)
   const unavailable = async (): Promise<never> => {
     throw new Error(`dsh-plugin-gala: service unavailable: ${message}`)
@@ -206,7 +221,13 @@ export function createDisabledGalaService(cause: unknown): GalaService {
       importPackage: unavailable,
       compose: unavailable,
     },
-    httpHandler: async (_req, res) => {
+    httpHandler: async (req, res) => {
+      const rejection = requestRejection(req)
+      if (rejection !== undefined) {
+        res.statusCode = rejection
+        res.end()
+        return
+      }
       res.statusCode = 503
       res.setHeader('content-type', 'application/json; charset=utf-8')
       res.end(JSON.stringify({ ok: false, error: message }))
@@ -223,10 +244,11 @@ export function apply(ctx: Context): void {
     throw new Error('dsh-plugin-gala: Gala requires a loopback Web server')
   }
   const origin = `http://127.0.0.1:${String(ctx.webServer.port)}`
+  const requestRejection: GalaRequestRejection = request => ctx.connection.requestRejection(request)
   const adapter = ctx.get('galaHost')
   let service: GalaService
   if (adapter === undefined) {
-    service = createDisabledGalaService(new Error('launcher did not provide galaHost'))
+    service = createDisabledGalaService(new Error('launcher did not provide galaHost'), requestRejection)
   } else try {
     adapter.configureOrigin(origin)
     const layer = createGalaLayer({
@@ -239,11 +261,11 @@ export function apply(ctx: Context): void {
       appearanceStorePath: adapter.workspaces?.appearanceStorePath,
       workspaces: adapter.workspaces,
     })
-    service = createGalaService(adapter, layer, origin)
+    service = createGalaService(adapter, layer, origin, requestRejection)
   } catch (cause) {
     ctx.logger.error('dsh-plugin-gala: disabled after assembly failure')
     ctx.logger.error(cause)
-    service = createDisabledGalaService(cause)
+    service = createDisabledGalaService(cause, requestRejection)
   }
   ctx.provide('gala', service)
   ctx.effect(

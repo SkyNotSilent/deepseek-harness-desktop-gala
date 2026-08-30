@@ -1,0 +1,2224 @@
+{
+  "formatVersion": 2,
+  "repository": "https://github.com/deepseek-ai/deepseek-harness.git",
+  "commit": "0a53fb55bea101816fa226bb964ae2bed71c343b",
+  "version": "0.1.2-alpha.2",
+  "buildProfile": "official",
+  "registry": "https://registry.npmjs.org",
+  "patches": [
+    "@deepseek-ai/dsh-client-ui-directory-picker-browse",
+    "@deepseek-ai/dsh-host-directory-picker-browse",
+    "@deepseek-ai/dsh-settings",
+    "@deepseek-ai/dsh-subprocess-local",
+    "@deepseek-ai/dsh-web-app",
+    "@deepseek-ai/dsh-win32-process",
+    "@deepseek-ai/dsh"
+  ],
+  "packages": [
+    {
+      "name": "@deepseek-ai/dsh-invariants",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-invariants-0.1.2-alpha.2.tgz",
+      "size": 13389,
+      "sha256": "ee6958376b5ab319a13b1108292a4c085783e68793a20a3901c29dd3730aa7ce",
+      "integrity": "sha512-1ewUeCzUHbaqhtW5rG1/eujIXXzy2VhwvMa16RpcTuJp5qcU1NtAf/+COkmvI7qtkyNY61vWg1Ez5qL9hKIUpQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-brand",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-brand-0.1.2-alpha.2.tgz",
+      "size": 5929,
+      "sha256": "b379b10621ddda91e1473aebf9263e29918638c0cb65624de2940be599908814",
+      "integrity": "sha512-sWFbShCe8LNLuqD3gdQeneUGxFtZ/rywe6Tmi2eteBDubecHnf04XurtF38Epno42bnNTMYWuKwt1cihcbHL3A==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-timeout",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-timeout-0.1.2-alpha.2.tgz",
+      "size": 10892,
+      "sha256": "c8bf0c8ed1601b75118bc5f99553e07395ba90b5ca40a94093d2a7d73d225233",
+      "integrity": "sha512-8q5cd55aMoOvrPaqSws/3xiyzHhs1bfjdtAs4YHWimQgMd+yMrDnlu8i+zFOkWoSc0A2wPkXcCYR8xogl4gerA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-typert-protocol",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-typert-protocol-0.1.2-alpha.2.tgz",
+      "size": 20407,
+      "sha256": "a464f3a90d1b5a8571f0c5036685ae92013be29e97f534814c960ed8f8ac6728",
+      "integrity": "sha512-U3j/usWHRllaJMdTr4GuVkkUciHWyq01mvMtWeGT+RY2hb+ysTxeuLEiV0Lh5EyVScgFdDLbe/GtTZ2OkGsGwQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-util-crypto",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-util-crypto-0.1.2-alpha.2.tgz",
+      "size": 5272,
+      "sha256": "dc9ecc25cc128498b332271f564a22b2a1b91f981f32eba352de33c5b42b7dc0",
+      "integrity": "sha512-03WVzlgLErJRRGMqaMdx5ufEoN3Scpdsnd0f8vXMhcbeEzKZ61lbI8z/m6ZttM/LhpzPALuFtDc5u+N5LFP8Fg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-util-values",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-util-values-0.1.2-alpha.2.tgz",
+      "size": 8375,
+      "sha256": "819b64c95209e5e6de1cb57c9ca23bdbb4d8242e114f42bd7bed802a29857537",
+      "integrity": "sha512-ZyZHTqGQ/8S5ZYflTkuiZGPxhkuHa9Uy5G+teEmnmnkhiN/UVPGQvI//CXRNmxpTKjfx+qcVVmr5x6bohplsQg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-llm",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-llm-0.1.2-alpha.2.tgz",
+      "size": 87339,
+      "sha256": "5a3dcd789bf8ed65ed50f72b7a3d574043c2b3cdf0796a0e0d1178b69cdc21f5",
+      "integrity": "sha512-ip6yMxwHugxQm4VCbwX/FDnlTeeBM9VBkIn0+74ityQy7Z3yKREJ1Ov8Z04l4G3duRzeGRsQ4ztOFZ01oNfKIw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-scope",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-scope-0.1.2-alpha.2.tgz",
+      "size": 15125,
+      "sha256": "4cebc5020cfbdf00c20df31e1002ac30160c5131e2f3e9bc019cbc56447d40f4",
+      "integrity": "sha512-jeWfQnftQeZOWujxndgU6kjoFuXGWqmFrkWAxlWmyeojK/iyZqAxayWPuhVUEgweh4EWJmn6rW5HV3E4DXWuWw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-session-0.1.2-alpha.2.tgz",
+      "size": 82316,
+      "sha256": "3c837b351f5bd9f908cf59262c5b59620a2c8087893b25ac038984615d22b72f",
+      "integrity": "sha512-RfikXscYTDXDr7CD7C/8oGJZaH8Egclj7pmXRtd90QcB5L8RIQ7069xrHZjds8OjNrFo69qQwNK3gYLUVZy9PA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-projection",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-session-projection-0.1.2-alpha.2.tgz",
+      "size": 22250,
+      "sha256": "881ca35b504a6d27a2409e9b2a0828bfe6156ac5780d50dcd6a6de3e474844c6",
+      "integrity": "sha512-E5NYRAOQwiYYu56WSHTlnI2MkyqznA4ePlOdOQvpF97a7ZG2BkRfflwvQ5NHIPv8FABemoSCGMiI3/0GSfqvBg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-system-prompt",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-system-prompt-0.1.2-alpha.2.tgz",
+      "size": 19357,
+      "sha256": "f8e2c1dea38b14602b6ea26c4611b8262dabaf2177a0c2a50981b8167805a626",
+      "integrity": "sha512-qT9PZEVMAbszsg1UVUvuovfWFS5unjy08KV0rnOc89TJCgkb2CnlknSyIQs0lXc/UiqT6ZQ59i4ClAFrXhxfxQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-agent",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-agent-0.1.2-alpha.2.tgz",
+      "size": 43663,
+      "sha256": "ea4ccd15eb0dc44253f563229cceda0211dd01af7e76730dac89a63be288cf3d",
+      "integrity": "sha512-K7B5XSQ7byB/IoNGj7n+lBgHCpVPJqEPvpGoHKc1dBS8fPo2yYp/ALFag4YOfrXVP3jQ9A8di20BbvIlp79SoA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-attachment",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-attachment-0.1.2-alpha.2.tgz",
+      "size": 17798,
+      "sha256": "77472122508bb2f1f96069f2fcad50610a16dd57cef04b69b669dcffbcdb6110",
+      "integrity": "sha512-+e+zQCbBi94Jnyfpq/M+/J2R/66GbMh5zqr7yVdCjvAJp8d2hxQsZ0O/oaSV+iZQIMgJz+BcwvrS1VU+XmzQWg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-subprocess",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-subprocess-0.1.2-alpha.2.tgz",
+      "size": 16982,
+      "sha256": "26f3aac463f9b5344a88071bb69d7f110c293727dca28473fba45f81f75de3c5",
+      "integrity": "sha512-MOktcCP6IeTLTGKvF6+0ooE+4++ODhgqawizXsq7w6SNcPb5SbdB2+k6+3FZypjnIMWw+FESaH19/2PmGi6XSQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-code-runtime",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-code-runtime-0.1.2-alpha.2.tgz",
+      "size": 15151,
+      "sha256": "262b69dabc46f33a01dddfed697690a2961a6774e81721091cdca7e1642566b0",
+      "integrity": "sha512-KGUwcm4sSHjspQYr2Kj1DycaxnPzxg25sk3ychqbFG4cLcUA8W6eqQJEpEUgmnCOkDBx/j9oXvzNxp7XGMsRoQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-user-approval",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-user-approval-0.1.2-alpha.2.tgz",
+      "size": 19408,
+      "sha256": "0394fad649fff9a776b060eb400e4b23ed92026c04e0c982989fada857136f2a",
+      "integrity": "sha512-CcV3hf2Q0NYxRbnlE+IysaUkq/hvmjlvS9OGiHpARZVY4VlidlZRmsy5g5L17vDoxirX+WBJ9Cc5VcJMcjPrUg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tools",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-tools-0.1.2-alpha.2.tgz",
+      "size": 140543,
+      "sha256": "7e1d39e239477cf0dfb0289a35717ecc1cbfd8c368af4d8623d3ea13b3a1eb61",
+      "integrity": "sha512-trk0fkmCDp64pqdcr8u7rCcRrwNi+93FKuznTnCD+YsPGFygcSG/6n+Wsh4+9A6oI1fM4/Ecq6Baa9vq1sNhJg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-mcp-client",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-mcp-client-0.1.2-alpha.2.tgz",
+      "size": 29804,
+      "sha256": "96678337ad82e52dc277596d3eaff0db5bde2276cb0d86897c81edbbda323b5d",
+      "integrity": "sha512-R/YhSaeHQIfWh9bAVrTizQ0LHVmSl+ugUKgrahF3PL2BJeWIoHqGSDEn6O8+6oSCjSqk01z+nQgYKbBcFbeSRg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-persistence",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-session-persistence-0.1.2-alpha.2.tgz",
+      "size": 38044,
+      "sha256": "bdcb223d9e310a6aa87e0a8a11c4d21cec9ba6acc136b397d3beb440591b76bf",
+      "integrity": "sha512-gaPi/8YyDB5YLgxWOTQxSYRC/oW2HTI0VyRnk4HCQ2Zc1v9ocPX7CdgN5/tuhYnOIwK7PNGRQHVG5KT2P9a2HA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-commands",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-commands-0.1.2-alpha.2.tgz",
+      "size": 30693,
+      "sha256": "d7702e6b74afd32ef6afedf166695f146fe28b6a712af6aaf6e318cecd6211fe",
+      "integrity": "sha512-KkyNkD5V80h+xXsByGdXH8uvKo/5uflb1CSY8O8IrciuptaJdneSAmTFsjmCKAjqCTGgigk2VDw6mqPwux2JYg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-compaction",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-compaction-0.1.2-alpha.2.tgz",
+      "size": 25655,
+      "sha256": "50e4aef47e510c642ceef6876184ed9d409f5980face35534e5046b63d73702e",
+      "integrity": "sha512-decsWxdQgJjsFRlJxiDJ30Tq/YkBV3B0fy8P6hThBefJAeDN47l2lvMSOsCa3IgrmiNaBawWxuOlTMDp6YyREQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-llm-retry",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-llm-retry-0.1.2-alpha.2.tgz",
+      "size": 17843,
+      "sha256": "945399eed6849f9200e191bf4da55b76ef77350e2ac880585d71b1e7aba435fb",
+      "integrity": "sha512-1mpS4Vbz5CyiRofY9dCua4TFK/Q+dzo6Ta0Map+KyzQrkJtn5OLfpkEut6Bf4F587dmYHLk45zSmTDhAH3GAQA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-token-meter",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-token-meter-0.1.2-alpha.2.tgz",
+      "size": 39096,
+      "sha256": "874f8b9cff000876281e361f60c4bb56d233fe9a5e26e4c669d0999a63071bd4",
+      "integrity": "sha512-PeogInxv1HTF8ZRc73GUcFmcZCMpxrPTE6k0jO68H9FSPU8tFfS/nUeY0jIPlFLFgEM52f4k1tZtTfGZWxccBQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-acp",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-acp-0.1.2-alpha.2.tgz",
+      "size": 31430,
+      "sha256": "3d06cda27f65a505841e8f009339ca3ded0d64c6d342d51369afec3ca04a12f5",
+      "integrity": "sha512-R92Mtg/LNGFoOHhWm/Obx6nuCPInQia7BCdPJn9i0OOHz2LmvslOH1ckV41tZYU8d7vf8Q/yxSUgYGHo9bCxSA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-cmdline",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-cmdline-0.1.2-alpha.2.tgz",
+      "size": 13745,
+      "sha256": "64505656114042aef4b47483ae9a7daa1bb1cbb0f92fd382c8b5be9f9d20ed03",
+      "integrity": "sha512-SxMi9adRQ9hWUHT9PGTjgsSDsi6TWQmlYEg99DudqVYz9YgzLQt+7PQROn+tiXEo8rtDJC0QpBCH0SQrN7JwVg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-acp-app",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-acp-app-0.1.2-alpha.2.tgz",
+      "size": 7349,
+      "sha256": "d5bc5a80ad03eb4cbefbd4453d97d97b2d4c07e55ac952fa65c9fa8bdfc193ba",
+      "integrity": "sha512-cIwdM8lv5lDCFbFqebLihGLiybPckezeDarnNVtf6cY9LTMPaYVEIyhDGj8dTxgGULNMGflDiT2YwdO6+qtSqQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-sandbox",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-sandbox-0.1.2-alpha.2.tgz",
+      "size": 20161,
+      "sha256": "78f5988dae18dc0e183b9fd9608b8fe7ee45483c1263445e50e48fa39227d9af",
+      "integrity": "sha512-InfHYn5B0MxF5QLz0AjbwPS5W0G9VtIvjEFl5o/049KzH6khGKhjqOAVZtu1Z46f1+K/dbjF50VkTdnX3pgIJA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-fs",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-fs-0.1.2-alpha.2.tgz",
+      "size": 16310,
+      "sha256": "8f331418ef916187d6dd80ec6fac0f8ba5a487f9787f6e500f74ec8d89be8216",
+      "integrity": "sha512-wx5n0QS5rfZ2LPVocMNfuOUh0RYH/QuLoCEy+qI8U3nKmSZ8GSTASURLg+0pVxckHpLElo38U+S/lkLxRK1rpQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-home-paths",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-home-paths-0.1.2-alpha.2.tgz",
+      "size": 8487,
+      "sha256": "87d8274dbf72c2c551a156f55b6a7f12ce09f1e75ff9afcfdade79eb0dd9f426",
+      "integrity": "sha512-L4mLwpZvBuKLSRjjSI6lFGUmUTbjcMcMuX1PWbhHKphmvaokQXf6jqNgD/I6VfIg0BnS2rO/jPqasOQUxRNlYw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-agent-instructions",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-agent-instructions-0.1.2-alpha.2.tgz",
+      "size": 30272,
+      "sha256": "61bcf85cb0fcfdadee8470cb52ac6a1a156ebbddf7f11cb0c334c57abf0bdff9",
+      "integrity": "sha512-Cxkh/yx/NBmwy594bUjIozEFhzVrSSZNwGsUPQdrC8qUp2Ben50DPa0Zbl455+F+5w0/HMRzgCKXlaD1T8q8kA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-agent-tool-presentation",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-agent-tool-presentation-0.1.2-alpha.2.tgz",
+      "size": 8314,
+      "sha256": "fe46e6b3f539e9c6479d41dc13cf24180964b12654af049bc168e9e14c3913b0",
+      "integrity": "sha512-y3Hwmrq5+NUS1QuytI/+BFeQ/KVP7AqEE+dCjk3zgyxnFwDqyliXL2W8Wtjmu3sguIQhgfxy6q392Qi6Xs5llg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-atomic-write",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-atomic-write-0.1.2-alpha.2.tgz",
+      "size": 11302,
+      "sha256": "e4ada3689155208824bff6c4fe72fd5fbb6f9f2e59572e68a130cf7c8bf44dbc",
+      "integrity": "sha512-9ZWA2sDIKYN5ewKBcGDKLi4YndRAS9OAa6a/9QWpNqxUqU/VK4W69JF3F4AwfzWnRjmymW+Ntbma6IB1B3e3QQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-launch-environment",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-launch-environment-0.1.2-alpha.2.tgz",
+      "size": 8870,
+      "sha256": "577a6a63cd09627f75e4dcb5aa8e7f13ee8ac25ce867656de3c8685f7dbac78a",
+      "integrity": "sha512-l4mYnHoRlxyxQft7ph8gaE0DoUNpfoPkETcPl1jusUmFq4UlPhjC+/yZ3nNUFLAP1u0Cx7a9mJGngM1LUjqM/A==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-app-boot",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-app-boot-0.1.2-alpha.2.tgz",
+      "size": 40765,
+      "sha256": "53d1ef709cc8c1b99ad4425e58cac5bb238efe823c9d091509a2455207257855",
+      "integrity": "sha512-i/deB4cVeko7FFrLbyHfbfz5XGWZHlydp7vPDGAG1+drWumOAslWFY3iwKIaXsYFt+1mSpBEmoaZR8WScHoYxg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-settings",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-settings-0.1.2-alpha.2.tgz",
+      "size": 33022,
+      "sha256": "cde889fbe44054fb90c762224c30e4f6ddf2ae5fe6885be2b749436ee0647995",
+      "integrity": "sha512-rWPH/LfDU9SCFaonqfxCMjnD4gkO31DlQVHL9LIy7wH/FVqnBJ6v13YN70Fpof2KKPyL2YhcwOOPQbusxlzSDw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-agent-default-model",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-agent-default-model-0.1.2-alpha.2.tgz",
+      "size": 8274,
+      "sha256": "bc3c2fb0abb77eb4687a33c21606f11f41e318fcdcd07f3c4d74f20c59570779",
+      "integrity": "sha512-CSDSK0sWa6luihoUZI2KOz8xFckjYuBPClT6UKRyzgigHdlf1oLOSJpoIrIywpaN6Q3CXFHqFrZ6DYuc5uDAhQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-agent-loop",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-agent-loop-0.1.2-alpha.2.tgz",
+      "size": 31709,
+      "sha256": "64e9d445574bfb5d793e55464c3d0552118473aed0b5dae96817b1964cceb7ab",
+      "integrity": "sha512-UU1i+rTuQV3Q5PGY4qFlojJ0Gbthib22pida5elZlg28dd8gtY2d1U5V9q2+rKK/469CO29rkz6TWMWk0g93Jg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-deque",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-deque-0.1.2-alpha.2.tgz",
+      "size": 6518,
+      "sha256": "31382b8a1368945162e1adab8f639534649ce7edd57bb94b83e5ef39493d1d7c",
+      "integrity": "sha512-cIGdUle0XbowDHqZgdW/9z5okzxE1K/nyV9RVbQdwgzYypw6/Cp4D0B9k47qTzSbUXI9RlOtU0gBMwvP03x1zA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-api-gateway",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-api-gateway-0.1.2-alpha.2.tgz",
+      "size": 80745,
+      "sha256": "df4d5c38285b893015b46537811ec19e666a9502a3b80034a589de9665ff4b60",
+      "integrity": "sha512-/QWj/81JOKia6yiurXwpDf13e6AtmlQZlbzKT9aJB0jk/Ail/0SXeOyNW347Ph1tyMtaSJW6KtokSG2iXEuWVg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-attachment-local",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-attachment-local-0.1.2-alpha.2.tgz",
+      "size": 25444,
+      "sha256": "d3e14ed44bbaeb143cf38c78ee07a2454ac7afdd025cee54febe7cbb83608e06",
+      "integrity": "sha512-IPlIRLyDOlVfqT0SGVwRhmvhh/i7itMd6vDEf5dxmFHM2V7X0G5bW9uWcIdEqnk6rUX0dnIPWNnj9npWeR9yTA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-shell",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-shell-0.1.2-alpha.2.tgz",
+      "size": 14653,
+      "sha256": "0957b64960e157a1b16eb69cc5642d90ae4d634c636a56a5a4305f352330461a",
+      "integrity": "sha512-i16e+OrCJ7GZ1XDnPds081NgVs/xzIVMLECzmLnXgVDKeePgWpdEgR//PgMqKPwoBoJ8z7DTzwKiOISAtOpNzA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-bash-local",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-bash-local-0.1.2-alpha.2.tgz",
+      "size": 15617,
+      "sha256": "9b189066b36bce5f705883297f4d0a2679e8211c6194bd3074402096056728bf",
+      "integrity": "sha512-fl7gu1vDuYCLjPOPas+71kTSSiTpvldJ8+A5fdc/rkGyRdCOEOpXP+kjb1uF8u4ZRIiFjdoMKoR060ZFmpWOgA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-sandbox-policy",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-sandbox-policy-0.1.2-alpha.2.tgz",
+      "size": 13501,
+      "sha256": "851786cfc8aeebf7c6aa5156009871838ae1e83c18cfc981ddaf9fd707a630fb",
+      "integrity": "sha512-Af7DWZTEjF/70YWSiN0jfbZli1XRk6Bo9W61QHxfShS79I8//mOPrItEPtJRWL/RCmGNfudFglNFyyGKdaqBIg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-bash-sandbox",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-bash-sandbox-0.1.2-alpha.2.tgz",
+      "size": 15709,
+      "sha256": "06452b7305a1066419d404994a9bc3a3fb0e53d1f34772b681fc1cc29811a56d",
+      "integrity": "sha512-y5NZT7OkKi23N2fF+x9oo1QZH8LPfTU+llL86r+iETSSk5jzh91Hp2cP5Iq5S/L3BAQDaEw2J4Dg8VjF+fnnkg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-command-compact",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-command-compact-0.1.2-alpha.2.tgz",
+      "size": 10535,
+      "sha256": "3d4f109f52d463c75b7f2ace58eff3d7f30aa9d9e30f537f3827f0649c5048c2",
+      "integrity": "sha512-tdw2W30o5hiR+3p+YB3HJGT1NUWeZgYtxevyYK4DHPLJbu9ko8C/Y/zYbn1d4pMo8tFpPAyOyvZtRM65PJRJrA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-anonymous-user-id",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-anonymous-user-id-0.1.2-alpha.2.tgz",
+      "size": 10956,
+      "sha256": "c951c2024436e1af1117f41c91432ff0e89b8a474ad58c912dde5c477972ca30",
+      "integrity": "sha512-mwuJvUuj6CHewyGm0m6WIuADglJkAKNzJ8G4W2zQ+uC01C4zp5M4t0jnJ1FmHa4ctRTj0jo4VCV6TmhPFSSE1g==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-telemetry",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-session-telemetry-0.1.2-alpha.2.tgz",
+      "size": 18541,
+      "sha256": "1a02aaa0a7bfd557b5faead25e54d4e3b8b9af0cc6d6b7d4f0f91fab09c957aa",
+      "integrity": "sha512-Sfa2LeZDnXXIY4WytEcgAafbFIms3gBWVCPRXfDCeHL77baJhf7a5R0j64YDjrHqoMKqk6jkI7GwRvMpipUcBA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-command-feedback",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-command-feedback-0.1.2-alpha.2.tgz",
+      "size": 11056,
+      "sha256": "dfd897214be46c3a7a47f1403e7cdb13439859535b8baed4400c688fc0527b51",
+      "integrity": "sha512-VKr1qq/IbXTlUbmtxFPoTt3p59AQpxv/LH0uxv03VGWsOkshxvV64gXph7XAw03rcLC/rX2VOkq/egTbQxJ0yA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-goal",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-goal-0.1.2-alpha.2.tgz",
+      "size": 44075,
+      "sha256": "e08a218e67c4eddcb37c899de4ee1a6a492d269d0b4bd3d51b713525e206b5fe",
+      "integrity": "sha512-6E+QfBezGsQ2RI0KLZc8llRpukV9ujLjCcQ2UAboYJS7FPQMs7f/QfSrfTubwpB4lrnOok0H26JT2jHUhJeQbQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-command-goal",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-command-goal-0.1.2-alpha.2.tgz",
+      "size": 11488,
+      "sha256": "e632c3c02f9fa2f54e19040de8e12459732b81fd8180735286b3864d4d98236a",
+      "integrity": "sha512-ZOcU2VawY6slnI6hOgU77Ye6PYWbrIvqJXHBayJNKGkO79QgswMGl9fnejINLdrN2wmOCU1aKYvOIpMY9brFzA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-compaction-tool-result-pruner",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-compaction-tool-result-pruner-0.1.2-alpha.2.tgz",
+      "size": 12754,
+      "sha256": "8b08796403c2be4970f131c9cc981bd3bf564ef99c6c6f6e1f1b3551c1ad6642",
+      "integrity": "sha512-wDygmocJYfR/Zyzkjxx96r2hVSC/eJFwuwY+RUK0RPyLVJAsABoJ46X5zX87Q3rc0IuSPSet1hPjn2yNJ374+w==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-compaction-basic",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-compaction-basic-0.1.2-alpha.2.tgz",
+      "size": 33370,
+      "sha256": "b9f5b65cef3a31b0f1a08f4416a456d5388811aad3a268cb888a59103d993fc3",
+      "integrity": "sha512-8KcP5LUOScJPu7EyGSBkqmQzJew0Z0JKA7qrYpskRqqOPAElwlErXMjx3MBOrsPyuBzE+LtBixnhKkrXnKvZ6w==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-credentials",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-credentials-0.1.2-alpha.2.tgz",
+      "size": 20045,
+      "sha256": "4ad919307d7cdbc42e79ea1d8ac02a4953d8e3a9e4a3c7132743c1b168cca3d1",
+      "integrity": "sha512-TnNK478eQ4iGfUvVyMnkj3GneRCxJbAaM2746HE01iRucE8TypFmh+lFj7kfz7Mcp4S00ixJXqyPddwv+/CPLQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-credentials-local",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-credentials-local-0.1.2-alpha.2.tgz",
+      "size": 26847,
+      "sha256": "65e7862079dd369cb14bf9d001d59bb6470839b8a771bd01829cc4c1335e23a8",
+      "integrity": "sha512-Pue0vNW/qCujMokVbY+oXrX3m2U5LdjJQCtJVZbJQMZxLVbCxKWu8Wt1dVYbAypd0PO0r4BpWnXSzbBTALpSxg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-deepseek-llm-api-extensions",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-deepseek-llm-api-extensions-0.1.2-alpha.2.tgz",
+      "size": 8121,
+      "sha256": "043d027ae9dc938ba27f8d3bd50e99e798ef2ff346d546339264d364bfe111bb",
+      "integrity": "sha512-TQ/OmSBxqZWpg72wdvcvKJAzvkgSWLaHGIeufpjCRVQ38QR4NGCiSenQlK7278As7cKYqerE3vwbTSupOGl4uA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-fs-local",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-fs-local-0.1.2-alpha.2.tgz",
+      "size": 25662,
+      "sha256": "47e441d4b35a2d0c41b519ec9d9dcf44c207aa0dc0b7f6efb0345db49dcb0188",
+      "integrity": "sha512-IIpZAxGw8wr+xpZQhvuHB9JtUeE6V03e45njfFah1eRl0miaHV5CxCRlFwkMLrow5I2zCCsCPPmdEaouGxTGSA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-fs-observation-policy",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-fs-observation-policy-0.1.2-alpha.2.tgz",
+      "size": 11234,
+      "sha256": "b622e4ca6cce1cfef2f0b79efffbee678b958fe5ede29fa8b6365699c180d4bf",
+      "integrity": "sha512-oMDSB1NTnj4rIGy5JXCtbzTFDwKkU/38KIKrVs3u6b65Y5spq3kjc1ITpjqo3Ze4H8umc8wJqGke2o/ms8eIEQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-fs-sandbox",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-fs-sandbox-0.1.2-alpha.2.tgz",
+      "size": 12124,
+      "sha256": "79deb4b32d14f88845065e02e0f29907e2dd51f472b955c8483486877108f19c",
+      "integrity": "sha512-jTnGZUov95e9OANKG+uoWAczdGlzy24aXJ+z4N4J+rMvThfj5awV3ucsmX9S4YW2peHoTV9D7BNGgBQ84LxB+w==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-goal-round-driver",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-goal-round-driver-0.1.2-alpha.2.tgz",
+      "size": 13823,
+      "sha256": "61d11712409249e33ecb63e963a4c5af077820b76f5be866eb1f9f6c54fe18d4",
+      "integrity": "sha512-Wm7CHHM3XFtYb/SGlZOjeRFT2MsvWBc2a/l8hVwZye7XNGgRloWayi+8z4sXo1V8rMDU4ShvuuHnYmKUyNcc0g==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-jobs",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-jobs-0.1.2-alpha.2.tgz",
+      "size": 16132,
+      "sha256": "f767dc160667c4e8434f32a111ce975986533afbfc410ac6a11906847af3e102",
+      "integrity": "sha512-yPNlYX/ZKphjzRY7oMf5uLgfSlJ8qBp49W6qNqzhmn8moXgJcPUCNqeOkT0C3a6GQ286mmmo09eyfDLGX7+lMQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-jobs-local",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-jobs-local-0.1.2-alpha.2.tgz",
+      "size": 17322,
+      "sha256": "4a172f496e245d2e8d8e5345eb5d415dc24a1e1254404beffe2303c58e23d0c5",
+      "integrity": "sha512-nrK4ujL6QRS6GAysgBR08vaHub4vh7/iuGtmMvcg4Bp3hZeQ4rjWnpQAuItg9E9G3OUrvfjwzwENEM1TyVcbWw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-llm-deepseek",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-llm-deepseek-0.1.2-alpha.2.tgz",
+      "size": 54614,
+      "sha256": "b28eef373e242b01474c4167fb0aba45f4e8814a0f63ace7656f73087734d288",
+      "integrity": "sha512-eJynLkPhwP7+Vl3u6ItW65dGTSwa6Kpg+RjUmv59B0D6vX6zL9b6cDuqEj8ZXDKQhfN0cTKdfiATGlnRg35Gbg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-authorization",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-authorization-0.1.2-alpha.2.tgz",
+      "size": 21717,
+      "sha256": "2c5c25b515a656bfc3dddd3ea79a05001784522169250c503e54e44320c7b22e",
+      "integrity": "sha512-WZqXQ5cplzW0nzLuKXkWW7t2tpFP2Zg/wzpi7NQNMVMY8eJxP6/xx11rNkeJLuYsoXFv4rcSl5DQVS26uCw/lQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-llm-pi-ai",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-llm-pi-ai-0.1.2-alpha.2.tgz",
+      "size": 65650,
+      "sha256": "ab00ef0766b091022e8850c3a10c7ffe3bd7861fa78ee525937c94d6419aa0f7",
+      "integrity": "sha512-hFFgh6JEuFiw/ZAvzNEPxCLcUQyASFSeLeE67gdyD+FRashJX468gUD1MSBbEscQiZsfwU15bCoLlT5UGo9GTQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-permission-presets",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-permission-presets-0.1.2-alpha.2.tgz",
+      "size": 18162,
+      "sha256": "2d55f3d603021407d09a1e77be2972378dd83f9145bf979c05a351b1d878431c",
+      "integrity": "sha512-X8pxq83M46ffWlOnpOPGBh+Rjc4jSot1wej9N8JD+BvNjcplUPiRHdyDU6MVHBd+dPJW90Eq8PO5MUp9VZ9Kog==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-user-questions",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-user-questions-0.1.2-alpha.2.tgz",
+      "size": 10356,
+      "sha256": "cab2412c1e7e68636dbba765e4eb7e0807f4f9441e9cf5f6c6ee849d184e96cc",
+      "integrity": "sha512-V4YmhyF1M2Xrkb9gbcFdXZTln5S71TTh2Gz3CTyY5TLhJJobu9acR82RxQWZNRE2GOSMq/vMoSpPwUbJLu9J7g==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-plan-mode",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-plan-mode-0.1.2-alpha.2.tgz",
+      "size": 23879,
+      "sha256": "21f993427454e639c1c286a086b4413a60adbbd16dfadd37b20504312fb53554",
+      "integrity": "sha512-moeyUUnAdmUku3K8AjCgzn16kqB7+4/pwehYfFEnD/ClYXTCglk8xOJsUIG3PjI/McXtEf/sZw/DUMrJBcHedA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-agent-presets",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-agent-presets-0.1.2-alpha.2.tgz",
+      "size": 138752,
+      "sha256": "ae124a37360d08fc64dc7729ff58f9dae77522c13830e5a872dc7eb75fead8aa",
+      "integrity": "sha512-PRLFoAPQ9xBYfm+wAlh3It242jwmoW3VxZvwAaq7IFS1dihgIUIMChhtjLT5FrirICQ0AFyadTwxWydCQJ9Uhw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-plugin-package-inventory-deepseek",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-plugin-package-inventory-deepseek-0.1.2-alpha.2.tgz",
+      "size": 9804,
+      "sha256": "d452106eb75b92d4b83882267da87abbcae605f402e3bf05ed1c3c2e8b087068",
+      "integrity": "sha512-X6FWFVGyJhcIGjA2FRTOs3Wza4Fe5ZnK7w1tTLl28YMPcQYDEfxWGdsuRz8CJkYX0s9QwQBCg/0tEQGbylxF1g==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-pwsh-local",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-pwsh-local-0.1.2-alpha.2.tgz",
+      "size": 19088,
+      "sha256": "6b187b4403c5133e832181c4a280bcf6d5f65e4665a714c40119dcacd6fc748e",
+      "integrity": "sha512-XQb5538h9L/kHmkJKIDELA5AM+lxBw/ekQvzMJ9R4UoF8i0QT4Dpnt7KUtqujgnvibGVbdI9RFAqHtHA4LXnmg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-pwsh-sandbox",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-pwsh-sandbox-0.1.2-alpha.2.tgz",
+      "size": 13984,
+      "sha256": "8912c10d3ac9266f4270c049e5c5c072b95983abcb46f03f6544fdf07c0057d9",
+      "integrity": "sha512-j/gUmv+nWYzg8o+oEEIK9FKeb6L24n2u7xjpIm7DcL5YjQlRDR6FgDvR2hpUK/d4Wk+zvnaPqZaEaXfUtOzEKQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-repeat-tool-reminder",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-repeat-tool-reminder-0.1.2-alpha.2.tgz",
+      "size": 30048,
+      "sha256": "1b3fe666ffa9342a082e129d6c08305abfa938ef5636f813ae3b1d25f10e62d8",
+      "integrity": "sha512-sSsADAw3zIgdCpAAAJulJxE+5J6lou9PffRqCkkwNnAWllQkhPC6NZp1dXPc4UAh9n1IIJRa4xUwVwzgszJ2zg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-win32-process",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-win32-process-0.1.2-alpha.2.tgz",
+      "size": 15061,
+      "sha256": "992075a719dc38d27222630e68de2299366079469c82a643ac445ed3d576339a",
+      "integrity": "sha512-m5dAldBSQR/bnYv98uGJYzKd0PmQL6SarGKEn6NFUxw+GOpnCDkIB2UTSy9Ahsp7p7t4sNAaGnzvuWlDw/lRfA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-sandbox-windows-acl",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-sandbox-windows-acl-0.1.2-alpha.2.tgz",
+      "size": 45506,
+      "sha256": "bae7a5c326faba15432c295b196d7bc858cd1d9e4d4263c1a1fbd82572321aed",
+      "integrity": "sha512-PcdzNIJQH+PidGU4oa6GH4QnloCaWKfmLsgPS0IbfIl3HTsuGjB/e0mCkVVJ/9IFbLc+yJf+vOhEyvAIcCVPaw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-sandbox-local",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-sandbox-local-0.1.2-alpha.2.tgz",
+      "size": 21089,
+      "sha256": "58997dd278b5210b52e8abf44ae0ddde17232dd818a2c5758f92cb921763b1b3",
+      "integrity": "sha512-Wh22DQX8+WswC8MCOCkNo9ZQJDWjQZPgLMpQBBkuAn2D6SbARrkrYQjSytEUg/0/n0q/GF0I937QUWHr6EVmCg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-checkpoint-policy",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-session-checkpoint-policy-0.1.2-alpha.2.tgz",
+      "size": 9180,
+      "sha256": "a3779eb04949f5642f6310c6010920552a5c8add4a976543caaa71679c97b294",
+      "integrity": "sha512-0wC2eFJBoVFPj5y/TAhoDrORjWwVqkx8FWQaaD8gBUb5a/PbX95WoY7zgAfkMx82zpRA7Rcr6c10n3Wj/fTIQA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-log-deepseek",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-session-log-deepseek-0.1.2-alpha.2.tgz",
+      "size": 8829,
+      "sha256": "8eeff1c2b65bc8534b58283e1825f20046527a264cc2ec8994706e3d9f279b5e",
+      "integrity": "sha512-bn5/O4+ZwwjUhposZvfZYh9ppaEAcz2VfQlhzQtPcOXJeB0kI4dm56pDsSrE0dorADKnIJgRqhg1T0PtfGeraQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-persistence-jsonl",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-session-persistence-jsonl-0.1.2-alpha.2.tgz",
+      "size": 35793,
+      "sha256": "170173086e3c4a618087985c76bbf43c999afaf65ac865f8dd734aa113e8339a",
+      "integrity": "sha512-YXyguqaDRN+qQN6/D0pfAOIDNNgWZ09P64ElBfQ1h67nWsJUR4Snqr+wbjr57LHRzSmr3bfZKIjY2eJFhWK9dQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-storage",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-storage-0.1.2-alpha.2.tgz",
+      "size": 12958,
+      "sha256": "879af27158aa9d7fc4d976e77c1f658a274442b144e3d9bc697f26ecc50cd802",
+      "integrity": "sha512-xz7NGrFS29htbXsjxaSMm87o6n23UX76lu4KH8AkgxADvC1ZY2e/OA5Qbys9b7/HjQblL6m+kJIcTiFYQJsITw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-storage-domain",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-storage-domain-0.1.2-alpha.2.tgz",
+      "size": 21431,
+      "sha256": "8bd9853e8bd6bc3933617c9fd36c98aa0a94f7332252bb82c7c1869b7e73c758",
+      "integrity": "sha512-1vs36S4eh1U5oBQ+PwdgllbN+Z0eM89UNRjTWQARjzstKCARm2C77nzwVPda2Spddqsk2e03eogl/8/n2+IoSA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-projection-cache",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-session-projection-cache-0.1.2-alpha.2.tgz",
+      "size": 16689,
+      "sha256": "32341ee9e06f700f302678f49a571e3152c769c763a2c425a07717855d1473a9",
+      "integrity": "sha512-68irVMtLjbl9fyQ3qWGX7+nxuCW/T3K36MllB1HDLNTiHLrH1ZPu0M+ARWN6QaINCGStzXgCHNcCjaVvyrEI2g==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-title",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-session-title-0.1.2-alpha.2.tgz",
+      "size": 26291,
+      "sha256": "d431855fe6db4c3f5bb345de29bdcc9d3d1ee6578b1807c6c4e0d7e5cb150acf",
+      "integrity": "sha512-rzfnzrtkEeFS+QcUBCd+GHZgNiQ65xtVvlEOFYUVxchc28bP9fSce1UaI7+BxqpmLRT1V3TeFkokXm4zjHZ/IA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-todo",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-tool-todo-0.1.2-alpha.2.tgz",
+      "size": 18308,
+      "sha256": "02f229251a04e8547eebe94d23ce43da33f55ccbd81125c4c79888ad0c3d4a32",
+      "integrity": "sha512-ZEJOyRCpZWz9rKXOityVJyp+h79ZO6fOnqoDmawPaxghbvvHzT3BSrJkcaANqg15U8UB5j8HR9CSB2fsSidQ1Q==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-query",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-session-query-0.1.2-alpha.2.tgz",
+      "size": 28774,
+      "sha256": "62f2840c8f12de7dac8e4ed80348e04c0982b98c53d84788f9336ddb86034151",
+      "integrity": "sha512-+SQ/Wnb4sfMSTslPZ2SraDJH+VmXaugKwdguHKDrqXYO42DpRgLrSqLnch7GtAAHNTt+aqJ2QOn0/J6rYmxK8w==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-query-sqlite",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-session-query-sqlite-0.1.2-alpha.2.tgz",
+      "size": 26842,
+      "sha256": "af82ebb953009390ea4f9de0b770cd262316a006614652267cc90cd991248fe9",
+      "integrity": "sha512-FxcsdOO2rCzcUJ6Nh+aXCU6Q9J+B/fU57pHFrCYkx2sewiTwtxyY7T/R3l5ITV3m2OrPjV5K/WGXWnsn0553mA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-telemetry-otel",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-session-telemetry-otel-0.1.2-alpha.2.tgz",
+      "size": 15018,
+      "sha256": "23b2ef905fe5012a98ac6b74a65114e8db225c281dde3ad08aa2cc8ec85979d5",
+      "integrity": "sha512-ht9IoCREnP+IzY/oav9v8XE1voUYzgpdhzyJrgvT20rX8C+WwmG8XKOg60bMknyVdVoa2MSN1JycC/CQkkljPw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-title-llm",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-session-title-llm-0.1.2-alpha.2.tgz",
+      "size": 12654,
+      "sha256": "373f5c08dc253373bca94257a558b071e05ee5bf98717208f5c994d2268b547e",
+      "integrity": "sha512-g1AKWm1XSJjVRZCzUJq9ROGSbudEipf2XPtK7N4LcdntWTWLDxHg4ZKe8/B28bISPIvxbG7Fd3B/2aKczIz6Bg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-title-first-prompt-llm",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-session-title-first-prompt-llm-0.1.2-alpha.2.tgz",
+      "size": 7422,
+      "sha256": "565d3022eb9de8c01b04a78c83f482a15b4fab3439939321d06b86b23441a16a",
+      "integrity": "sha512-WtxdjcEHjepc4uUC2XBArlSGHzBafKKtFxktXWsPWXeQSw6Fc9ZtChVbc8bWJEQIPasV3H3Z7CkLOFQU6EukSg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-settings-file",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-settings-file-0.1.2-alpha.2.tgz",
+      "size": 16084,
+      "sha256": "a68a32efb9b1aeb5332116674ac7cbaa0f8b6f4cdbc1cfc2c74f2f86cf1f6ab7",
+      "integrity": "sha512-f3A1jwArKhBCJX0ODv30xzNPAXabOIpKo2JX9CLRIxjI919UQeCvR+qAw3BzoxlvAYxp9NWkDzkSwYeYhj35oQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-shell-env",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-shell-env-0.1.2-alpha.2.tgz",
+      "size": 10947,
+      "sha256": "356a362950525e582a8039fecb43c42e16dcb530d297002edfb601fd6ba6ca73",
+      "integrity": "sha512-OCf1iaPC5Qg6/DMLzvq5flGVSKP2uxAhgKs+8vrRuUiKc2UXXUE4uKayzZU7S18EysLZOVjMKKyUnHFXCVRQxg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-skill",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-skill-0.1.2-alpha.2.tgz",
+      "size": 21516,
+      "sha256": "8cb4824f7b20e318f46e02ee383e8b8d4509077e520e34d3a59cf0084c4f4e0d",
+      "integrity": "sha512-BbOc+DPjRNwVjln7U6AT28b0hegT8FKUkFLRWn6GnapwuGBuMAt4G2WUUEMjF6xmOD7gLNz+BEPhwOV9FmF2jQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-skill-badge",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-skill-badge-0.1.2-alpha.2.tgz",
+      "size": 20668,
+      "sha256": "27c2ab7733cba38d4758f4c6730084ae1036b29e65c1b65e0746c4c102f40704",
+      "integrity": "sha512-EoaMCKEoq0Ba1a3HuDMt1ijw03PF2y9KzapV+IdvkdQG3+WFcsuq9lanPyDNrBje72zFi8oN3bMXuJPaw7ndJA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-skill-filesystem",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-skill-filesystem-0.1.2-alpha.2.tgz",
+      "size": 20155,
+      "sha256": "4b28d20b510d55ce94c7f816dd30cc866dc64da3fe155c175bad0d2ed5310aa2",
+      "integrity": "sha512-CCANlEbO5+fMORpan3RtVfshPSgPi+f6nJpd/naVRs+ht+9y5Wi10ofimeNpXxRQ+BpGx1/43n2S2dZXS7QtnQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-spill",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-spill-0.1.2-alpha.2.tgz",
+      "size": 11440,
+      "sha256": "2ab049a27f326bf366d0c8d8027bad579418e873e3ca748737fe94dafa6f8d9d",
+      "integrity": "sha512-BemtJNMbbaOENMa8oKVhp55AU+6QJUHqfHdIhNPGAhZe3DFe15cXnyEg97q4fzWZk7dxUyFuJiO1ERoCHGj11g==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-spill-local",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-spill-local-0.1.2-alpha.2.tgz",
+      "size": 19074,
+      "sha256": "c3b1d6931238e94922c048d3434aac2ec2f8926084b12e22908ffad26266c941",
+      "integrity": "sha512-ilMXrV58r7aK47HcnPzlTb5U1uLcltoulEPBEPbWlf9J8NWyJXZsFE3/gRLszQEkAGmWn3NL79xj+EPEcoCFTQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-output-retention",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-output-retention-0.1.2-alpha.2.tgz",
+      "size": 14864,
+      "sha256": "c673c47da615803f81bf054701def7259b63c9f042a4cb5520a5be2bbb8f8885",
+      "integrity": "sha512-mKLCLsZKPJxwfma4AKl7KyfNUFVCmVovcbbdm3alxJqgU16PpkeK0rmJog6M34XJozQ8GAhdFf0TsDs3O6MoTA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-spill-policy",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-spill-policy-0.1.2-alpha.2.tgz",
+      "size": 12420,
+      "sha256": "78c5f145547fb537eb9dc80a43ccea76d04bea315c1b241b2c3fde227c4d46bd",
+      "integrity": "sha512-Xq04fp37DrE4p+EejCWRTlZq8JEeJxVhA8n+siDmUoCEj9yQR5ppFibuQ1gLy6jIkjvuzfwTlTF5AUnYhP9JeQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-storage-json",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-storage-json-0.1.2-alpha.2.tgz",
+      "size": 17571,
+      "sha256": "8da2882b79aed85ae43d934ec52b639660808b8670bd3cb025e03685ae18ac15",
+      "integrity": "sha512-tm0TOTyUwu55nPyfTap3UP112dI20yg9qANoAqCjBcedZTktV/mwm3QBsdmHfh+f5Xj5LYmqV2ZOwwFva3CggQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-util-time",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-util-time-0.1.2-alpha.2.tgz",
+      "size": 5356,
+      "sha256": "9a0317300c898390dd3eba99a90e920a75fffb95138fcbc3431e710de4383fb1",
+      "integrity": "sha512-BhVWSkq/GisaTDRIjg8MeUG9CaltZ2KlmcNO23gWo3ns+SEF7W8DpmHpcVXWLRILvcq4J+w9gfcw2leSnPuGCg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-subagent",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-subagent-0.1.2-alpha.2.tgz",
+      "size": 139059,
+      "sha256": "74b7c78a4f49ae89d3ebd6da5228f26009097f6cf942e2ce3f1720f0afbff025",
+      "integrity": "sha512-WN268rZqdo/lSO4ZQ6tIPaBS0Bs0QCC7lNwYTaZTaKOml7k+EYZSSDeRF1tJlfM8FjwDtYdB9pHUqLHyNKcaVg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-subagent-in-process-driver",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-subagent-in-process-driver-0.1.2-alpha.2.tgz",
+      "size": 15213,
+      "sha256": "547299c21abf1cd3a6db9081f08e38967902d7e2686cf7a14ecf7ac774cf7354",
+      "integrity": "sha512-zCNMh2KLkS9FlFLontj0VKk9KUvIZDSkRQIwV2mXWka5K123vE2K1Z70dfLfK4bVQoCTCg+TjWOERaJJZSfYQw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-subagent-fork-in-process",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-subagent-fork-in-process-0.1.2-alpha.2.tgz",
+      "size": 10556,
+      "sha256": "e4bad3166db40b3dc350f815f4535eb5c5f90e83342fccff15615d55238534c6",
+      "integrity": "sha512-6+xOF9NAQzjgz9suq0g0em4FEXxztTUbWugA19lVSZaLY7YbkWVnocCPzFJc5BEzR+OOsaufC3gkpkEo4aPGhA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-subagent-spawn-in-process",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-subagent-spawn-in-process-0.1.2-alpha.2.tgz",
+      "size": 9350,
+      "sha256": "34b2614bd72c9223b01451e746a416d53073ef8ada73757ce1b792a66449d90a",
+      "integrity": "sha512-b3dTQviGkb0wGF6mmB5XZpRodBA3cmhk5we7pJ/0Io3ctZlPFmjs8H7PH16Mzqi5R4lmTnK9fnG68GAvExwQXw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-subprocess-local",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-subprocess-local-0.1.2-alpha.2.tgz",
+      "size": 32903,
+      "sha256": "47ce4eab99fa50fc08b417f5ecc49e29658b87600bfbbc5fa70f1a7f8388c9d8",
+      "integrity": "sha512-IFneyTRqvbF/1Jm9h0WwBBxwlAd3vRh3SE/sZo2DTy9lzkRUMEBmWTiJZhVCMZ7hDLE0ALnjLLnLFLkA7bCP9Q==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-bash",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-tool-bash-0.1.2-alpha.2.tgz",
+      "size": 19672,
+      "sha256": "f7f319998582b8d318c2cb0c5464fcbe46c7b2cc692da38d5f3ded97272cf885",
+      "integrity": "sha512-Vt70FCPSE3Y7++2i9dKCNrsXTqhDpeJwqo44/GZow1xJ5acY9iNkjmjfq0UrTvacLLOEVnrMMBa9LojXi2WZUA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-call-timeout-policy",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-tool-call-timeout-policy-0.1.2-alpha.2.tgz",
+      "size": 11210,
+      "sha256": "8d1b7624c5e64bbfcaa3231a41f74c09f8354bd67c7048cd8de6f9a0ea682a2a",
+      "integrity": "sha512-iY2yNkEG5s2hrH4fCV+h9e91NPNST/GxW44tmQJS0lrATZLwf0j1fCfSHv7FhWRzoZxJ3sjRTrSbVqa8XkeMVg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-fs",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-tool-fs-0.1.2-alpha.2.tgz",
+      "size": 35728,
+      "sha256": "a9db1f7628959a8a77af2045fd8c301fb23164153f6122b7aeb1738e429bed66",
+      "integrity": "sha512-zQ+zxunJ9BXFR/kAw0Z/LO5TEy87uf1X2giE1AmM9fqbev28vd4pzLq3y8F9b0E64461ANrfD1q2wx8Gy1w47g==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-fs-search",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-tool-fs-search-0.1.2-alpha.2.tgz",
+      "size": 38825,
+      "sha256": "b1ab40ee7a1adbceccd26d786de833ee777beb728c2d8e639a228fa266dc236d",
+      "integrity": "sha512-DHHsVBQSI++SXieWrAUvabdC5pGqQPMK/G4C9sD6yEeq2uylRoBxuGOvWNWvObmAgxEHG5BTftFnApFWT0aWiQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-goal",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-tool-goal-0.1.2-alpha.2.tgz",
+      "size": 16003,
+      "sha256": "56f534e6d30ba2a585b655c7d3cdc9398f0a4ddb08b9011a973ca20afce06264",
+      "integrity": "sha512-lvp60s3JKuTzncrlKCyS3qM/jYMLZSTMXJ/xQ8A0EIDvfPp7x1C3NNez66IJXPJ5YMtW9QYsqx2YmnUKhPOrow==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-jobs",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-tool-jobs-0.1.2-alpha.2.tgz",
+      "size": 16664,
+      "sha256": "79c395ac979c9a84c27e19eb87c9727ac195c5ae51981ea187daae90839af3c0",
+      "integrity": "sha512-QYq4almnoKNDu/ncrpGLTfkT5sIdqvRTyLd61VNJTFl4rNT2G/JCoEIhDgf50Rkwcchvvk/bNNdekjlENqZjKg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-pwsh",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-tool-pwsh-0.1.2-alpha.2.tgz",
+      "size": 20034,
+      "sha256": "aebc1f3ca84075e48485e2983d634daf3df0a852728487edc466ae578f25d2ef",
+      "integrity": "sha512-sRGAmLWxxb+gglsqoftLojnFY1HaKMcwV9itkvv7JeACn5vkZuXTI0I/gNxjvt+g/b6sXT37hmQ7bmyo3dFHuQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-workflow",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-workflow-0.1.2-alpha.2.tgz",
+      "size": 18160,
+      "sha256": "0b4b9ed0eee1e80964af6a2517852190d472331f2726c8f0fea93be77e385cf2",
+      "integrity": "sha512-U2nGVCOZ3hGoPP6XtPWUFL++l6K8S7XRQV2hvFrSQ4WBGbwdkY6h1cyzGvJXzae1s3AbAu5tdt//AIBNHOtYaA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-ralph",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-tool-ralph-0.1.2-alpha.2.tgz",
+      "size": 15614,
+      "sha256": "60b8b7f5fbf9e72a39f3ecd8fc05acc5911c45df5afb52c00cd007f0ca8d2d8f",
+      "integrity": "sha512-QCUshiMz5LohEQeYyHgmG73jfFU+h9G5V42MjJGaYfhgkX9Wg6wnqbw7RFkDr/eqvrUfVKktM7mfqK96rjQD4w==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-skill",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-tool-skill-0.1.2-alpha.2.tgz",
+      "size": 16724,
+      "sha256": "7e6d4442ba760c04a57d3f9713c4d8320510b8af587ea862359e8b7851b4b3de",
+      "integrity": "sha512-+xjlVgy98M34FjOCXHptYeFgWNp9NWn6M3XEQqYLjW4fgI8mwvYAkra7t6xg8k5bgU3CC6ucykcloGeNvqmZ4A==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-str-replace-editor",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-tool-str-replace-editor-0.1.2-alpha.2.tgz",
+      "size": 13486,
+      "sha256": "5a87f48cf0b8e7f043ad6fd9d80e67adcc3de8de3c35d9544221b97cc339866f",
+      "integrity": "sha512-Lmd6A+z+tQZueew5+RAz3V6uqEOP+ShA+/ARZJC4IXp4aL2gSjmjs9bI4CImgOwdhDSiPoGqxMVtCUGgN3qwsw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-subagent",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-tool-subagent-0.1.2-alpha.2.tgz",
+      "size": 27769,
+      "sha256": "903e87c0104cec8ea254c84f5ae898340d517fb22015232781fcaba7639c099f",
+      "integrity": "sha512-i7LScg9QVrtOW77VKPpxtvQ2JUMaPxW681mw3ndlbSSCbvOb73NGxsQUbwJ2ELJVl3ugMkeFnn2hgN9rxzdjJg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-subagent-control",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-tool-subagent-control-0.1.2-alpha.2.tgz",
+      "size": 13959,
+      "sha256": "cf156c750d4b27542971559653f17b80120fb5ddabfe29d4e6fecac35804d99d",
+      "integrity": "sha512-R74tJ6C11LwH5H3vtuPwntrkSN72gwFKYeZ8w8GiAgbdIjIYS2oiIUEpH2cRqBKKNiEq8MNH+lVPQCWuEoyYjg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-subagent-report",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-tool-subagent-report-0.1.2-alpha.2.tgz",
+      "size": 11999,
+      "sha256": "2ede84bd8525878513b57ece3c270d824e366d5081181985bbaa8ef33b551c1a",
+      "integrity": "sha512-6yz7y2d3ntzcj2aot3ai2MK5V+Kue83B35ImU3ar4GF/hDYzJrzuem+18GgyAgS+T0Rvz/QiU+CWcco+NAKhpg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-web",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-web-0.1.2-alpha.2.tgz",
+      "size": 15582,
+      "sha256": "aa50575d0e31239a5153788491287c22d472fae4f72a17efca28a0d736e10c3e",
+      "integrity": "sha512-Q8wihUfauM/GMTttzYsgF19L+EQ67ewSFAViv5Cl516mv2bFEykAQSmJubmTkUS38BJiSeNorTiBHLUZIqKRNA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-web",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-tool-web-0.1.2-alpha.2.tgz",
+      "size": 28710,
+      "sha256": "e3c7e7aab75194e805cf319601f4c0db8def9279a6ba5795e2128be7b91013ea",
+      "integrity": "sha512-Us4xXhNctr34Em8QbUkdI+65KutXapHH96Xb2NUuO2LygIW80ajBDnlw7B5WClEz9EtzQZtz8RHmrMZDYaVmDQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-workflow",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-tool-workflow-0.1.2-alpha.2.tgz",
+      "size": 20100,
+      "sha256": "6ab419072d9d979760697d421ebf0a1213ced4d89d5ec1023f4d8645017f6bd9",
+      "integrity": "sha512-/3EjB8vOah8ZpT2I8ja8iPt4dE/0W7GX2lXe/YftOYlM4kF/rmri+JidPPLl+XdRe7laaJwBOqRG67smak4dng==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-typert-registry",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-typert-registry-0.1.2-alpha.2.tgz",
+      "size": 26156,
+      "sha256": "7a973035c38b59d2536cb3048359dd2b37c63e8436043276544375d1710e1c1f",
+      "integrity": "sha512-l71zfo5D20HqO5btBB4qqLzq0hHoa+Dlg7bjsynx/o7EMDFXN+AcCOTZ3sqk6ZMaTIlf+7CCTENtf9PyeYS8Iw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-typert-loader",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-typert-loader-0.1.2-alpha.2.tgz",
+      "size": 12588,
+      "sha256": "e6ab63509b2507f8b9dc86af8df825dd15206b1c3382bf7c760861ec04e6e904",
+      "integrity": "sha512-A4sS6JtkIdAPUbLBziAkyYGJljAloeB4WcL3x2xI60igJqerl732g3fqqImXT5RQWMpj1hv7E8VYhiOrieoQGQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-web-fetch-http",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-web-fetch-http-0.1.2-alpha.2.tgz",
+      "size": 20390,
+      "sha256": "2d419c892fab4a289b23ae63efc400a2ccf0c39e9c11d4baba8388f61a2bacb0",
+      "integrity": "sha512-/HtQrHxrRdipFDJ8p1H55plB0J2AY8eF17svS7lUzbV228g7ZWM1PSuwUyBlPcJ2JPI1e4BuVT5oAqK1VI5WPQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-web-search-deepseek",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-web-search-deepseek-0.1.2-alpha.2.tgz",
+      "size": 18878,
+      "sha256": "bc219b3cd0e86e9d9143a01f52bbe4f77fc74a1fa15596379951a7a2b2940bbb",
+      "integrity": "sha512-fk1eRrLlcd2UTTZMA1wncy43GmsW9mfoKERRQptk+6iNuCxBtrQuvCRXh6kjW7zUI/40YZrexfaizMTKm1/dzg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-workflow-worker-thread",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-workflow-worker-thread-0.1.2-alpha.2.tgz",
+      "size": 42355,
+      "sha256": "ef00187e30b757b5c0a5cf9b869e018c3ce6c876f61af5b922b0d2fe8f27c439",
+      "integrity": "sha512-mCGZOv532UwHXdmnqS+vK3Xa94YDC8imBGarmu1tNvB/DqPzTekFJy5/t3GMyly1v4b0gKMrO8YVfOCyigKvQw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-base",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-base-0.1.2-alpha.2.tgz",
+      "size": 16008,
+      "sha256": "d8bc07cde905fa99b11dc1a4a621020447891f7cde2e95e38b39cef7544f5258",
+      "integrity": "sha512-8KwrZTkzPukI4dENjMyLYzz/mObE1f8Z8kSSpy0f2nFvgczXnu+RsmpdQGHDJb6vjcU5Bu7UOW9NO/iGkVHi+g==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-agent-preset",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-agent-preset-0.1.2-alpha.2.tgz",
+      "size": 33285,
+      "sha256": "e9de75a30e57b2e2a78f525688cce1181dfc08be95ff6064c2fe435e5d1bbcf7",
+      "integrity": "sha512-hTGSGtJ5gaEAZWY2AKDNHsGBF+m1YQukl+ScTPexbFFDKP6M0hm1B6JFg8ScAi68K+oHMn1njLvDvqD5IAMB7w==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-cordis",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-cordis-0.1.2-alpha.2.tgz",
+      "size": 31510,
+      "sha256": "65a733fde0ad37e8a96c81f7327ace80fecf94e7dcad19bf0fe1b517ab315620",
+      "integrity": "sha512-kNwwr1ZDx5oNJPYznK9WZekv7duDxDKEHNBhliRZ2fmL1icCPlvK3AhG0GVklukXNMWvLRZFpg/+KBCEK+ma1A==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-cordis-client-runner",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-cordis-client-runner-0.1.2-alpha.2.tgz",
+      "size": 70094,
+      "sha256": "5f7638e66df42e4b498a294988fcd3590d1e0cd0c8a68bcc309c3ab51c04f2e7",
+      "integrity": "sha512-uTdZpbcEiw0MY5LGu5Td/rP2C+2fu7jAOTknTJcNX7n3BaSb2gPlgchNQ163J303oojW9OI4gDCkwJnl4wjapw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-code-runtime-worker-thread",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-code-runtime-worker-thread-0.1.2-alpha.2.tgz",
+      "size": 35857,
+      "sha256": "857d6ebbf69686b2e899b34eedf0ae655942d2767a174767f58f291875256397",
+      "integrity": "sha512-KGkkEoXWR5OiRuYr3asJOezD0WRHttGFHyWe/8m57pBimcDtr+raI6D2Ru7SKN0dJWrlhXZ1ZlMLqTNA5hwDKg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-headless",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-headless-0.1.2-alpha.2.tgz",
+      "size": 12689,
+      "sha256": "bd0be56dcd41d9c750913053b5da42249d7f53a99da40d9fdeefb5e9b23a541a",
+      "integrity": "sha512-UcmDiML+CHq/RZ1c8cMUQy0SYSKxJJ+wuLWPp/xsAKTN2+3pSUo6qIGpa1xkuJcxwt6t0pZCZDxlMebjZ/WlnQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-hook-protocol",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-hook-protocol-0.1.2-alpha.2.tgz",
+      "size": 23932,
+      "sha256": "7558151e7bbde625e3c94f16bec416a6f953431083d7df50c622c63e9cdcd60f",
+      "integrity": "sha512-0vHGGJQUQMHjuLM/sbAn5y3i3rpN+oMpjoRwSOHa6icpeWRXe2OWMaCSoK0MwDdnUHY8sowZ5paMorecYHMjBw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-hooks-claude-code",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-hooks-claude-code-0.1.2-alpha.2.tgz",
+      "size": 20566,
+      "sha256": "6917efcca6b7c66084cb3eab1ac523dbe9fb98bec6609a56a8f8da7e9fa5d22b",
+      "integrity": "sha512-WuePYgMnCckHtKXp2nLrQauXo/F/AYU12mrf32m9oXWF2g0f+kqTp2JsWERCyQvrX2A2jrKJ58cCLoifo2TeZw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-hooks-codex",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-hooks-codex-0.1.2-alpha.2.tgz",
+      "size": 17928,
+      "sha256": "74bdf5d751f699ad373dffc69bab87971cb0091bfdbee8ceda5356bb0ecda7bd",
+      "integrity": "sha512-OuSeLw1kRL2A+JoJOwIlPBatbmYs8UgsHQu8mvyyMG7I7xG88MAHbMggWAWcz4rBqwv6gHtcl5AN57uCrPYFAg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-persona",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-persona-0.1.2-alpha.2.tgz",
+      "size": 8836,
+      "sha256": "373c5154731c5d62ee69bb03ebcec7c0e7fad03bb1d134f2d5f28e27bf5b52cb",
+      "integrity": "sha512-ijosrEO/VQDFXJLlICemeqZBWnQff+rBFSwIA2Kb5Mo5rXkuS++AeoORGPO+0OYNs+vPMeoEAH6Du5ivbRw3qg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-schedule",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-schedule-0.1.2-alpha.2.tgz",
+      "size": 51253,
+      "sha256": "e890b8053893eca7552f8452f37460d374271084bb38ba3ba8b6cb0f647f71c6",
+      "integrity": "sha512-RP2Alb2SqxCP9p9aL5TgsLDZmV3R7ayCHw0s7LLlbJ4ikzp75ICncEJwzDBhigkNVRcwVrsM2g0/yjVsy3MreQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-sdk-protocol",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-sdk-protocol-0.1.2-alpha.2.tgz",
+      "size": 13980,
+      "sha256": "8b66aec016121ab8ae8253d586e4b4651a13ce451c1076a750ae1c2d0fdb4fec",
+      "integrity": "sha512-lcOHeJNzezOr73wN8XjALdSDZSrbK5B3Qi3EVHmL3Mekgr3XL7DJ6Lh1MZNYHeuJNEkElBb4S5XoUYIdFI3T2Q==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-sdk-jsonrpc-server",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-sdk-jsonrpc-server-0.1.2-alpha.2.tgz",
+      "size": 14797,
+      "sha256": "e0ea8bde55ad2acdad707266e870fbc63fbaae7704e5d752144b2367bbacdb6d",
+      "integrity": "sha512-053ageD5Zb/8TOKipmo9WcWREly57m5eMaB8JyRc+Wq6J+179oxzX9uFRje5iP7lMBXI6cm8veV3UmQVyS4yng==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-sdk-app",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-sdk-app-0.1.2-alpha.2.tgz",
+      "size": 7182,
+      "sha256": "6babab7bf0bc880f7c91c67e5d989054d2c56bbfcf74217844e069bf456cd147",
+      "integrity": "sha512-S4kHZRTJEvcyBnQ8ZKydyhISX4RyAwNkcdvSOpyVgNPbSU399ypfd1T9I2lzGo4ga6w/pjW//6HWh2lm8ZyAuw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-agent-spine-demo",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-agent-spine-demo-0.1.2-alpha.2.tgz",
+      "size": 22264,
+      "sha256": "62e9e3c201c96ccb9b9f6d17cb256caa6efef3c39b6e13d7ec14d7fb650b96a6",
+      "integrity": "sha512-iSAyRYbTJ22XHrtLF0mM0C30+/bRmMhLJIqPfM9Z3EWjMp+WujKpwvJ5sbDg8qh59q8XY28cSdHYxAvShSEEFw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-terminal",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-terminal-0.1.2-alpha.2.tgz",
+      "size": 16730,
+      "sha256": "6d1d5e5450eead1d089fd3afc23f979ad15c791368732a3df8c2a2f246e4e156",
+      "integrity": "sha512-C3yg9sVBvrM0G6Fw/nUJdiy1ev4wZ4vJTcIRmNYn06sLdsX5rlWGDCOoOsqyWOFYk1K796gQ+lWxwP4zlrl/qA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-terminal-bash",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-terminal-bash-0.1.2-alpha.2.tgz",
+      "size": 23152,
+      "sha256": "cc8461168be8e9015fbd6f784c9401972f5715a088e9c6d8c6d0e6506a354dc7",
+      "integrity": "sha512-ZSEBLy1IVPb0v3cXWHLoSM7ENprETvit02yv99FLzs4zhCDwfRTV/nskEyrBHBJ2+PP9nGwpWJb7w8l+MN4fbg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-bash-persistent",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-tool-bash-persistent-0.1.2-alpha.2.tgz",
+      "size": 14861,
+      "sha256": "311350bcec20d9c2d03a2127652e0c832c0764f7f0b36cf839655940a484438a",
+      "integrity": "sha512-CYTybwYEoV+t9gXTFMFVK56d2vTWisVXi45K5JyfobXDlQL/RIkRR6MPaTD1OWFkIdMJAGyOMfA/thns0paKfQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-pwsh-persistent",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-tool-pwsh-persistent-0.1.2-alpha.2.tgz",
+      "size": 16099,
+      "sha256": "784d532a029034f4dcdaecf0e6f1fead5de198c012b82de81812067b44cba87a",
+      "integrity": "sha512-q70wHu44hZPnNkc2c/rIrCS5DR9wB9h/BNnR3JKsaXQLxW399fhDJyHfVj14zXeOLfV8gSvAt/q4MFJVCxwCEw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-sdk-minimal",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-sdk-minimal-0.1.2-alpha.2.tgz",
+      "size": 7963,
+      "sha256": "d16a9d0b44c045283fbd24745dbb9e50a91582286005f268f70be049f1925a2d",
+      "integrity": "sha512-SFw2Arj4aT9yn5S9PYvbeoApDjfNRwQocUiFGMDP/C31PpMZLPMu5VsTDroZ45OIF2zXvdZOz9B56vj66Bippg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-reference",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-session-reference-0.1.2-alpha.2.tgz",
+      "size": 34910,
+      "sha256": "77b30234c6fe9191f6ca612191a4c0408f941e2c32e2e2d56e0b4f34f4c82a11",
+      "integrity": "sha512-4t4Aj+S84UOIY04jqHwjiT70OeOoz+X5zyc9YEF248qmPf6Y6RES11FBYMRlmm1BkcjfG1+EDlCMYul7iRHnoQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-time-context",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-time-context-0.1.2-alpha.2.tgz",
+      "size": 14943,
+      "sha256": "0d6970edbe8800cf7de84af893029b98cbe6c37edbf6fad8eb2994180f187fa0",
+      "integrity": "sha512-o2MrzXmScPtq1m24OI/Z8i0zfeES/p17DpmxMVwJhqwfidrSKDuAXfaLNC2gLIFW7XqYZ7bVG/Adj4PX6JYAZA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tmux-context",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-tmux-context-0.1.2-alpha.2.tgz",
+      "size": 26809,
+      "sha256": "584602c5d86292ec6af897d4386116a4fa6f4ab2136ef221be0c6bb1aa722d79",
+      "integrity": "sha512-VkCGQYLPFD+iY766Z49FIA6RIa1LFUZpvG9YEJGUZ+j29JXej7yh5y7RTALoYhX/e3Atqt/hLevH8knoSqgzJQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-ask-user",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-tool-ask-user-0.1.2-alpha.2.tgz",
+      "size": 9171,
+      "sha256": "86980a65576a44c1f96f6ef21a6e8ce82787bfbfe68f4fc90d5a72411c160785",
+      "integrity": "sha512-GfRl+LCORpmZsL4QYGhN1Pg93M50ihvLEuEn8FPYziOUPNp5BCjn9nOouoVKAWCfz8c4K6yC58NmQT3chF0PHg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-cordis-host-runner",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-cordis-host-runner-0.1.2-alpha.2.tgz",
+      "size": 97766,
+      "sha256": "44104e8b6149661d026c2168a9173bb0c5d55123549ee85a34bc8643bf79f693",
+      "integrity": "sha512-MXKQvTKZb9YGndtL74sTla3dfydfgccApi9avkExvxlWCi5wmR8jzyMOsG3eCdVCRawSPiHC/XUITBOn98+kgQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-cordis",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-tool-cordis-0.1.2-alpha.2.tgz",
+      "size": 124805,
+      "sha256": "3ed4ead8da80b7b52844098961dfc46d8ad66050d768d401806f332dab79d9f4",
+      "integrity": "sha512-cIo8DlM2bG2TKCHWOFvGKQO8oir5X3pMfRXS4+H2NlH2JeCYiO84tl7o0aBCy8w7p/m5vsTTKkhx6jCOiqBPHw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-api-remotes",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-api-remotes-0.1.2-alpha.2.tgz",
+      "size": 53889,
+      "sha256": "2c50f75172eed7b8d501342abad8b5c8f215ed8831a601159315708af9fde296",
+      "integrity": "sha512-57C0M0o7I+LiSqTTF4Ku70Ob7MarzaHBrUJOK6klvnmbtYAiK0z3zZwW3Y4/HZ5K5ITwMjyx+G1IWPrCjsk0qQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-connection",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-connection-0.1.2-alpha.2.tgz",
+      "size": 68411,
+      "sha256": "563857014280de6c981c26281de279df0a8ce785e6f79d7e9697a25030076613",
+      "integrity": "sha512-au2+lgnwmJboCvW/LXLJvmyAKsUa0iISjS0T5k4TyZ80KbGQo0erIH0E9GnKbbmER6tk/Kaom9AEewAEY8TAjQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-file-reference",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-file-reference-0.1.2-alpha.2.tgz",
+      "size": 9220,
+      "sha256": "2b5c1f6f31474dfd9522849cc756e995b309ee08870254f16f34c13c98ee83b5",
+      "integrity": "sha512-oWir6ovcpgsacGebGyvpJcbS3VFetSMtnTGlhxb4dtJMdDipb3Zy+iyjj7DU8C27ulJloU33z1mX555PwZPe5w==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-native-command",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-native-command-0.1.2-alpha.2.tgz",
+      "size": 9763,
+      "sha256": "de1419922b1cc861fa152318856706b583b4590a5942fd8b3124965b4193b112",
+      "integrity": "sha512-ST68EfUNPsF4Bv6dz7hQVO9GkRYjrO5nwquLXwHEBSaJXF5QxBPWQvcyqlL6p4ayQVSkc808OwicVKDTEVDLNw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-util-workspace-path",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-util-workspace-path-0.1.2-alpha.2.tgz",
+      "size": 4293,
+      "sha256": "f70b7a5d0620f1165e74f116d75569da838a89293b7afa0a0bfe28c4acd7c390",
+      "integrity": "sha512-pu0NlgVVGN1G2HqJTC/150wd6N6nXmJcqyvzSZgnZ7J5vRXQQXbQkpksP+EK4bwWqViYPzhAc8kgyygtkIS9tw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-workspace",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-workspace-0.1.2-alpha.2.tgz",
+      "size": 31434,
+      "sha256": "724355c9f11333d9a2973ad48cae2d7adc9f269b867d4d22f4906c88fcbb49a2",
+      "integrity": "sha512-pdq9bEAS8B1beez0Wbb5RvhUOTmgHA3zECYrC4j3FTJzCBH0YrbkEhf8yogzeF3UdOprpYDjF1IQV3ozCENaAQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-api-session-controller",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-api-session-controller-0.1.2-alpha.2.tgz",
+      "size": 171617,
+      "sha256": "eedcf812f2b9a8f5a60c8a7b7b6c0733d5620355e767d14819c55f2c2625988c",
+      "integrity": "sha512-X2YSKLSlD8ncitlzSdqzeBV92V4Sa7wEkOB65u32Xy04rovR+vKlqm4TpSGjHUT7Q0U8vOQ6eVlrMmOuJ+nkbw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-api-settings-controller",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-api-settings-controller-0.1.2-alpha.2.tgz",
+      "size": 22813,
+      "sha256": "8bb2cfff86e3a11453b4b36580265b1dfa929e3f7f1296d5ab4e34930e24e98d",
+      "integrity": "sha512-26d6eJcVYlUF1a1F+uvFEcUJHPeJ+xHZT0Wm86cswrPqkUkNYC/CaC9zImFHctAo70gvA653/nJdci/IdqJujA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-host-directory-picker",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-host-directory-picker-0.1.2-alpha.2.tgz",
+      "size": 9931,
+      "sha256": "282759e044121c2d4f642aa6a6da10de671fa9839b557c131a8742455e6e540e",
+      "integrity": "sha512-zz1l0e9tEVdEzt6YWiqFmDyMbkcq9r3iWgDqLaB3mTTy8oc32YWXUMKIOMvKV7U1bQAI9of7DKVRzFJ/UBaHwg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-api-workspace-controller",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-api-workspace-controller-0.1.2-alpha.2.tgz",
+      "size": 32341,
+      "sha256": "eec035968d9cb8932d6c4216403811d390a85b788543f280d93111f173e1666f",
+      "integrity": "sha512-HnKmL4T3ZYJUoedRd+l9wf7mY2w9UK4ZMOmHBJ80+3S0evJJPjmTnRzxdmncWpjuxazAMq62TWfv5l+tSaJQag==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-hmr",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-hmr-0.1.2-alpha.2.tgz",
+      "size": 14378,
+      "sha256": "a39a35c6673ff7696ca176b00e5a6e24e7bec15962f9469d4f6a814181fb7b2d",
+      "integrity": "sha512-TNNGhoTi3XMgjyehiNeVQZU9s3Jws1EUklJunHE//I7S2afPfmWveWuWlGvxp6ZPTNi1F4pXnUM4z+KKsInbbQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-locale",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-locale-0.1.2-alpha.2.tgz",
+      "size": 29775,
+      "sha256": "cb726ab72d160e2d4aecbb3953fa112d713f1541c39ddc6b6e499eb6ccc3b773",
+      "integrity": "sha512-YDALYBD+iYU3GAAdL0ce2edcKURGe8jTk452ZSmDTGaUqd4TUBsB304yt2HjSzAyzoL3R7t2f4aKrVtAWbY1Rg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-modules",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-modules-0.1.2-alpha.2.tgz",
+      "size": 33149,
+      "sha256": "77f326fbe5da5330cffd4a784a7404285a9a08b09b89e04ee6270e78bb5cb6b7",
+      "integrity": "sha512-QkRlB4f9Of+hDF3r2MrEWgKyE9AxVJPCQbjcYPCPHLEyDaoNV4+uxNsUjRyTjDizKlT4j9ggc2XXdWR4lT6GTw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-approval",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-approval-0.1.2-alpha.2.tgz",
+      "size": 8649,
+      "sha256": "25bc8e2b75c067f7d9a2df570c492d845b27f5cfc8bc732b290bea4dda3514ea",
+      "integrity": "sha512-etCRSCvyOAT25zHQzQZlS7rVoUIbzgGFsfLBNL/daBwlK+ue15+Q4u2kNyqmCIWkSn5s1o3UnMbx3A517WAYlQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-attachment",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-attachment-0.1.2-alpha.2.tgz",
+      "size": 19914,
+      "sha256": "6cf4d99458cfc01fd18fe8afdf3e001663976cca4eb6ec494f8ccced9afc1dea",
+      "integrity": "sha512-T0fR68mKhYHiffiobBFN90dUpwiz1nhL22JbGAF/qrHY2b+ibZzODmc6rS3bDqhSj6DuJD6pShAKxfvxtwAs7A==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-brand-official",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-brand-official-0.1.2-alpha.2.tgz",
+      "size": 7098,
+      "sha256": "77cca9f2fec64e3fcaf022b98a8e6eb74aa8b44c9b0b7dabd5252c412200ef0f",
+      "integrity": "sha512-HZdl+tep8J9oZfVp5YsZRiCHY7UFvslo0soClB2auw6zXt/ZLfUfafsigMIe0humlPb5WKNUKoynPPvOM3PwAA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-chat",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-chat-0.1.2-alpha.2.tgz",
+      "size": 109858,
+      "sha256": "2bd328ff5b72ebe53204a4f31e0fa969df7573160b2423c8227af07525192deb",
+      "integrity": "sha512-+EHT8plLEXOhp8DK4gn9dvYcxirjp1rwCnzOxNkN9pW2BSipVOBJyHa2e6nAgzCfNCfTXTCTIf6Idn0XSGhxKQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-commands",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-commands-0.1.2-alpha.2.tgz",
+      "size": 28004,
+      "sha256": "f1cb4b28bcb19610dae588a538b43351bafcbd5d62ddc44fe1a025241181f9bb",
+      "integrity": "sha512-zd5CytSqQ9HNP0tFMQShRseq/DzIr9kwQRumR+N7lE/AaY8DWhO73pdd3kAcjElWTyrmvw1jR4vp0bBFL6hV5g==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-conversation",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-conversation-0.1.2-alpha.2.tgz",
+      "size": 210563,
+      "sha256": "c42b9f7688af5aa3ebc94651a74b843cde1f8156c7873c6de062af560086d897",
+      "integrity": "sha512-iCNkro90sUYopvtAWe3pE635ZpKfdUQdvejTboEVmmwBvU6n+2yKQDOcDMntZO7OqDOD4LfoJlMnnG3OGrXxtw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-deliverables",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-deliverables-0.1.2-alpha.2.tgz",
+      "size": 16511,
+      "sha256": "135b14dca2fdaa88bc65cbc8b5d46c94b7657635d2065816edfb745c519fce89",
+      "integrity": "sha512-W/bKHBSywgPSWdYO65L3gzyDfdis/KBTz8IaiZlhnIxjFU8fT5RwEcn5GhWwm5w346aH5X34fjjni+HohW4nkg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-directory-picker-browse",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-directory-picker-browse-0.1.2-alpha.2.tgz",
+      "size": 20868,
+      "sha256": "0075210703a7cd599ffd87cca4b055286f4219c3bae20fe5bdd00d40f2fef7b0",
+      "integrity": "sha512-M/3NzcvcqPqtE598oqaz24c8i0fDOuqOp0O6RFVJ0Mgn6DFDiOtrALOio9J016qlbXunWVE9xMwi99Os5paTPA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-directory-picker-native",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-directory-picker-native-0.1.2-alpha.2.tgz",
+      "size": 7885,
+      "sha256": "8224b1f137ffe6b1b8a6f1a2afa01e35563cc00a472c5aa92506db33695c7f09",
+      "integrity": "sha512-ybSq9sRc6Y5aPrNQszjThCDL6nnn/m1NcE/7apYdbFBDVdgx6z4735ZqQnPQr8aYvJma86TPJz6IqSyVaOJziQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-goal",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-goal-0.1.2-alpha.2.tgz",
+      "size": 13721,
+      "sha256": "2c073c5a8a1e8ceea1812daef661b193602bb50599791e658c04e95f14f3e051",
+      "integrity": "sha512-mJYV8D4yl8yW2QYHBYxpqmbHGMk4xBU2tMEZiy0cIuOVxf7lxFxSCZ+1pq/ats/nWNfbVoObyjgup2tXz5C0tw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-input-trigger",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-input-trigger-0.1.2-alpha.2.tgz",
+      "size": 32205,
+      "sha256": "a3fe7ddfbea37ce6a31cdf76ac910669a77f7d6e82656c66473c40ebed5965c4",
+      "integrity": "sha512-bQ7D+/nYbfS/PS44WnCAoNhcN0/orVBfanSZN86MoavkeGOyPELedczEclaunOyWHeb+qZDsuw6sFMMrco4UHw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-jobs",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-jobs-0.1.2-alpha.2.tgz",
+      "size": 11763,
+      "sha256": "aae6a1a1608abaa1f40bcea65edc4b8158170da54d95298b939ef09eb51ec88f",
+      "integrity": "sha512-AKcBMryNwYqoFfLhId1LcnaWnvxPmXeMVqNvHH/4YNTA/APWIsZx9OW/YhFVKhfRye0Gci13vX/dKa+2LVZ71A==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-layout",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-layout-0.1.2-alpha.2.tgz",
+      "size": 18180,
+      "sha256": "0497457953391b24219b2856bdebae1858fd175d789553ec25e6e2721485e79b",
+      "integrity": "sha512-eTI2dilbUfzHelbvMZOzuJlVTHzlxmkRio7dIBVejZvEadVlh5uQLWu/hbV36cQG2wHbARdcU698V7zMHo3g0w==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-message-feedback",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-message-feedback-0.1.2-alpha.2.tgz",
+      "size": 17504,
+      "sha256": "98bbd64a25115efa0ab2499e87a76a0143d0c4208803e6ff85cfbf5591875fe0",
+      "integrity": "sha512-fyD2jOd0WlqCBac0d3dVHB5OZMhgXFFO11ftozo2h2GenAlnD/UVw4SL3QZpGEMBLltJWkRnPHVQ4sk3nGdpLg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-model-selection",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-model-selection-0.1.2-alpha.2.tgz",
+      "size": 21039,
+      "sha256": "1476a0c4009e78c43ee415853f261ea82508a3d45864d1a5e3f7fe835cbe884b",
+      "integrity": "sha512-JpXGsHIAzyAXYfRn7LLYUVna3lgQC2S0vwt2UGCpyxldUyP+jbAqgeq2D5H+4zZB1dNErHXqPnqYRsW0YF0wdg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-permission-presets",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-permission-presets-0.1.2-alpha.2.tgz",
+      "size": 15539,
+      "sha256": "aaacaedee84bdfb824534a8076edf29122fb1c63c58c50ac5e2bacbf6ca59ed3",
+      "integrity": "sha512-9KQYRGiYEtze3EaavbZqMCuCcT6n4aeC+p+qn0wkC8zODMLS/jt274lgqnSKs3OZgVOBUM0RtKtvZorb27T5tA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-plan",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-plan-0.1.2-alpha.2.tgz",
+      "size": 9658,
+      "sha256": "6d29ef142ef05f92575c19fb83accf02174b6434277c65cb0d2df588a9e2e49e",
+      "integrity": "sha512-dqIUnkhSjsSR+VTqGlqkH/6MzPbRr5JEm9IQwjE22XooNxnjLYAnZYCaof3RrtQah6mo5OFEJQbBuJhYaufb+Q==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-reference",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-reference-0.1.2-alpha.2.tgz",
+      "size": 11936,
+      "sha256": "31ee0367435a476d36f26e65c335675166fc614a16d3d5464c3d899ef2cc1ecf",
+      "integrity": "sha512-sWjO8N7W27b9F+A/kkf5LGHpKTom5F+lW8HSl1fR4aQdfAWSClOGt6IqSX51fLN0C/hvMVm6R9RaD3z01etURQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-renderer",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-renderer-0.1.2-alpha.2.tgz",
+      "size": 27248,
+      "sha256": "7dfd2a12f2215e1ae46bcee6564fdf8de5b4d3949d8ad9ec3ad35c9d694b82de",
+      "integrity": "sha512-XDDR6qVFi8vhHAcDsaagq+yQk/NvsWRP9yDohmJG2+GgI+bG75+CJE8d5JK/PvkUk9DFx343p1CADJaewZQytA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-schedule",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-schedule-0.1.2-alpha.2.tgz",
+      "size": 12250,
+      "sha256": "1a10694ce5cd40066a7c073e37069183ef4cde03106d1b6c4680e21244e9efd7",
+      "integrity": "sha512-X+qJLYhN52ekdDQB9JYXXy+QDlxglsoBGPwPgILIFKF2toyTwUtWmcVML0CPCvm49b3wlMuejD7QPdiQEyFNvw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-session",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-session-0.1.2-alpha.2.tgz",
+      "size": 8698,
+      "sha256": "503ac77161ec1944016fba09708e48532d16416b1574e5359005cb0878bb6457",
+      "integrity": "sha512-RDGRTM97UB4dZo1MAxDxvyqcSxdPxrjwhW/hDANYr0jwlTC+pflp8N3pGuaWtW+gz9vFXVKemQMke7yyJeJrXw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-settings",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-settings-0.1.2-alpha.2.tgz",
+      "size": 29136,
+      "sha256": "59841026a05d1ecf94e2bc6dc8ad949c3476b6a1ad2b2bdfa538a6c577a202ed",
+      "integrity": "sha512-06gPdKaUVItJt1liQVYM/I2W0TxNuK7qN682Ja43R4vMahg++mP35ALA5MtZPXQNLnHKe+AllYMzmgrjBf8rnA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-settings-general",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-settings-general-0.1.2-alpha.2.tgz",
+      "size": 19488,
+      "sha256": "f5be870f9b0a34d8a7ddc1af97881a3ce48eb15105291b44aa9551f48e8514c8",
+      "integrity": "sha512-uGk1ogimIU8bMGEkIo/4PyDXicm7WLCrdnfrC/FMhzmb0boszT7c36b2VlauoX/Fc8XL3Wk4BhNGsMJc6gX6Kg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-settings-models",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-settings-models-0.1.2-alpha.2.tgz",
+      "size": 58407,
+      "sha256": "ad982206fd394e6186fe82a1f96538e4ce15d589bc474d716ca16898335bdead",
+      "integrity": "sha512-gqAM5N9zoCNWqEEhNY9/EvS9oJ3QIqN/hDNDojmnru1jnwkPCmdVpadlELJjsxEdJOr7pS3dILJ2FdnNswXZ0Q==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-settings-plugin-inventory",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-settings-plugin-inventory-0.1.2-alpha.2.tgz",
+      "size": 17396,
+      "sha256": "01e863afce0d38f375ea780f06231e448cc58f6cf1e31c8fe5bc06b3e90620c5",
+      "integrity": "sha512-RquYtMKspBfOJOD3ct1v+1+92CNr4tA092pKB4uOKrsentRexgrcsk2hbtapqTNnCYJpObs3LLtPzq/vKGXL6Q==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-settings-plugins",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-settings-plugins-0.1.2-alpha.2.tgz",
+      "size": 37402,
+      "sha256": "e10540452a9ddc883b6fc79e2fb9f130b9267d253638d96f13f6c6275fb4e68e",
+      "integrity": "sha512-8DAvbngT9PE1Nzqmxbx2nKeIJIb9XAdiSbqcEzEGCHwyRLZA+jwzDBbZGvJ/ZS5cTOP2Zs9ifhwPkzGIg4riAw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-sidebar",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-sidebar-0.1.2-alpha.2.tgz",
+      "size": 14352,
+      "sha256": "fabdf9ce9e32b24e60ee4959936046c2c082c35e46bc05b98fe04f533a522ddf",
+      "integrity": "sha512-sLSen1UCdIoQ5zRko7PBNJ9e9Bon6sTAY3FoePh7H3fsUcf8Hw9IDkzI9GhLVJGFS33ieo4lnUaZ/3uGv9jU1w==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-skill",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-skill-0.1.2-alpha.2.tgz",
+      "size": 14783,
+      "sha256": "f635cc329f4467693b1a34f6e8e56c6935ae38b7980f72ab2bd2cce468c1ee04",
+      "integrity": "sha512-O2cVTqZvLmW0EiRdl5bGUBMnQVQkFh/1WOLd8tVZpt643pR+LX2+L6IfpxT7Ntq8qsC0/dMn/wUhlOuuM5aWvg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-subagent",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-subagent-0.1.2-alpha.2.tgz",
+      "size": 20560,
+      "sha256": "cde76005b6e31646549e5cbb61032c68c8d991f38e780f0143dd72dd1097e01c",
+      "integrity": "sha512-TmiA/75kIy+eTzZtBicO/aUm4SwxOcC/eJLivW9kjXUbLBQU6StCBfmQ6Nmal1a40nBoKTBjgKPr9tMfgMqF8Q==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-theme",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-theme-0.1.2-alpha.2.tgz",
+      "size": 35416,
+      "sha256": "78cd0401449819e0cdfe907ea13102b3324af6962ff2c7330b8a1810c363e383",
+      "integrity": "sha512-obtxdjNvZ13C2tUsxfEYI77QJ4/bLnqr5/gHEXLom43rHWWYJ7vk/AZYvq63Mdp5LeXX6eScj1ZE5lUUN9Ud8Q==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-tool",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-tool-0.1.2-alpha.2.tgz",
+      "size": 38456,
+      "sha256": "e0d7bcb72b923d37cba2e7ee2124822cb34ff2e07dd7ed7bf178911ae24e8a73",
+      "integrity": "sha512-wHjJQRsp1KxzIzBtntZkP91F6hV0YBmxpCcTEYc9TkL5EpqO4lvs2OC/OB2daU3BcatC/MhfrbefYldHCjMZmw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-trajectory",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-trajectory-0.1.2-alpha.2.tgz",
+      "size": 99972,
+      "sha256": "aaac40f00066443100fb95b575e6a07435cf29d020bd14a3cd7694eee6269a8c",
+      "integrity": "sha512-G4gXPeVRmdJHRXWyD35iJLU+mHXjMu/GORhaDWt7LE03e0hTKnur9hAjsy6LdRzFEBSakSi7AWIwKSXLT3Qwwg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-user-questions",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-user-questions-0.1.2-alpha.2.tgz",
+      "size": 22754,
+      "sha256": "c95b2de293ee0b56687c6886b0465dfd9b7c350d6b13c476304b0b90915f4ac2",
+      "integrity": "sha512-lixmqYcOxQXDfPDv7kkyuPZWlOR0CZkjx44gK/VrLF5Biz2eLvcz4BWC9SbH/6o/0Lo1kw0U92cUlNJ8HrjCxg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-workflow-run",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-workflow-run-0.1.2-alpha.2.tgz",
+      "size": 15162,
+      "sha256": "32ab6bfa928929fb48a984f83943dc1223b35f76b5e5de33b3362a96452593ad",
+      "integrity": "sha512-J+Bf7gEWo1P7YE+fxY0hL4Ijstz0DCZ9pJJbIrXe/GIiyTfmeZQJwgWBvPmXVsSNvX2yE7kcks3WZy6zeF0/YQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-workspace",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-workspace-0.1.2-alpha.2.tgz",
+      "size": 49639,
+      "sha256": "4bbbe86e550cbc81d38f2a80fec64876933a337c37a5f00668ff15db852ea90d",
+      "integrity": "sha512-Lzf1YBbEaIkG+kPr/NB8PkLC1L1Im7OxmLdlx19XBS9+GxT6e/WIZnNTfRr1yfDkVFjG6djrj6bacxF0t5VWGg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-file-reference-local",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-file-reference-local-0.1.2-alpha.2.tgz",
+      "size": 17707,
+      "sha256": "f5692bd38b09494f830fe5cb1f9d155117e7172d9ddd9b2bea8347407e12d57a",
+      "integrity": "sha512-qnIejkYFE5t2fc6scrqHIwfh4GbfktaZRGWlh6dM1r7JIK7vTm9ozMD/iYVlMQDXPglBHXS+gXkgtxl9nMTDuA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-host-directory-picker-browse",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-host-directory-picker-browse-0.1.2-alpha.2.tgz",
+      "size": 12336,
+      "sha256": "f6d35e1fc345da8334339ba1406bd1103b31b16ce004856fb85c6bc92884766e",
+      "integrity": "sha512-o2Eqz+brdOWHiVcG456PV393umW/Cov2nzE8bSouneErbnjxOEOOEd9YXnJ95UOFs5LIwNqL2dMp+fwzjyW80A==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-host-directory-picker-native",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-host-directory-picker-native-0.1.2-alpha.2.tgz",
+      "size": 17523,
+      "sha256": "86e01eb06fcf3919198f43c459078755c0be26ba9f3ddc59cca7379df56d5ef7",
+      "integrity": "sha512-d0pHyglODL1bCT3FXCyUDeY3WITNJwiI3uMStdiF04tmd4SGAriu4dgieRIYIFMZyTdBCI6lEy31QcqR5uSwsw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-host-webserver",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-host-webserver-0.1.2-alpha.2.tgz",
+      "size": 15514,
+      "sha256": "686b776e975d3347b84e8e2f22ea19a07eb42b1487a4bcc022602b18d2fe5580",
+      "integrity": "sha512-cvsfM/cm5hZk/RqdIsardfqBIVpemdmUrP4M6UgdqhJy2nG5VnokLBg7k0bc8Yi11q0vIETfQK4xiDOSOMnu7Q==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-host-directory-picker-auto",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-host-directory-picker-auto-0.1.2-alpha.2.tgz",
+      "size": 10999,
+      "sha256": "40d17907b069a90d9ff468cbb6e28589d11331ebf03e559e3020fb28647e174d",
+      "integrity": "sha512-HdDuLz7U9i5OK//sJdoOE8bOVUZAtytxNnwXeVKYrpoy5w55b1Okwy0c4YhIpnfduRLkBvUSMveiBeIHpsNN+Q==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-host-frontend-static",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-host-frontend-static-0.1.2-alpha.2.tgz",
+      "size": 9359,
+      "sha256": "cd95fe379fc8f52ef9171e38a1b6c9142653bfa2c0bd5c76fd4d5504c553825b",
+      "integrity": "sha512-o+bigGcwNH5RVVGN0unksCNLVXJibApFs2+NGn4UTuyfHkNxxp4wynp3rFyIqau2VV7Ch4m7OYPUInn4eSpuJA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-host-plugin-inventory",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-host-plugin-inventory-0.1.2-alpha.2.tgz",
+      "size": 12699,
+      "sha256": "fa3d943714ea1bfcaba259a580d9276950f8d7e5cd5394aa3aec4ab329daef0f",
+      "integrity": "sha512-qWD+fTYTq8YoNa1TbYXy/Qk7bjjS4URJMgMa3m1vnyZ+xdwtRBF47dUa7wVAVX7oGg03bl7TD1Eo7GcKP/eajA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-message-feedback",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-message-feedback-0.1.2-alpha.2.tgz",
+      "size": 25545,
+      "sha256": "1917488061e76767ea84143bb0908d8458af82ae587d53df02e61d9d2c6b3892",
+      "integrity": "sha512-PKTt9c4ewE+OKSHKnlkxqjC/waJoq2iSUIlveVBqSykYET6gAiVu4qLwJzD/fiRKHG9aByFuu5IG3c+8qmShzg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-log-export",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-session-log-export-0.1.2-alpha.2.tgz",
+      "size": 21722,
+      "sha256": "df91aadf9f6077d6df6ad798cb55b6206aac19bacef626e9b2f03148998df9d4",
+      "integrity": "sha512-es9nQk6q2y1W3svkv5ocjkcyyCjPi8fETM+SCem3iiNBPxHgU+qlXb+9Xc6hu+AKt+PhC6IagdbazW5vkSI4YA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-stats",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-session-stats-0.1.2-alpha.2.tgz",
+      "size": 14192,
+      "sha256": "fafdcd06cc4ac0f3eb701faf87278cd87992ccb0b8558f3960659074c35c4a2c",
+      "integrity": "sha512-IBFIPUCiB7RlfFea0PI1xI8os+YAlyGu2/86ybB9bo7FxjKhkbi8odJt6E12SqXQRyG3zzZNd8fe9sucgOMoyA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-web-frontend",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-web-frontend-0.1.2-alpha.2.tgz",
+      "size": 1415371,
+      "sha256": "ca08e5f34abf699b07bf82b5f6f7a3d8f10ae94f5f7635c3b3aea0f20a040d90",
+      "integrity": "sha512-HsHg63ktzsQq63OFw8GvNUpwySz+pCp8nShJG7PyMIAbwPL5L7pEIQYc+xTKFjxxGiGSRv2dLPut+hWlrKg16w==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-web-app",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-web-app-0.1.2-alpha.2.tgz",
+      "size": 23068,
+      "sha256": "035cdc87bd65e70135f258a83e4270079ca14440669623891d71abde1c5d4f5a",
+      "integrity": "sha512-+SKilM9fCCCoYr3fKT7CxNiozGsNHgvvTGhL63tKXM7/3M96dyj7zhT5ztoTgIDW9b9m8J/CaJUa4KlSeUJGFQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-webhook",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-webhook-0.1.2-alpha.2.tgz",
+      "size": 14670,
+      "sha256": "f8e812f53cd23fb6bdde50637d9d42a61f2fc5f42d64dc2b7c764e079419f365",
+      "integrity": "sha512-KPOzCxr9CumtphZLgICh8lwGRcaxpDmqP8gOPVTLZTacdfFkmRClMznTqbkL+TFlt7u32eIYgC2kjUHFhpvhAQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-webhook-github",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-webhook-github-0.1.2-alpha.2.tgz",
+      "size": 10532,
+      "sha256": "c3d3a87aa311918bb4ba8d2f8ae296aad9b61d4e7b5d542a4758cb779edeb212",
+      "integrity": "sha512-uycxVr7oQXy+UnCo9BYuXuDCUkLqI/bnO0nO/PXrbW8Gb9jNxDylWdnrNNfbz9UCk3vqx9KPLOym+y/yfOFQXQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-0.1.2-alpha.2.tgz",
+      "size": 15257,
+      "sha256": "5bf062a26a490853ffb9294fe3c9fb2047f029be3545612dea45718a81920a47",
+      "integrity": "sha512-4TvTC5kRKlgtSU2UTBv+cID9a2Z+6+m6mpvjXWJfVzuTkflCff6s4MsQpFJTCmwFh/k7zNWe7qFXcLYMV/5VvA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-agent-loop-testkit",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-agent-loop-testkit-0.1.2-alpha.2.tgz",
+      "size": 6929,
+      "sha256": "84300fbc868f452340010797799ca59b8b7739609d4266a773c79d06638341d3",
+      "integrity": "sha512-jABCwmjpsGjQyXJnDUCP8UnXWuWP/d42p1cqDvAGw8gIh2AcV7I1cRmQezAmni6lAEBRE3uFChe32ZSNkXgtkg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-store",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-store-0.1.2-alpha.2.tgz",
+      "size": 9061,
+      "sha256": "f51823dc28d7ef053ee7d23397ae41d58ac2d2c17205341671b642d460e2327b",
+      "integrity": "sha512-tz94GO4b8m3PPe/knfNjHa/VeTJTDNgN1eZeQWHjb5kKxCCThlNk91y5z/kEC93oGVd0lphq5pG5aQCQr2364g==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-slots",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-slots-0.1.2-alpha.2.tgz",
+      "size": 26469,
+      "sha256": "e838a1d09406c1463580a004baeb744a5de6c8c47707cbe2c467ade80710617b",
+      "integrity": "sha512-6ihXjJcgQLExj28SkKuPK0Rr7xfOvHhOiAIeO+uD5yywxtz7mSAW4S9JuxAOrpk2I2gNNU0DnFU4MmB229tjww==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-test-runtime",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-test-runtime-0.1.2-alpha.2.tgz",
+      "size": 33619,
+      "sha256": "009d31dd373627f2a4739620590fe68d5b978789f246bfc528259259e37fa19f",
+      "integrity": "sha512-Rim4iI+UWXzZ0uKyQn8lrDjjSdUTzNPPkKXRfE/7ckgejCUc2fExJchFlPeFt9Gwmt8ITuK3Mo2nW4F8W2taLw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-primitives",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-ui-primitives-0.1.2-alpha.2.tgz",
+      "size": 151884,
+      "sha256": "dd88424e1adcf203d3a88748f3ab7474fa7ec47f7ee8c077a78ad372338f1856",
+      "integrity": "sha512-OKOfYgM4KxACMJEprT0ThIDTJetWpYp5qNqULwJmc/4CY+sTQmFQ2tJjOXLwNpkCrryVJF2YZet/6j1JNp2h5w==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-web",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-client-web-0.1.2-alpha.2.tgz",
+      "size": 14954,
+      "sha256": "69f88b9fab9a22ba1ad3259098d2ea7698dfb5cc6c883ba1025dcb75a7c0c9d5",
+      "integrity": "sha512-+WQuIgQGR+B2TMK3CxehVn4w3M4azx+yQNvNZ60bgiQaGEizXYylRIIsde/K+QOlOgMwRq1coipB7FONGG0srw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-code-runtime-python",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-code-runtime-python-0.1.2-alpha.2.tgz",
+      "size": 21149,
+      "sha256": "665449de3bcd85a3051f9504b50406164498a6e3b97f90feef2155924d9b74fc",
+      "integrity": "sha512-7a0Ap31Ub7pU7x/Re4Ero0tnT/S7aOEigwC8b1K/MBOGvhdndWovLagFSNU/uHyJDNeLaYlsgL8Pluowe9oLEA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-e2b",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-e2b-0.1.2-alpha.2.tgz",
+      "size": 11463,
+      "sha256": "05d5684e2fca51033bcb1e11462f8bf95b0267ccfff8c91b34cf6442a11f7a2e",
+      "integrity": "sha512-w5Di6fOufl7NLl94z56xz0RLdCeASnpAdwaFNXfnF/Ky3sG9AHwX1eQZliT/pZ8BFQei1vI0IXd7L5n9oOTGsg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-fs-e2b",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-fs-e2b-0.1.2-alpha.2.tgz",
+      "size": 14865,
+      "sha256": "70826b5af923d5f225a8e346582a41d9c0d6decc70b003b6ef2e156aa132db9d",
+      "integrity": "sha512-BrXT3GlaFF3feq93gchZWD+wNdcJr7q534f+eqSHJ4sHEtzkQVSKUtowQD3T02ixfIgDJUBWYt7d6htu+4+MWQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-llm-mock-server",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-llm-mock-server-0.1.2-alpha.2.tgz",
+      "size": 17851,
+      "sha256": "3a20da5979031d2aa0dee4ff19e79005560ac055ed4b81b9b42d2f98fda10cad",
+      "integrity": "sha512-2gqYj5P2NVKAcckmoCiWDaHlF/yjNZG09zKGANT+2Q9JF1bZN/bciVOEfGF4lXARoEiQLQeU7lP3QxW3voxpLA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-llm-replay",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-llm-replay-0.1.2-alpha.2.tgz",
+      "size": 23510,
+      "sha256": "36690175e5680488b4a09d63b48d71ecc9c9a528700a5a0c4a9fa954d9844ac3",
+      "integrity": "sha512-e68jBuFAz5Yx5CV7Ckok5+uu2rgRkZEYQZ7RvvCAK6ls74o5HO+Cw3I/uI7+MuAM42K8rR1l31Tpr/dpLwiD0A==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-loader-smoke",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-loader-smoke-0.1.2-alpha.2.tgz",
+      "size": 12873,
+      "sha256": "d06e9b14cdea9f2cf2c57b0ab8b63dd9309761683b80910ac4775bde71d0848a",
+      "integrity": "sha512-DhdNq5gvXIOTfE1asNqIKS/DO/AFHIGfg3EyWHS0MNCpG2gwwhWk5CPJgpP8yrQMrgAkQRe5qLVdC1i5mRqsPw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-lsp",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-lsp-0.1.2-alpha.2.tgz",
+      "size": 13720,
+      "sha256": "395d45abb54f86194561c23946c270590d914a9e16ce551324f463a5fdc98a36",
+      "integrity": "sha512-3ITpD+uAezBaF2kWINssdS26cDu14z8QHSFz81HOU9s8mu72oaZWr/XlXDDV92LohDYrKDcQsdTeWCNWbhz+ag==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-lsp-stdio",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-lsp-stdio-0.1.2-alpha.2.tgz",
+      "size": 33046,
+      "sha256": "5c2adcaac93e71278d22c97fa78728e2d66d70003c48cc49d0a11822d0b6495a",
+      "integrity": "sha512-FwEDNuylIEg3/aYWiU+4O0qyxNaeTMd+TjEXmVycU5IAMdn4Db9UWk0Z3Kr7WMaVluNriTtbLMCXY16ZRaNH7Q==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-sdk-client",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-sdk-client-0.1.2-alpha.2.tgz",
+      "size": 26030,
+      "sha256": "30c0e849058fcb53356023c1cca7355d407797ab4c0980a46725ed3874c02074",
+      "integrity": "sha512-co+yh6qvHDZ0ksfhulF2QVdxXY7sAbXCmoIVfSEZOtyASfl46Goawm4r7d14v+myMAPH7P/kBA/KrI87ulA1Qw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-persistence-sqlite",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-session-persistence-sqlite-0.1.2-alpha.2.tgz",
+      "size": 43472,
+      "sha256": "b169a748d3f8cc8e15978fd06448d5676d5079360a7df4eab10512a9740ac4a7",
+      "integrity": "sha512-tBxfFwNeExaLTvfpMYmdTUvYq9O8t2pQ4BI/xu83XgbfEM9Kyl4QFICNmBTulblQJ44H+4oUq8n1h4j4VGzSCw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-snapshot",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-session-snapshot-0.1.2-alpha.2.tgz",
+      "size": 59150,
+      "sha256": "4484374be03756b0232d8038170a5e1ce6209d45a09d733057fc0ec93f7899df",
+      "integrity": "sha512-FfpfQvKNmK3quw1dqyIHciTIIYas+yRPFe63NrfzoTpMwK3IFv8YverME4JR1X2QEWTrsbh9K3eM/2WbE86GQg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-title-all-prompts-llm",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-session-title-all-prompts-llm-0.1.2-alpha.2.tgz",
+      "size": 7481,
+      "sha256": "bbaa99c114763980d8f3ac2d16db4587a5330250badd94a8896849df4c9e2d2d",
+      "integrity": "sha512-/z3ulrwEmInePEzd+/gSmKV3msGdQHdJYFvn+iOuLYzi+5gjIHdCRIEOiZd5Rgl3b1t9dyVmu/al+QugZ4ZDeg==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-storage-sqlite",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-storage-sqlite-0.1.2-alpha.2.tgz",
+      "size": 14500,
+      "sha256": "6a484e4f71f222c7c9f132536fc8e9df59049617a263026fcda82886f402ad12",
+      "integrity": "sha512-ScupojsEHfV+jOplCNMI9uQeHk0R59i2dj57+V2xnQeONRiESxAVts6Wla592iRYqxtxY+G+czjSwHBmv1flzA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-subagent-acp",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-subagent-acp-0.1.2-alpha.2.tgz",
+      "size": 21293,
+      "sha256": "8d22909a95ce1a1b587b03bc1fbd6243464be1e42169290c7994c7ef40f106e3",
+      "integrity": "sha512-E6jauIklrdDKvBlUldYO43N2ldQ4Wq56e84l7dENuj3GqNdtXzO+5wFRhD55dhFoywNjRyr2NKvtDeIuNZsEug==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-subagent-claude-code",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-subagent-claude-code-0.1.2-alpha.2.tgz",
+      "size": 22721,
+      "sha256": "2becc69c78296d1d49ac64712943268823e0c46d13653467f7125df7e27fff0a",
+      "integrity": "sha512-5kbX1vdBqC0Y1HQW2sNyi6dchnxzxbNducXekGyGa2wFa1jj2qFPeaE7qfRi6gPIkwMY5UOxuxcHjRH7LTMZzw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-subagent-codex",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-subagent-codex-0.1.2-alpha.2.tgz",
+      "size": 25351,
+      "sha256": "0ea7b2f75347428c29f296f2c411a4850c7253ab77fca45b20f224a4205196e1",
+      "integrity": "sha512-oXbOIVgyblT3JgjytEhuN4bS95Kzo73MmiojOpWgp6poH9E5l5FeQZVclPwruHXH+9gmlLz5EuJRmDFs6nwbAw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-subagent-dsh-sdk",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-subagent-dsh-sdk-0.1.2-alpha.2.tgz",
+      "size": 19692,
+      "sha256": "e86929bcc5b7fd3652221a38ec6473e47a0d5156febb9d1db64ca679aa06dfa3",
+      "integrity": "sha512-vQ0tR1wqgG6ujl7O2LTBn5D8bSnsLQ0IqM/oHEuJq3crxzradMPqxPbLbl795GhH6abLQHdzee4+2EUEJ79g4Q==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-subprocess-e2b",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-subprocess-e2b-0.1.2-alpha.2.tgz",
+      "size": 30995,
+      "sha256": "935b463e25331c8a873a2b590e4a9f09c2d04ae6bfaf989ab812314c546939ad",
+      "integrity": "sha512-h0Ln1e/Njn4iHr8Tp748SR6TAI0NyMb3YnnSu/LWYuh4J4oxCnzWQ0iIXE0/1yaFHY/cGTOhRzEe4zCNmk8dpQ==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-lsp",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-tool-lsp-0.1.2-alpha.2.tgz",
+      "size": 16071,
+      "sha256": "c21ca860963601db858dd1cdd3883f67b0c1467d84d0b19d63758e0090dc943a",
+      "integrity": "sha512-NJSe6x1r4FwV3niP3ZGss7bkPZcOZfqiLmJUWf9aK33NcDW0w0ExgTumhBFtvIyXZ7YcDJfxup0Nkovljjed0A==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-session-query",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-tool-session-query-0.1.2-alpha.2.tgz",
+      "size": 23250,
+      "sha256": "23a2ede055061def01540e1d72bcf2379f53f5218b6f869bfcf690ae5078fa19",
+      "integrity": "sha512-YpiWSaeRlqE1tJ1I6bRjxWI8pePWOSkJ1+yqGmaVPOgzFxcv7tGh91BjjpO0WGxr9GBN1FYx5upmEARvZ9uQRA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-terminal",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-tool-terminal-0.1.2-alpha.2.tgz",
+      "size": 15379,
+      "sha256": "2fffafe264bff6a256f1eac3f11853a173a6735e89cf8864c9bf7c515d9e680a",
+      "integrity": "sha512-T8pjJOr8GPNRpgGXkkkZpcrQ96ZquGPbiYDfU5m+wCfB/OeWBXJ7p/c8/Us6dZ6p/tg2Yi2b5HruFacQBS6vAw==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-typert-generator",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-typert-generator-0.1.2-alpha.2.tgz",
+      "size": 115241,
+      "sha256": "8479b77209d49732fdfdba54d53d8a3c7f8ca86b2435f4ed0dd1852ba74310a6",
+      "integrity": "sha512-kLjF8locY3FsQzgA4L9B+W3LOCCUP1j1N4QIzj+UM3MOlpbuIH9O6P4lRYduH2nwvc6J3OEhINSbiHFt8bZSKA==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-web-search-exa",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-web-search-exa-0.1.2-alpha.2.tgz",
+      "size": 12014,
+      "sha256": "59f220277e11704bae0b0385ab45e3b5d58b73fda24982e7b6f746562208489c",
+      "integrity": "sha512-pHxYGGVckG/Q3C9Y/ByJqS4OxoPpZRN2GA4AsFJxJwOghB9lc1IYtS3Le05SSyVBCtIcLm/lgPVPcLtvqsor4A==",
+      "license": "MIT"
+    },
+    {
+      "name": "@deepseek-ai/dsh-web-search-perplexity",
+      "version": "0.1.2-alpha.2",
+      "filename": "deepseek-ai-dsh-web-search-perplexity-0.1.2-alpha.2.tgz",
+      "size": 12998,
+      "sha256": "fc19cd19110c929f506a65d38ceae2b82b168c96e65afa91188f479d499b4e9a",
+      "integrity": "sha512-vo66bhS+1KEtNIn7bz6kzN57gmzdaWmqtlyShUY8mC+jeDakh95w0cRTWv+KSYY7uSFE69DLLnLoUqAe4k/mTA==",
+      "license": "MIT"
+    }
+  ]
+}

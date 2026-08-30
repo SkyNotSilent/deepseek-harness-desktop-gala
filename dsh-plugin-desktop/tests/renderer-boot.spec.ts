@@ -35,6 +35,7 @@ describe('desktop renderer boot route', () => {
       res,
       'http://127.0.0.1:43120',
       notify,
+      () => undefined,
     )
 
     expect(notify).toHaveBeenCalledWith(report)
@@ -51,9 +52,23 @@ describe('desktop renderer boot route', () => {
       res,
       'http://127.0.0.1:43120',
       notify,
+      () => undefined,
     )
 
     expect(notify).not.toHaveBeenCalled()
     expect(res.statusCode).toBe(403)
+  })
+
+  it.each([401, 403] as const)('applies the Connection fence before route validation (%s)', async (status) => {
+    const notify = vi.fn()
+    const res = response()
+    const reject = vi.fn(() => status)
+    const req = request(JSON.stringify({ status: 'healthy' }))
+
+    await handleRendererBootRequest(req, res, 'http://127.0.0.1:43120', notify, reject)
+
+    expect(reject).toHaveBeenCalledWith(req)
+    expect(notify).not.toHaveBeenCalled()
+    expect(res.statusCode).toBe(status)
   })
 })

@@ -76,7 +76,12 @@ function createNative(options: GalaDesktopAdapterOptions, resolveOrigin: () => s
         height: PANEL_WINDOW_HEIGHT,
         title: '嘎啦图鉴',
         show: false,
-        webPreferences: { sandbox: true, contextIsolation: true, nodeIntegration: false },
+        webPreferences: {
+          sandbox: true,
+          contextIsolation: true,
+          nodeIntegration: false,
+          session: requireWindow().webContents.session,
+        },
       })
       panelWindow = window
       window.on('closed', () => { panelWindow = undefined })

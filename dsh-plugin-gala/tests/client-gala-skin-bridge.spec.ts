@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
+import type { Context } from '@deepseek-ai/cordis'
 import {
   parseSkinTokens,
   SKIN_OVERRIDE_SOURCE,
@@ -25,7 +25,7 @@ function createFakes(initialTokens: object) {
       return () => { disposed += 1 }
     },
   }
-  const ctx = { theme } as unknown as ClientContext
+  const ctx = { theme } as unknown as Context
   const fetchImpl = (async () =>
     new Response(JSON.stringify({ ok: true, tokens }), { status: 200 })) as typeof fetch
 

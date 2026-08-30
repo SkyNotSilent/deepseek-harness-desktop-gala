@@ -1,22 +1,17 @@
-import { readFileSync, readdirSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 import {
-  collectRuntimePins,
-  collectSandboxResolutions,
+  assertManifestPins,
   findProseSeries,
   minorSeries,
+  planResolutionRewrite,
   readPinnedVersion,
-  resolutionKeys,
-  resolutionValue,
-  sandboxPatchPath,
+  validateVendorClosure,
 } from './dsh-version.mjs'
 
-const ROOT_MANIFEST = 'package.json'
-const MANIFEST_FILES = [ROOT_MANIFEST, 'dsh-plugin-desktop/package.json', 'dsh-plugin-gala/package.json']
+const MANIFEST_FILES = ['package.json', 'dsh-plugin-desktop/package.json', 'dsh-plugin-gala/package.json']
 const PIN_SOURCE = 'dsh-plugin-desktop/package.json'
-const PATCH_DIRECTORY = 'patches'
-const SANDBOX_PATCH_PATTERN = /^dsh-sandbox-windows-acl@.+\.patch$/u
 const PROSE_FILES = [
   { file: 'README.md', required: true },
   { file: 'README.en.md', required: true },
@@ -25,80 +20,64 @@ const PROSE_FILES = [
 ]
 
 const repoRoot = resolve(import.meta.dirname, '..')
-const manifests = MANIFEST_FILES.map((file) => ({ file, manifest: JSON.parse(readFileSync(resolve(repoRoot, file), 'utf8')) }))
+const manifests = MANIFEST_FILES.map(file => ({
+  file,
+  manifest: JSON.parse(readFileSync(resolve(repoRoot, file), 'utf8')),
+}))
+const upstream = JSON.parse(readFileSync(resolve(repoRoot, 'upstream.json'), 'utf8'))
 const offenders = []
 let pinned
+let closure
+
 try {
-  pinned = readPinnedVersion(manifests.find((entry) => entry.file === PIN_SOURCE).manifest)
+  pinned = readPinnedVersion(manifests.find(entry => entry.file === PIN_SOURCE).manifest)
+  closure = validateVendorClosure(repoRoot, pinned)
 } catch (cause) {
-  console.error('verify-dsh-version: the canonical DSH pin cannot be derived, so nothing else can be checked:')
-  console.error(`  ${PIN_SOURCE}: ${cause.message}`)
-  console.error(`  pin dependencies.@deepseek-ai/dsh to one exact semver version in ${PIN_SOURCE}`)
+  console.error(`verify-dsh-version: cannot establish the canonical runtime: ${cause.message}`)
   process.exit(1)
 }
 
-const series = minorSeries(pinned)
-let checkedPins = 0
-
 for (const entry of manifests) {
-  for (const pin of collectRuntimePins(entry.manifest)) {
-    checkedPins += 1
-    if (pin.version === pinned) continue
-    offenders.push(`${entry.file}: ${pin.section}.${pin.name} is ${JSON.stringify(pin.version)}, expected ${pinned}`)
+  try {
+    assertManifestPins(entry.manifest, pinned, closure)
+  } catch (cause) {
+    offenders.push(`${entry.file}: ${cause.message}`)
   }
 }
 
-const expectedPatch = sandboxPatchPath(pinned)
-const sandboxPatches = readdirSync(resolve(repoRoot, PATCH_DIRECTORY))
-  .filter((name) => SANDBOX_PATCH_PATTERN.test(name))
-  .map((name) => `${PATCH_DIRECTORY}/${name}`)
-  .sort()
-
-for (const patch of sandboxPatches) {
-  if (patch === expectedPatch) continue
-  offenders.push(`${patch}: stale sandbox patch filename, expected ${expectedPatch}`)
-}
-if (!sandboxPatches.includes(expectedPatch)) offenders.push(`${expectedPatch}: sandbox patch file is missing`)
-
-const expectedKeys = resolutionKeys(pinned)
-const expectedValue = resolutionValue(pinned)
-const declared = new Map(collectSandboxResolutions(manifests.find((entry) => entry.file === ROOT_MANIFEST).manifest.resolutions)
-  .map((entry) => [entry.key, entry.value]))
-
-for (const key of expectedKeys) {
-  if (!declared.has(key)) {
-    offenders.push(`${ROOT_MANIFEST}: resolutions is missing ${key}`)
-    continue
-  }
-  const value = declared.get(key)
-  if (value === expectedValue) continue
-  offenders.push([
-    `${ROOT_MANIFEST}: resolutions[${key}] carries the wrong patch value`,
-    `      found    ${JSON.stringify(value)}`,
-    `      expected ${JSON.stringify(expectedValue)}`,
-  ].join('\n'))
-}
-for (const key of declared.keys()) {
-  if (expectedKeys.includes(key)) continue
-  offenders.push(`${ROOT_MANIFEST}: resolutions[${key}] is stale, expected only ${expectedKeys.join(' and ')}`)
+try {
+  const root = manifests.find(entry => entry.file === 'package.json').manifest
+  planResolutionRewrite(root.resolutions, closure, closure)
+} catch (cause) {
+  offenders.push(`package.json: ${cause.message}`)
 }
 
+if (upstream.repository !== closure.repository
+  || upstream.commit !== closure.commit
+  || upstream.sourceVersion !== pinned
+  || upstream.runtimePackageVersion !== pinned
+  || upstream.runtimeSource !== `vendor/dsh-runtime/${pinned}/manifest.json`) {
+  offenders.push('upstream.json does not identify the active registry-backed vendor manifest')
+}
+
+const versions = new Set(manifests.map(entry => entry.manifest.version))
+if (versions.size !== 1) offenders.push(`product manifests disagree: ${[...versions].join(', ')}`)
+
+const series = minorSeries(pinned)
 for (const prose of PROSE_FILES) {
   const found = findProseSeries(readFileSync(resolve(repoRoot, prose.file), 'utf8'))
-  if (prose.required && found.length === 0) {
-    offenders.push(`${prose.file}: states no upstream release series, expected ${series}`)
-  }
+  if (prose.required && found.length === 0) offenders.push(`${prose.file}: states no Harness series`)
   for (const mention of found) {
-    if (mention.series === series) continue
-    offenders.push(`${prose.file}:${mention.line}: states upstream series ${mention.series}, expected ${series}`)
+    if (mention.series !== series) offenders.push(`${prose.file}:${mention.line}: states ${mention.series}, expected ${series}`)
   }
 }
 
 if (offenders.length > 0) {
-  console.error(`verify-dsh-version: the DSH runtime pin ${pinned} (upstream series ${series}) has drifted:`)
+  console.error(`verify-dsh-version: runtime ${pinned} has drifted:`)
   for (const offender of offenders) console.error(`  ${offender}`)
-  console.error('  run `yarn set:dsh-version <version>` to move every pin, then update the upstream series in README.md, README.en.md and site/')
   process.exit(1)
 }
 
-console.log(`verify-dsh-version: ${checkedPins} DSH runtime pins, both sandbox resolutions, ${expectedPatch} and the prose series ${series} all agree on ${pinned}`)
+console.log(
+  `verify-dsh-version: ${String(closure.packages.length)} registry packages, ${String(closure.patches.length)} patches, three product manifests, and prose series ${series} agree on ${pinned}`,
+)

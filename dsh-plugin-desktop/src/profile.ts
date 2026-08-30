@@ -41,6 +41,7 @@ export const DESKTOP_PROFILE_ROOT = 'cordis.yml'
 
 const BIN_NAME = DESKTOP_PACKAGE_NAME
 const REQUIRED_BUNDLES = requiredWebBundles()
+const REQUIRED_PROFILE_PATCH_RELOAD = requiredWebPatchReload()
 const REQUIRED_BUNDLE_SET = new Set(REQUIRED_BUNDLES)
 const INSTALL_ANCHOR = unpackedAsarPath(fileURLToPath(new URL('../package.json', import.meta.url)))
 const DESKTOP_PATCH_PATH = fileURLToPath(new URL('../cordis.patch.yml', import.meta.url))
@@ -116,11 +117,20 @@ export function readDesktopShellMode(config: SettingsFileConfig): DesktopShellMo
 
 /** Resolve the public Web template once and reject an incompatible DSH release. */
 function requiredWebBundles(): string[] {
-  const bundles = PROFILE_TEMPLATES.web
-  if (bundles === undefined) {
+  const template = PROFILE_TEMPLATES.web
+  if (template === undefined) {
     throw new Error(`${BIN_NAME}: installed dsh-app-boot has no web profile template`)
   }
-  return [...bundles]
+  return [...template.bundles]
+}
+
+/** User patch lifecycle inherited from the official Web profile. */
+function requiredWebPatchReload(): 'live' | 'startup' {
+  const template = PROFILE_TEMPLATES.web
+  if (template === undefined) {
+    throw new Error(`${BIN_NAME}: installed dsh-app-boot has no web profile template`)
+  }
+  return template.patchReload
 }
 
 /** Prepared profile inputs consumed by app-boot. */
@@ -171,7 +181,9 @@ function sameList(left: readonly string[], right: readonly string[]): boolean {
  */
 export function ensureDesktopProfile(home: string = resolveDshHome()): string {
   const dir = resolveProfileDir(DESKTOP_PROFILE_NAME, home)
-  if (!existsSync(join(dir, 'package.json'))) initProfile(dir, REQUIRED_BUNDLES)
+  if (!existsSync(join(dir, 'package.json'))) {
+    initProfile(dir, REQUIRED_BUNDLES, REQUIRED_PROFILE_PATCH_RELOAD)
+  }
   const manifest = readProfileManifest(BIN_NAME, dir)
   const rawBundles = (manifest.dsh?.profile as { bundles?: unknown } | undefined)?.bundles
   if (rawBundles !== undefined
@@ -195,10 +207,12 @@ export function ensureDesktopProfile(home: string = resolveDshHome()): string {
   return dir
 }
 
-/** Resolve the agent presets shipped by the matching dsh CLI dependency. */
-function shippedPresetRoot(): string {
-  const require = createRequire(import.meta.url)
-  return join(dirname(require.resolve('@deepseek-ai/dsh/package.json')), 'config', 'agent-presets')
+/** Resolve the agent presets shipped by the matching alpha.2 preset package. */
+export function shippedPresetRoot(moduleUrl: string = import.meta.url): string {
+  const require = createRequire(moduleUrl)
+  return unpackedAsarPath(
+    join(dirname(require.resolve('@deepseek-ai/dsh-agent-presets/package.json')), 'presets'),
+  )
 }
 
 /** Read a row's object config without trusting arbitrary YAML values. */
@@ -298,7 +312,6 @@ export function prepareDesktopProfile(
   const profileDir = profileName === DESKTOP_PROFILE_NAME
     ? ensureDesktopProfile(home)
     : resolveProfileDir(profileName, home)
-  healProfilesModuleFallback(INSTALL_ANCHOR, home)
   const profile = loadProfile(BIN_NAME, profileName, INSTALL_ANCHOR, home)
   const rootConfig = join(profileDir, DESKTOP_PROFILE_ROOT)
   const bareModuleBaseUrl = pathToFileURL(join(profile.dir, 'package.json')).href
@@ -427,7 +440,8 @@ export function prepareDesktopProfile(
     disabled: false,
     config: { host: '127.0.0.1', port: 0 },
   })
-  if ((telemetryDisabled ?? '') !== '' && rows.has('session-telemetry-otel')) {
+  void telemetryDisabled
+  if (rows.has('session-telemetry-otel')) {
     patches.push({ id: 'session-telemetry-otel', disabled: true })
   }
   const desktopShell = rows.get('desktop-shell')
@@ -451,6 +465,15 @@ export function prepareDesktopProfile(
     skippedOptionalEntries,
     mode,
   }
+}
+
+/** Maintain alpha.2's module fallback before booting a resolved Desktop profile. */
+export function healDesktopProfileModuleFallback(home: string, profile?: Profile): Promise<void> {
+  return healProfilesModuleFallback({
+    installAnchor: INSTALL_ANCHOR,
+    home,
+    ...(profile === undefined ? {} : { profile }),
+  })
 }
 
 /** Expose the package anchor for focused resolution tests. */

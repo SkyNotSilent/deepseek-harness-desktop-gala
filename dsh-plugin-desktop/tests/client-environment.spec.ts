@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
+import type { Context } from '@deepseek-ai/cordis'
 import { provideDesktopLayout } from '../src/client/layout-service.ts'
 import { parseDesktopClientEnvironment } from '../src/client/environment.ts'
 import {
@@ -93,7 +93,7 @@ describe('advanced desktop layout', () => {
           return () => { disposed = true }
         },
       },
-    } as unknown as ClientContext
+    } as unknown as Context
 
     const dispose = provideDesktopLayout(ctx, new DesktopLayoutState())
     expect(disposed).toBe(false)

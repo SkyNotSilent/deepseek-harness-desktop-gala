@@ -162,7 +162,7 @@ describe('Gala 层与 Cordis 段落', () => {
       bundles: adapter.bundles,
       native,
     })
-    const service = createGalaService(adapter, layer, 'http://127.0.0.1:4321')
+    const service = createGalaService(adapter, layer, 'http://127.0.0.1:4321', () => undefined)
     await service.activate()
 
     // 首次启动：开关默认关闭，默认全员也没有人设

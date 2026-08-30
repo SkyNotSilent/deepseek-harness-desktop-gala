@@ -45,7 +45,11 @@ import {
   type DesktopProfileStartup,
 } from './profile-manager.ts'
 import { DesktopProfileService } from './profile-service.ts'
-import { prepareDesktopProfile, type SkippedOptionalEntry } from './profile.ts'
+import {
+  healDesktopProfileModuleFallback,
+  prepareDesktopProfile,
+  type SkippedOptionalEntry,
+} from './profile.ts'
 import type { DesktopPnpmBootstrap } from './pnpm.ts'
 import {
   createDesktopExitCoordinator,
@@ -333,12 +337,14 @@ async function start(): Promise<void> {
         added: recoveredPath.added,
       })
     }
+    await healDesktopProfileModuleFallback(homeDir)
     const prepared = prepareDesktopProfile(
       process.env.DSH_TELEMETRY_DISABLED,
       homeDir,
       process.platform,
       activeProfileName,
     )
+    await healDesktopProfileModuleFallback(homeDir, prepared.profile)
     const desktopPnpmBootstrap: DesktopPnpmBootstrap = {
       activeProfileName,
       activeProfileDir: prepared.profile.dir,
