@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import test from 'node:test'
@@ -165,6 +166,130 @@ test('real dry-run and missing-target failures preserve managed files and the gi
 
   for (const [index, file] of managed.entries()) assert.deepEqual(readFileSync(join(repoRoot, file)), before[index])
   assert.deepEqual(spawnSync('git', ['diff', '--cached', '--binary'], { cwd: repoRoot }).stdout, indexBefore)
+})
+
+test('real CLI success atomically advances a valid synthetic vendor pair without touching lock, vendor, or git index', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'dsh-version-cli-success-'))
+  const nextVersion = '0.1.2-alpha.3'
+  const run = (command, args, options = {}) => spawnSync(command, args, {
+    cwd: directory,
+    encoding: 'utf8',
+    ...options,
+  })
+  const json = value => `${JSON.stringify(value, null, 2)}\n`
+  const digest = value => createHash('sha256').update(value).digest('hex')
+
+  function createVendor(version, commit) {
+    const vendor = join(directory, 'vendor', 'dsh-runtime', version)
+    const staging = join(directory, '.package-staging', version, 'package')
+    mkdirSync(staging, { recursive: true })
+    writeFileSync(join(staging, 'package.json'), json({
+      name: '@deepseek-ai/dsh',
+      version,
+      license: 'MIT',
+    }))
+    mkdirSync(vendor, { recursive: true })
+    const filename = `deepseek-ai-dsh-${version}.tgz`
+    const archive = join(vendor, filename)
+    const packed = spawnSync('tar', ['-czf', archive, '-C', join(staging, '..'), 'package'], {
+      encoding: 'utf8',
+    })
+    assert.equal(packed.status, 0, packed.stderr)
+    const bytes = readFileSync(archive)
+    writeFileSync(join(vendor, 'licenses.json'), '{}\n')
+    writeFileSync(join(vendor, 'manifest.json'), json({
+      formatVersion: 2,
+      version,
+      registry: 'https://registry.npmjs.org',
+      repository: 'https://github.com/deepseek-ai/deepseek-harness.git',
+      commit,
+      patches: [],
+      packages: [{
+        name: '@deepseek-ai/dsh',
+        filename,
+        size: bytes.byteLength,
+        sha256: digest(bytes),
+        integrity: `sha512-${createHash('sha512').update(bytes).digest('base64')}`,
+        license: 'MIT',
+      }],
+    }))
+    return { archive, filename }
+  }
+
+  try {
+    mkdirSync(join(directory, 'scripts'), { recursive: true })
+    mkdirSync(join(directory, 'dsh-plugin-desktop'), { recursive: true })
+    mkdirSync(join(directory, 'dsh-plugin-gala'), { recursive: true })
+    cpSync(join(repoRoot, 'scripts', 'dsh-version.mjs'), join(directory, 'scripts', 'dsh-version.mjs'))
+    cpSync(join(repoRoot, 'scripts', 'set-dsh-version.mjs'), join(directory, 'scripts', 'set-dsh-version.mjs'))
+    const currentVendor = createVendor(CURRENT, '1'.repeat(40))
+    const targetVendor = createVendor(nextVersion, '2'.repeat(40))
+    const dependencyManifest = name => ({
+      name,
+      private: true,
+      dependencies: { '@deepseek-ai/dsh': CURRENT },
+    })
+    writeFileSync(join(directory, 'package.json'), json({
+      ...dependencyManifest('synthetic-root'),
+      resolutions: {
+        '@deepseek-ai/dsh': `file:vendor/dsh-runtime/${CURRENT}/${currentVendor.filename}`,
+        'unrelated@npm:1.0.0': 'npm:1.0.0',
+      },
+    }))
+    writeFileSync(join(directory, 'dsh-plugin-desktop', 'package.json'), json(dependencyManifest('synthetic-desktop')))
+    writeFileSync(join(directory, 'dsh-plugin-gala', 'package.json'), json(dependencyManifest('synthetic-gala')))
+    writeFileSync(join(directory, 'upstream.json'), json({
+      repository: 'https://github.com/deepseek-ai/deepseek-harness.git',
+      commit: '1'.repeat(40),
+      sourceVersion: CURRENT,
+      runtimePackageVersion: CURRENT,
+      runtimeSource: `vendor/dsh-runtime/${CURRENT}/manifest.json`,
+    }))
+    writeFileSync(join(directory, 'yarn.lock'), 'immutable-lock-sentinel\n')
+    writeFileSync(join(directory, 'staged.txt'), 'committed\n')
+    writeFileSync(join(directory, 'unstaged.txt'), 'committed\n')
+    assert.equal(run('git', ['init']).status, 0)
+    assert.equal(run('git', ['config', 'user.email', 'qa@example.invalid']).status, 0)
+    assert.equal(run('git', ['config', 'user.name', 'Version QA']).status, 0)
+    assert.equal(run('git', ['add', '.']).status, 0)
+    assert.equal(run('git', ['commit', '-m', 'synthetic baseline']).status, 0)
+    writeFileSync(join(directory, 'staged.txt'), 'staged sentinel\n')
+    assert.equal(run('git', ['add', 'staged.txt']).status, 0)
+    writeFileSync(join(directory, 'unstaged.txt'), 'unstaged sentinel\n')
+
+    const indexBefore = run('git', ['diff', '--cached', '--binary']).stdout
+    const unstagedBefore = run('git', ['diff', '--', 'unstaged.txt']).stdout
+    const lockBefore = readFileSync(join(directory, 'yarn.lock'))
+    const currentArchiveBefore = readFileSync(currentVendor.archive)
+    const targetArchiveBefore = readFileSync(targetVendor.archive)
+    const result = run(process.execPath, ['scripts/set-dsh-version.mjs', nextVersion])
+
+    assert.equal(result.status, 0, result.stderr)
+    assert.match(result.stdout, /source and manifests updated; vendor and yarn\.lock were not changed/u)
+    for (const file of ['package.json', 'dsh-plugin-desktop/package.json', 'dsh-plugin-gala/package.json']) {
+      const manifest = JSON.parse(readFileSync(join(directory, file), 'utf8'))
+      assert.equal(manifest.dependencies['@deepseek-ai/dsh'], nextVersion)
+    }
+    const root = JSON.parse(readFileSync(join(directory, 'package.json'), 'utf8'))
+    assert.equal(
+      root.resolutions['@deepseek-ai/dsh'],
+      `file:vendor/dsh-runtime/${nextVersion}/${targetVendor.filename}`,
+    )
+    assert.equal(root.resolutions['unrelated@npm:1.0.0'], 'npm:1.0.0')
+    const upstream = JSON.parse(readFileSync(join(directory, 'upstream.json'), 'utf8'))
+    assert.equal(upstream.commit, '2'.repeat(40))
+    assert.equal(upstream.runtimePackageVersion, nextVersion)
+    assert.deepEqual(readFileSync(join(directory, 'yarn.lock')), lockBefore)
+    assert.deepEqual(readFileSync(currentVendor.archive), currentArchiveBefore)
+    assert.deepEqual(readFileSync(targetVendor.archive), targetArchiveBefore)
+    assert.equal(readFileSync(join(directory, 'staged.txt'), 'utf8'), 'staged sentinel\n')
+    assert.equal(readFileSync(join(directory, 'unstaged.txt'), 'utf8'), 'unstaged sentinel\n')
+    assert.equal(run('git', ['diff', '--cached', '--binary']).stdout, indexBefore)
+    assert.equal(run('git', ['diff', '--', 'unstaged.txt']).stdout, unstagedBefore)
+    assert.equal(run('git', ['status', '--porcelain']).stdout.includes('.dsh-version-'), false)
+  } finally {
+    rmSync(directory, { recursive: true, force: true })
+  }
 })
 
 test('findProseSeries captures only Harness/upstream series mentions', () => {

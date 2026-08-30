@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { composeEntries } from '@deepseek-ai/dsh-app-boot'
@@ -34,6 +34,27 @@ describe('alpha.2 product defaults', () => {
       disabled: true,
     }))
   })
+
+  it.each(['darwin', 'linux', 'win32'] as const)(
+    'force-disables session-log upload after a %s machine patch tries to opt in',
+    (platform) => {
+      const home = temporaryHome()
+      writeFileSync(join(home, 'cordis.patch.yml'), [
+        '- id: session-log-deepseek',
+        '  disabled: false',
+        '  config:',
+        '    enabled: true',
+        '',
+      ].join('\n'))
+
+      const rows = composeEntries([prepareDesktopProfile(undefined, home, platform).patches])
+      expect(rows.find(row => row.id === 'session-log-deepseek')).toEqual(expect.objectContaining({
+        name: '@deepseek-ai/dsh-session-log-deepseek',
+        disabled: true,
+        config: expect.objectContaining({ enabled: true }),
+      }))
+    },
+  )
 
   it('keeps plugin package inventory enabled while the global Web tool stays disabled', () => {
     const rows = composeEntries([prepareDesktopProfile(undefined, temporaryHome(), 'darwin').patches])

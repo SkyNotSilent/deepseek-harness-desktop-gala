@@ -8,69 +8,80 @@
     "sessions": {
       "session-preview-2-1-0-fixture": {
         "identity": {
-          "createdAt": 1788115176107,
-          "cwd": "/var/folders/0r/_djw0jks3ys50q4khgvqb5440000gn/T/dsh-preview-2.1.0-data-ajpZd4/workspace with spaces 中文"
+          "createdAt": 1788117800144,
+          "cwd": "/var/folders/0r/_djw0jks3ys50q4khgvqb5440000gn/T/dsh-preview-2.1.0-nonblank-QEcSmt/workspace with spaces 中文"
         },
         "rows": {
           "sessionStats": {
             "ver": 1,
-            "seq": 2,
+            "seq": 14,
             "val": {
-              "turns": 0,
-              "steps": 0,
-              "llmMs": 0,
-              "toolMs": 0,
+              "turns": 1,
+              "steps": 2,
+              "llmMs": 1,
+              "toolMs": 1,
               "ttftMs": 0,
               "ttftSteps": 0,
               "decodeMs": 0,
               "decodeTokens": 0,
-              "lastTurn": null,
+              "lastTurn": 1,
               "openStep": null,
               "pendingCalls": {}
             }
           },
           "title": {
             "ver": 1,
-            "seq": 2,
-            "val": null
+            "seq": 14,
+            "val": "Preview 2.1.0 历史对话"
           },
           "goal": {
             "ver": 4,
-            "seq": 2,
+            "seq": 14,
             "val": null
           },
           "tokenUsage": {
             "ver": 1,
-            "seq": 2,
+            "seq": 14,
             "val": {
               "totals": {
-                "uncachedInputTokens": 0,
-                "outputTokens": 0,
+                "uncachedInputTokens": 23,
+                "outputTokens": 11,
                 "cacheReadTokens": 0,
                 "cacheWriteTokens": 0
               },
-              "last": null
+              "last": {
+                "turn": 1,
+                "step": 2,
+                "buckets": {
+                  "uncachedInputTokens": 23,
+                  "outputTokens": 11,
+                  "cacheReadTokens": 0,
+                  "cacheWriteTokens": 0
+                }
+              }
             }
           },
           "contextPressure": {
             "ver": 4,
-            "seq": 2,
+            "seq": 14,
             "val": {
-              "surfaceTokens": 0
+              "surfaceTokens": 79,
+              "pressureTokens": 23,
+              "sampledSurfaceTokens": 63
             }
           },
           "contextBreakdown": {
             "ver": 2,
-            "seq": 2,
+            "seq": 14,
             "val": {
               "systemTokens": 0,
               "toolsTokens": 0,
-              "messageTokens": 0
+              "messageTokens": 79
             }
           },
           "subagentTiming": {
             "ver": 2,
-            "seq": 2,
+            "seq": 14,
             "val": {
               "descriptorSeen": false,
               "settledMs": 0
@@ -78,12 +89,12 @@
           },
           "subagent": {
             "ver": 2,
-            "seq": 2,
+            "seq": 14,
             "val": {}
           },
           "permissions": {
             "ver": 1,
-            "seq": 2,
+            "seq": 14,
             "val": {
               "preset": "workspace-write",
               "sandbox": "workspace-write",
@@ -92,15 +103,15 @@
           },
           "sessionListMetadata": {
             "ver": 1,
-            "seq": 2,
+            "seq": 14,
             "val": {
-              "blank": true,
-              "lastPromptAt": null
+              "blank": false,
+              "lastPromptAt": 1788117800147
             }
           },
           "imageLimits": {
             "ver": 1,
-            "seq": 2,
+            "seq": 14,
             "val": null
           }
         }

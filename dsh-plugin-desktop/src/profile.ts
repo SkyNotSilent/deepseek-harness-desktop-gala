@@ -441,8 +441,10 @@ export function prepareDesktopProfile(
     config: { host: '127.0.0.1', port: 0 },
   })
   void telemetryDisabled
-  if (rows.has('session-telemetry-otel')) {
-    patches.push({ id: 'session-telemetry-otel', disabled: true })
+  // Request telemetry and full session-log delivery are Desktop privacy invariants.
+  // Apply these after machine/profile patches so neither can opt back in.
+  for (const id of ['session-telemetry-otel', 'session-log-deepseek']) {
+    if (rows.has(id)) patches.push({ id, disabled: true })
   }
   const desktopShell = rows.get('desktop-shell')
   if (desktopShell === undefined) {

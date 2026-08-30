@@ -1,0 +1,4 @@
+agent:
+  model: deepseek-chat
+dsh-desktop:
+  mode: compatibility

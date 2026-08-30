@@ -10,6 +10,7 @@ import {
   createLaunchEnvironmentSnapshot,
   DSH_LAUNCH_ENVIRONMENT_KEY,
 } from '@deepseek-ai/dsh-launch-environment'
+import { SessionId } from '@deepseek-ai/dsh-session'
 import { DESKTOP_SETTINGS_NAMESPACE } from '../lib/index.js'
 import { installDesktopPnpmRuntime } from '../lib/desktop-runtime-environment.js'
 import { installProfilePackageResolver } from '../lib/module-resolution.js'
@@ -166,6 +167,22 @@ try {
     prepared.bareModuleBaseUrl,
   )
   await runtime.mountScheduled()
+
+  const requestProbeSession = ctx.sessions.create(
+    SessionId('desktop-request-extension-smoke'),
+    { meta: { cwd: home } },
+  )
+  const requestExtensions = await ctx.deepseekLlmApiExtensions.prepare({
+    body: { model: 'deepseek-chat', messages: [] },
+    sessionId: requestProbeSession.id,
+    signal: new AbortController().signal,
+  })
+  if (!Object.hasOwn(requestExtensions.fields, 'dsh_plugin_packages')) {
+    throw new Error('assembled desktop request is missing the enabled plugin-package inventory')
+  }
+  if (Object.hasOwn(requestExtensions.fields, 'dsh_session_log')) {
+    throw new Error('assembled desktop request unexpectedly contains disabled full session-log upload')
+  }
 
   if (ctx.get('desktopPnpm') === undefined) {
     throw new Error('assembled desktop profile is missing the desktop pnpm Host capability')
