@@ -3,10 +3,13 @@
 import { spawnSync } from 'node:child_process'
 import {
   accessSync,
+  closeSync,
   constants,
   lstatSync,
   mkdirSync,
   mkdtempSync,
+  openSync,
+  readFileSync,
   readdirSync,
   rmSync,
   symlinkSync,
@@ -54,6 +57,7 @@ if (!realPackagePath.includes('app.asar.unpacked')) {
 }
 const pty = request('node-pty');
 let output = '';
+console.error('packaged smoke phase: bash PTY');
 const timer = setTimeout(() => {
   console.error('packaged PTY smoke timed out');
   process.exit(4);
@@ -81,6 +85,7 @@ terminal.onExit(({ exitCode }) => {
 });
 
 async function verifyPackagedCommands() {
+  console.error('packaged smoke phase: command runtime setup');
   const runtimePath = path.join(unpackedRoot, 'lib', 'desktop-runtime-environment.js');
   const { installDesktopPnpmRuntime } = await import(pathToFileURL(runtimePath).href);
   const pnpmBinPath = path.join(unpackedRoot, 'node_modules', 'pnpm', 'bin', 'pnpm.mjs');
@@ -98,17 +103,17 @@ async function verifyPackagedCommands() {
     environment,
   });
   try {
-    const nodeVersion = spawnSync('node', ['--version'], {
+    console.error('packaged smoke phase: node --version');
+    const nodeVersion = runCaptured('node-version', 'node', ['--version'], {
       cwd: root,
       env: environment,
-      encoding: 'utf8',
       timeout: ${PACKAGED_COMMAND_TIMEOUT_MS},
     });
     assertCommand('packaged node', nodeVersion, process.version);
-    const packagedPnpm = spawnSync('pnpm', ['--version'], {
+    console.error('packaged smoke phase: pnpm --version');
+    const packagedPnpm = runCaptured('pnpm-version', 'pnpm', ['--version'], {
       cwd: root,
       env: environment,
-      encoding: 'utf8',
       timeout: ${PACKAGED_COMMAND_TIMEOUT_MS},
     });
     assertCommand('packaged pnpm', packagedPnpm, pnpmVersion);
@@ -129,10 +134,10 @@ async function verifyPackagedCommands() {
       '}))',
       '',
     ].join('\n'));
-    const built = spawnSync('pnpm', ['run', 'build'], {
+    console.error('packaged smoke phase: short process build');
+    const built = runCaptured('short-build', 'pnpm', ['run', 'build'], {
       cwd: project,
       env: environment,
-      encoding: 'utf8',
       timeout: ${PACKAGED_COMMAND_TIMEOUT_MS},
     });
     if (built.error || built.status !== 0) {
@@ -153,6 +158,28 @@ async function verifyPackagedCommands() {
   }
 }
 
+function runCaptured(label, command, args, options) {
+  const stdoutPath = path.join(root, label + '.stdout.log');
+  const stderrPath = path.join(root, label + '.stderr.log');
+  const stdoutFd = fs.openSync(stdoutPath, 'wx', 0o600);
+  const stderrFd = fs.openSync(stderrPath, 'wx', 0o600);
+  let result;
+  try {
+    result = spawnSync(command, args, {
+      ...options,
+      stdio: ['ignore', stdoutFd, stderrFd],
+    });
+  } finally {
+    fs.closeSync(stdoutFd);
+    fs.closeSync(stderrFd);
+  }
+  return {
+    ...result,
+    stdout: fs.readFileSync(stdoutPath, 'utf8'),
+    stderr: fs.readFileSync(stderrPath, 'utf8'),
+  };
+}
+
 function assertCommand(label, result, expected) {
   if (result.error || result.status !== 0 || result.stdout.trim() !== expected) {
     throw new Error(label + ' failed: ' + JSON.stringify({
@@ -166,6 +193,43 @@ function assertCommand(label, result, expected) {
   }
 }
 `
+
+/**
+ * Run a packaged executable without stdout/stderr pipes. Electron helpers such as crashpad can
+ * inherit a pipe and keep it open after the RunAsNode parent exits; regular files preserve all
+ * diagnostics without making completion depend on descendant EOF.
+ */
+export function runFileBackedProcess(
+  executable: string,
+  args: readonly string[],
+  env: NodeJS.ProcessEnv,
+  timeoutMs: number,
+  logDirectory: string,
+): ReturnType<MacSmokeOptions['run']> {
+  const stdoutPath = join(logDirectory, 'packaged-smoke.stdout.log')
+  const stderrPath = join(logDirectory, 'packaged-smoke.stderr.log')
+  const stdoutFd = openSync(stdoutPath, 'wx', 0o600)
+  const stderrFd = openSync(stderrPath, 'wx', 0o600)
+  let result: ReturnType<typeof spawnSync>
+  try {
+    result = spawnSync(executable, args, {
+      env,
+      timeout: timeoutMs,
+      killSignal: 'SIGKILL',
+      stdio: ['ignore', stdoutFd, stderrFd],
+    })
+  } finally {
+    closeSync(stdoutFd)
+    closeSync(stderrFd)
+  }
+  return {
+    status: result.status,
+    signal: result.signal,
+    stdout: readFileSync(stdoutPath, 'utf8'),
+    stderr: readFileSync(stderrPath, 'utf8'),
+    ...(result.error === undefined ? {} : { error: result.error }),
+  }
+}
 
 function defaultOptions(): MacSmokeOptions {
   return {
@@ -184,19 +248,11 @@ function defaultOptions(): MacSmokeOptions {
       }),
     link: (target, path) => symlinkSync(target, path, 'dir'),
     run(executable, args, env, timeoutMs) {
-      const result = spawnSync(executable, args, {
-        encoding: 'utf8',
-        env,
-        timeout: timeoutMs,
-        killSignal: 'SIGKILL',
-      })
-      return {
-        status: result.status,
-        signal: result.signal,
-        stdout: result.stdout ?? '',
-        stderr: result.stderr ?? '',
-        ...(result.error === undefined ? {} : { error: result.error }),
+      const logDirectory = env.DSH_PTY_SMOKE_ROOT
+      if (logDirectory === undefined) {
+        throw new Error('packaged macOS PTY smoke is missing its log directory')
       }
+      return runFileBackedProcess(executable, args, env, timeoutMs, logDirectory)
     },
     remove: path => rmSync(path, { force: true, recursive: true }),
   }

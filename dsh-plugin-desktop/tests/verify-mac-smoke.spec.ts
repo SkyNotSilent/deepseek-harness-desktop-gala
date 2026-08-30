@@ -1,9 +1,13 @@
+import { mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
 import {
   MAC_SMOKE_TIMEOUT_MS,
   PACKAGED_COMMAND_TIMEOUT_MS,
   PACKAGED_PTY_PROBE,
   PACKAGED_PTY_TIMEOUT_MS,
+  runFileBackedProcess,
   verifyMacSmoke,
   type MacSmokeOptions,
 } from '../scripts/verify-mac-smoke.ts'
@@ -48,10 +52,52 @@ describe('packaged macOS PTY smoke', () => {
     expect(PACKAGED_PTY_PROBE).toContain(`}, ${PACKAGED_PTY_TIMEOUT_MS});`)
     expect(PACKAGED_PTY_PROBE.match(new RegExp(`timeout: ${PACKAGED_COMMAND_TIMEOUT_MS}`, 'gu')))
       .toHaveLength(3)
+    expect(PACKAGED_PTY_PROBE).toContain("stdio: ['ignore', stdoutFd, stderrFd]")
     expect(MAC_SMOKE_TIMEOUT_MS).toBeGreaterThan(
       PACKAGED_PTY_TIMEOUT_MS + (3 * PACKAGED_COMMAND_TIMEOUT_MS),
     )
     expect(harness.remove).toHaveBeenCalledOnce()
+  })
+
+  it('does not wait for inherited output handles held by a detached descendant', () => {
+    const directory = mkdtempSync(join(tmpdir(), 'dsh-file-backed-smoke-'))
+    let descendantPid: number | undefined
+    const descendant = [
+      "const { spawn } = require('node:child_process')",
+      "const child = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 2000)'], {",
+      "  detached: true, stdio: ['ignore', process.stdout, process.stderr],",
+      '})',
+      'child.unref()',
+      "process.stdout.write('parent-complete:' + child.pid)",
+    ].join('\n')
+    const started = Date.now()
+    try {
+      const result = runFileBackedProcess(
+        process.execPath,
+        ['-e', descendant],
+        process.env,
+        1_000,
+        directory,
+      )
+
+      expect(result.error).toBeUndefined()
+      expect(result.status).toBe(0)
+      const match = /^parent-complete:(\d+)$/u.exec(result.stdout)
+      expect(match).not.toBeNull()
+      if (match === null) throw new Error(`missing descendant pid in ${JSON.stringify(result.stdout)}`)
+      descendantPid = Number(match[1])
+      expect(descendantPid).toBeGreaterThan(0)
+      expect(Date.now() - started).toBeLessThan(1_000)
+    } finally {
+      if (descendantPid !== undefined) {
+        try {
+          process.kill(descendantPid, 'SIGKILL')
+        } catch (cause) {
+          if ((cause as NodeJS.ErrnoException).code !== 'ESRCH') throw cause
+        }
+      }
+      rmSync(directory, { force: true, recursive: true })
+    }
   })
 
   it('fails loud and still removes temporary state when PTY creation fails', () => {
