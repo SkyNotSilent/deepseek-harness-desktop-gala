@@ -10,6 +10,7 @@ import type {} from '@deepseek-ai/dsh-client-ui-sidebar/client'
 import { applyAdvancedShell } from './advanced-shell.ts'
 import { startRendererBootReporter } from './boot-health.ts'
 import { parseDesktopClientEnvironment } from './environment.ts'
+import { installCurrentBlankNewSessionFix } from './new-session-fix.ts'
 import { DesktopTurnErrorView } from './turn-error/DesktopTurnErrorView.tsx'
 import {
   DESKTOP_CONVERSATION_LOCALES,
@@ -26,6 +27,7 @@ export {
 export type { RendererBootLoader, RendererBootReport } from './boot-health.ts'
 export { parseDesktopClientEnvironment } from './environment.ts'
 export type { DesktopClientEnvironment, DesktopClientMode, DesktopClientPlatform } from './environment.ts'
+export { installCurrentBlankNewSessionFix } from './new-session-fix.ts'
 
 /** Services required by advanced presentation. */
 export const inject = [
@@ -33,6 +35,7 @@ export const inject = [
   'locale',
   'sessions',
   'theme',
+  'workspaces',
 ]
 
 /** Register desktop-owned client surfaces for the current BrowserWindow mode. @param ctx - browser Cordis context. */
@@ -45,6 +48,10 @@ export function apply(ctx: ClientContext): void {
   ctx.effect(
     () => ctx.locale.register(DESKTOP_CONVERSATION_NS, DESKTOP_CONVERSATION_LOCALES),
     'dsh-plugin-desktop: conversation locale',
+  )
+  ctx.effect(
+    () => installCurrentBlankNewSessionFix(ctx.workspaces),
+    'dsh-plugin-desktop: current blank New Session compatibility',
   )
   ctx.slots.inject('conversation.chat.node', () => ctx.slots.register({
     name: 'conversation.chat.node',
