@@ -76,7 +76,11 @@ jobs:
         run: corepack yarn exec electron-builder --mac dmg zip --arm64 --publish never
       - name: Verify packaged PTY, Node, pnpm and short-process build
         working-directory: dsh-plugin-desktop
-        run: corepack yarn verify:mac-smoke "dist/mac-arm64/DeepSeek Harness Desktop Gala.app"
+        run: |
+          corepack yarn verify:mac-smoke "dist/mac-arm64/DeepSeek Harness Desktop Gala.app"
+          artifact_version="$(node -p "require('./package.json').version")"
+          hdiutil verify "dist/DeepSeek-Harness-Desktop-Gala-${artifact_version}-arm64.dmg"
+          unzip -tq "dist/DeepSeek-Harness-Desktop-Gala-${artifact_version}-arm64.zip"
       - uses: actions/upload-artifact@v4
         with:
           name: macos-arm64-preview

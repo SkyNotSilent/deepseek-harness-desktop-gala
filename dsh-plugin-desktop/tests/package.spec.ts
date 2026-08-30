@@ -298,6 +298,21 @@ describe('published package surface', () => {
     expect(ciWorkflow).toContain('run: xvfb-run -a corepack yarn check')
   })
 
+  it('runs executable macOS smoke only after Electron Builder applies fuses and seals artifacts', () => {
+    const ciWorkflow = readFileSync(
+      new URL('.github/workflows/ci.yml', workspaceRoot),
+      'utf8',
+    )
+    const build = ciWorkflow.indexOf('corepack yarn exec electron-builder --mac dmg zip --arm64')
+    const smoke = ciWorkflow.indexOf('corepack yarn verify:mac-smoke')
+
+    expect(build).toBeGreaterThan(-1)
+    expect(smoke).toBeGreaterThan(build)
+    expect(ciWorkflow).toContain('artifact_version="$(node -p "require(\'./package.json\').version\")"')
+    expect(ciWorkflow).toContain('hdiutil verify "dist/DeepSeek-Harness-Desktop-Gala-${artifact_version}-arm64.dmg"')
+    expect(ciWorkflow).toContain('unzip -tq "dist/DeepSeek-Harness-Desktop-Gala-${artifact_version}-arm64.zip"')
+  })
+
   it('keeps one fixed brand-blue tray source for generated native assets', () => {
     const source = readFileSync(new URL('build/tray-icon.svg', packageRoot), 'utf8')
 
