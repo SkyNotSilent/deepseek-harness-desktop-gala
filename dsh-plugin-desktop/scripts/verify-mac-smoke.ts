@@ -13,15 +13,20 @@ import {
   readdirSync,
   rmSync,
   symlinkSync,
+  writeFileSync,
 } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { basename, join, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+import type {
+  DesktopPnpmRuntimeInstallation,
+  DesktopPnpmRuntimeOptions,
+} from '../src/desktop-runtime-environment.ts'
 
 const SUCCESS_MARKER = '__dsh_packaged_pty_ok__'
 export const PACKAGED_PTY_TIMEOUT_MS = 30_000
 export const PACKAGED_COMMAND_TIMEOUT_MS = 20_000
-export const MAC_SMOKE_TIMEOUT_MS = 120_000
+export const MAC_SMOKE_TIMEOUT_MS = PACKAGED_PTY_TIMEOUT_MS
 
 /** Injectable process and filesystem boundary for focused tests. */
 export interface MacSmokeOptions {
@@ -29,13 +34,26 @@ export interface MacSmokeOptions {
   makeDirectory(path: string): void
   listExecutables(directory: string): readonly string[]
   link(target: string, path: string): void
-  run(executable: string, args: readonly string[], env: NodeJS.ProcessEnv, timeoutMs: number): {
+  run(
+    executable: string,
+    args: readonly string[],
+    env: NodeJS.ProcessEnv,
+    timeoutMs: number,
+    logStem: string,
+    cwd?: string,
+  ): {
     status: number | null
     signal: NodeJS.Signals | null
     stdout: string
     stderr: string
     error?: Error
   }
+  readText(path: string): string
+  writeText(path: string, contents: string): void
+  installRuntime(
+    modulePath: string,
+    options: DesktopPnpmRuntimeOptions,
+  ): Promise<DesktopPnpmRuntimeInstallation>
   remove(path: string): void
 }
 
@@ -43,12 +61,8 @@ export const PACKAGED_PTY_PROBE = String.raw`
 const fs = require('node:fs');
 const path = require('node:path');
 const { createRequire } = require('node:module');
-const { spawnSync } = require('node:child_process');
-const { pathToFileURL } = require('node:url');
 const root = process.env.DSH_PTY_SMOKE_ROOT;
 if (!root) throw new Error('missing DSH_PTY_SMOKE_ROOT');
-const unpackedRoot = process.env.DSH_PACKAGED_UNPACKED_ROOT;
-if (!unpackedRoot) throw new Error('missing DSH_PACKAGED_UNPACKED_ROOT');
 const request = createRequire(path.join(root, 'probe.cjs'));
 const packagePath = request.resolve('node-pty/package.json');
 const realPackagePath = fs.realpathSync(packagePath);
@@ -75,123 +89,12 @@ terminal.onExit(({ exitCode }) => {
     console.error(JSON.stringify({ exitCode, output }));
     process.exit(5);
   }
-  void verifyPackagedCommands().then(() => {
-    console.log('${SUCCESS_MARKER}');
-    process.exit(0);
-  }, error => {
-    console.error(error && error.stack ? error.stack : String(error));
-    process.exit(6);
-  });
+  console.log('${SUCCESS_MARKER}' + JSON.stringify({
+    node: process.version,
+    electron: process.versions.electron,
+  }));
+  process.exit(0);
 });
-
-async function verifyPackagedCommands() {
-  console.error('packaged smoke phase: command runtime setup');
-  const runtimePath = path.join(unpackedRoot, 'lib', 'desktop-runtime-environment.js');
-  const { installDesktopPnpmRuntime } = await import(pathToFileURL(runtimePath).href);
-  const pnpmBinPath = path.join(unpackedRoot, 'node_modules', 'pnpm', 'bin', 'pnpm.mjs');
-  const pnpmVersion = JSON.parse(fs.readFileSync(
-    path.join(unpackedRoot, 'node_modules', 'pnpm', 'package.json'),
-    'utf8',
-  )).version;
-  const environment = { ...process.env };
-  const installation = installDesktopPnpmRuntime({
-    platform: process.platform,
-    appExecutable: process.execPath,
-    pnpmBinPath,
-    electronVersion: process.versions.electron,
-    stateDir: path.join(root, 'runtime-commands'),
-    environment,
-  });
-  try {
-    console.error('packaged smoke phase: node --version');
-    const nodeVersion = runCaptured('node-version', 'node', ['--version'], {
-      cwd: root,
-      env: environment,
-      timeout: ${PACKAGED_COMMAND_TIMEOUT_MS},
-    });
-    assertCommand('packaged node', nodeVersion, process.version);
-    console.error('packaged smoke phase: pnpm --version');
-    const packagedPnpm = runCaptured('pnpm-version', 'pnpm', ['--version'], {
-      cwd: root,
-      env: environment,
-      timeout: ${PACKAGED_COMMAND_TIMEOUT_MS},
-    });
-    assertCommand('packaged pnpm', packagedPnpm, pnpmVersion);
-
-    const project = path.join(root, 'short-process-build');
-    fs.mkdirSync(project);
-    fs.writeFileSync(path.join(project, 'package.json'), JSON.stringify({
-      name: 'dsh-packaged-short-process-smoke',
-      version: '0.0.0',
-      private: true,
-      scripts: { build: 'node build.mjs' },
-    }) + '\n');
-    fs.writeFileSync(path.join(project, 'build.mjs'), [
-      "import { writeFileSync } from 'node:fs'",
-      "writeFileSync(new URL('built.json', import.meta.url), JSON.stringify({",
-      "  node: process.version,",
-      "  runnerEnvironment: Object.keys(process.env).filter(name => name.toUpperCase() === 'ELECTRON_RUN_AS_NODE'),",
-      '}))',
-      '',
-    ].join('\n'));
-    console.error('packaged smoke phase: short process build');
-    const built = runCaptured('short-build', 'pnpm', ['run', 'build'], {
-      cwd: project,
-      env: environment,
-      timeout: ${PACKAGED_COMMAND_TIMEOUT_MS},
-    });
-    if (built.error || built.status !== 0) {
-      throw new Error('packaged short-process build failed: ' + JSON.stringify({
-        status: built.status,
-        signal: built.signal,
-        error: built.error && built.error.message,
-        stdout: built.stdout,
-        stderr: built.stderr,
-      }));
-    }
-    const receipt = JSON.parse(fs.readFileSync(path.join(project, 'built.json'), 'utf8'));
-    if (receipt.node !== process.version || receipt.runnerEnvironment.length !== 0) {
-      throw new Error('packaged short-process build returned an invalid environment: ' + JSON.stringify(receipt));
-    }
-  } finally {
-    installation.dispose();
-  }
-}
-
-function runCaptured(label, command, args, options) {
-  const stdoutPath = path.join(root, label + '.stdout.log');
-  const stderrPath = path.join(root, label + '.stderr.log');
-  const stdoutFd = fs.openSync(stdoutPath, 'wx', 0o600);
-  const stderrFd = fs.openSync(stderrPath, 'wx', 0o600);
-  let result;
-  try {
-    result = spawnSync(command, args, {
-      ...options,
-      stdio: ['ignore', stdoutFd, stderrFd],
-    });
-  } finally {
-    fs.closeSync(stdoutFd);
-    fs.closeSync(stderrFd);
-  }
-  return {
-    ...result,
-    stdout: fs.readFileSync(stdoutPath, 'utf8'),
-    stderr: fs.readFileSync(stderrPath, 'utf8'),
-  };
-}
-
-function assertCommand(label, result, expected) {
-  if (result.error || result.status !== 0 || result.stdout.trim() !== expected) {
-    throw new Error(label + ' failed: ' + JSON.stringify({
-      expected,
-      status: result.status,
-      signal: result.signal,
-      error: result.error && result.error.message,
-      stdout: result.stdout,
-      stderr: result.stderr,
-    }));
-  }
-}
 `
 
 /**
@@ -205,9 +108,11 @@ export function runFileBackedProcess(
   env: NodeJS.ProcessEnv,
   timeoutMs: number,
   logDirectory: string,
+  logStem = 'packaged-smoke',
+  cwd?: string,
 ): ReturnType<MacSmokeOptions['run']> {
-  const stdoutPath = join(logDirectory, 'packaged-smoke.stdout.log')
-  const stderrPath = join(logDirectory, 'packaged-smoke.stderr.log')
+  const stdoutPath = join(logDirectory, `${logStem}.stdout.log`)
+  const stderrPath = join(logDirectory, `${logStem}.stderr.log`)
   const stdoutFd = openSync(stdoutPath, 'wx', 0o600)
   const stderrFd = openSync(stderrPath, 'wx', 0o600)
   let result: ReturnType<typeof spawnSync>
@@ -217,6 +122,7 @@ export function runFileBackedProcess(
       timeout: timeoutMs,
       killSignal: 'SIGKILL',
       stdio: ['ignore', stdoutFd, stderrFd],
+      ...(cwd === undefined ? {} : { cwd }),
     })
   } finally {
     closeSync(stdoutFd)
@@ -247,19 +153,61 @@ function defaultOptions(): MacSmokeOptions {
         }
       }),
     link: (target, path) => symlinkSync(target, path, 'dir'),
-    run(executable, args, env, timeoutMs) {
+    run(executable, args, env, timeoutMs, logStem, cwd) {
       const logDirectory = env.DSH_PTY_SMOKE_ROOT
       if (logDirectory === undefined) {
         throw new Error('packaged macOS PTY smoke is missing its log directory')
       }
-      return runFileBackedProcess(executable, args, env, timeoutMs, logDirectory)
+      return runFileBackedProcess(executable, args, env, timeoutMs, logDirectory, logStem, cwd)
+    },
+    readText: path => readFileSync(path, 'utf8'),
+    writeText: (path, contents) => writeFileSync(path, contents, { encoding: 'utf8', flag: 'wx', mode: 0o600 }),
+    async installRuntime(modulePath, options) {
+      const runtime = await import(pathToFileURL(modulePath).href) as {
+        installDesktopPnpmRuntime(value: DesktopPnpmRuntimeOptions): DesktopPnpmRuntimeInstallation
+      }
+      return runtime.installDesktopPnpmRuntime(options)
     },
     remove: path => rmSync(path, { force: true, recursive: true }),
   }
 }
 
+interface PackagedRuntimeVersions {
+  node: string
+  electron: string
+}
+
+/** Read the Node and Electron versions reported by the exact packaged executable. */
+function parseRuntimeVersions(stdout: string): PackagedRuntimeVersions {
+  const line = stdout.split(/\r?\n/gu).find(value => value.startsWith(SUCCESS_MARKER))
+  if (line === undefined) throw new Error('packaged PTY smoke did not report runtime versions')
+  const parsed = JSON.parse(line.slice(SUCCESS_MARKER.length)) as Partial<PackagedRuntimeVersions>
+  if (typeof parsed.node !== 'string' || typeof parsed.electron !== 'string') {
+    throw new Error(`packaged PTY smoke reported invalid runtime versions: ${JSON.stringify(parsed)}`)
+  }
+  return { node: parsed.node, electron: parsed.electron }
+}
+
+/** Require one packaged command to exit successfully with the exact expected stdout. */
+function assertCommand(
+  label: string,
+  result: ReturnType<MacSmokeOptions['run']>,
+  expected: string,
+): void {
+  if (result.error !== undefined || result.status !== 0 || result.stdout.trim() !== expected) {
+    throw new Error(`${label} failed: ${JSON.stringify({
+      expected,
+      status: result.status,
+      signal: result.signal,
+      error: result.error?.message,
+      stdout: result.stdout,
+      stderr: result.stderr,
+    })}`)
+  }
+}
+
 /** Verify one packaged macOS application with its real PTY and bundled command runtime. */
-export function verifyMacSmoke(appPath: string, options: MacSmokeOptions = defaultOptions()): void {
+export async function verifyMacSmoke(appPath: string, options: MacSmokeOptions = defaultOptions()): Promise<void> {
   const absoluteApp = resolve(appPath)
   const executableDirectory = join(absoluteApp, 'Contents', 'MacOS')
   const executables = options.listExecutables(executableDirectory)
@@ -275,28 +223,118 @@ export function verifyMacSmoke(appPath: string, options: MacSmokeOptions = defau
     'node-pty',
   )
   const workDir = options.makeWorkDir()
+  let installation: DesktopPnpmRuntimeInstallation | undefined
   try {
     const modules = join(workDir, 'node_modules')
     options.makeDirectory(modules)
     options.link(nodePty, join(modules, 'node-pty'))
-    const result = options.run(executables[0]!, ['-e', PACKAGED_PTY_PROBE], {
+    const executable = executables[0]!
+    const unpackedRoot = join(absoluteApp, 'Contents', 'Resources', 'app.asar.unpacked')
+    const smokeEnvironment = {
       ...process.env,
       ELECTRON_RUN_AS_NODE: '1',
-      DSH_PACKAGED_UNPACKED_ROOT: join(
-        absoluteApp,
-        'Contents',
-        'Resources',
-        'app.asar.unpacked',
-      ),
       DSH_PTY_SMOKE_ROOT: workDir,
-    }, MAC_SMOKE_TIMEOUT_MS)
+    }
+    const result = options.run(
+      executable,
+      ['-e', PACKAGED_PTY_PROBE],
+      smokeEnvironment,
+      MAC_SMOKE_TIMEOUT_MS,
+      'packaged-pty',
+    )
     if (result.error !== undefined || result.status !== 0 || !result.stdout.includes(SUCCESS_MARKER)) {
       const tail = `${result.stdout}\n${result.stderr}`.slice(-8_000)
       throw new Error(
         `packaged macOS PTY smoke failed for ${basename(absoluteApp)}: status=${String(result.status)} signal=${String(result.signal)}${result.error === undefined ? '' : ` error=${result.error.message}`}\n${tail}`,
       )
     }
+    const runtimeVersions = parseRuntimeVersions(result.stdout)
+
+    const pnpmBinPath = join(unpackedRoot, 'node_modules', 'pnpm', 'bin', 'pnpm.mjs')
+    const pnpmPackage = JSON.parse(options.readText(
+      join(unpackedRoot, 'node_modules', 'pnpm', 'package.json'),
+    )) as { version?: unknown }
+    if (typeof pnpmPackage.version !== 'string') {
+      throw new Error('packaged pnpm manifest does not contain a string version')
+    }
+    const commandEnvironment = { ...process.env, DSH_PTY_SMOKE_ROOT: workDir }
+    installation = await options.installRuntime(
+      join(unpackedRoot, 'lib', 'desktop-runtime-environment.js'),
+      {
+        platform: process.platform,
+        appExecutable: executable,
+        pnpmBinPath,
+        electronVersion: runtimeVersions.electron,
+        stateDir: join(workDir, 'runtime-commands'),
+        environment: commandEnvironment,
+      },
+    )
+
+    const nodeVersion = options.run(
+      'node',
+      ['--version'],
+      commandEnvironment,
+      PACKAGED_COMMAND_TIMEOUT_MS,
+      'node-version',
+      workDir,
+    )
+    assertCommand('packaged node', nodeVersion, runtimeVersions.node)
+    const packagedPnpm = options.run(
+      'pnpm',
+      ['--version'],
+      commandEnvironment,
+      PACKAGED_COMMAND_TIMEOUT_MS,
+      'pnpm-version',
+      workDir,
+    )
+    assertCommand('packaged pnpm', packagedPnpm, pnpmPackage.version)
+
+    const project = join(workDir, 'short-process-build')
+    options.makeDirectory(project)
+    options.writeText(join(project, 'package.json'), `${JSON.stringify({
+      name: 'dsh-packaged-short-process-smoke',
+      version: '0.0.0',
+      private: true,
+      scripts: { build: 'node build.mjs' },
+    })}\n`)
+    options.writeText(join(project, 'build.mjs'), [
+      "import { writeFileSync } from 'node:fs'",
+      "writeFileSync(new URL('built.json', import.meta.url), JSON.stringify({",
+      '  node: process.version,',
+      "  runnerEnvironment: Object.keys(process.env).filter(name => name.toUpperCase() === 'ELECTRON_RUN_AS_NODE'),",
+      '}))',
+      '',
+    ].join('\n'))
+    const built = options.run(
+      'pnpm',
+      ['run', 'build'],
+      commandEnvironment,
+      PACKAGED_COMMAND_TIMEOUT_MS,
+      'short-build',
+      project,
+    )
+    if (built.error !== undefined || built.status !== 0) {
+      throw new Error(`packaged short-process build failed: ${JSON.stringify({
+        status: built.status,
+        signal: built.signal,
+        error: built.error?.message,
+        stdout: built.stdout,
+        stderr: built.stderr,
+      })}`)
+    }
+    const receipt = JSON.parse(options.readText(join(project, 'built.json'))) as {
+      node?: unknown
+      runnerEnvironment?: unknown
+    }
+    if (
+      receipt.node !== runtimeVersions.node
+      || !Array.isArray(receipt.runnerEnvironment)
+      || receipt.runnerEnvironment.length !== 0
+    ) {
+      throw new Error(`packaged short-process build returned an invalid environment: ${JSON.stringify(receipt)}`)
+    }
   } finally {
+    installation?.dispose()
     options.remove(workDir)
   }
 }
@@ -309,7 +347,7 @@ if (invokedPath !== undefined && resolve(invokedPath) === fileURLToPath(import.m
     process.exitCode = 2
   } else {
     try {
-      verifyMacSmoke(appPath)
+      await verifyMacSmoke(appPath)
       console.log(`macOS packaged PTY, Node, pnpm, and short-process build smoke passed: ${appPath}`)
     } catch (error) {
       console.error(error instanceof Error ? error.message : String(error))
