@@ -370,9 +370,12 @@ describe('published package surface', () => {
   })
 
   it('starts restricted Windows shells with a hidden console show state', () => {
-    const patchResolution = 'patch:@deepseek-ai/dsh-sandbox-windows-acl@npm%3A0.1.1-rc.2#./patches/dsh-sandbox-windows-acl@0.1.1-rc.2.patch'
+    const runtimeVersion = String(manifest.dependencies?.['@deepseek-ai/dsh'])
+    expect(runtimeVersion).toMatch(/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u)
+    const sandboxPatchPath = `patches/dsh-sandbox-windows-acl@${runtimeVersion}.patch`
+    const patchResolution = `patch:@deepseek-ai/dsh-sandbox-windows-acl@npm%3A${runtimeVersion}#./${sandboxPatchPath}`
     const lockfile = readFileSync(new URL('yarn.lock', workspaceRoot), 'utf8')
-    const patch = readFileSync(new URL('patches/dsh-sandbox-windows-acl@0.1.1-rc.2.patch', workspaceRoot), 'utf8')
+    const patch = readFileSync(new URL(sandboxPatchPath, workspaceRoot), 'utf8')
     const workspaceRequire = createRequire(new URL('package.json', packageRoot))
     const sandboxManifest = workspaceRequire.resolve('@deepseek-ai/dsh-sandbox-windows-acl/package.json')
     const sandboxLocalManifest = workspaceRequire.resolve('@deepseek-ai/dsh-sandbox-local/package.json')
@@ -381,12 +384,12 @@ describe('published package surface', () => {
     const runtimeChunks = readdirSync(sandboxLib).filter(name => /^types-.*\.js$/u.test(name))
 
     expect(workspaceManifest.resolutions).toMatchObject({
-      '@deepseek-ai/dsh-sandbox-windows-acl@npm:0.1.1-rc.2': patchResolution,
-      '@deepseek-ai/dsh-sandbox-windows-acl@npm:^0.1.1-rc.2': patchResolution,
+      [`@deepseek-ai/dsh-sandbox-windows-acl@npm:${runtimeVersion}`]: patchResolution,
+      [`@deepseek-ai/dsh-sandbox-windows-acl@npm:^${runtimeVersion}`]: patchResolution,
     })
     expect(sandboxLocalRequire.resolve('@deepseek-ai/dsh-sandbox-windows-acl/package.json'))
       .toBe(sandboxManifest)
-    expect(lockfile).toContain('@deepseek-ai/dsh-sandbox-windows-acl@patch:@deepseek-ai/dsh-sandbox-windows-acl@npm%3A0.1.1-rc.2#./patches/dsh-sandbox-windows-acl@0.1.1-rc.2.patch')
+    expect(lockfile).toContain(`@deepseek-ai/dsh-sandbox-windows-acl@${patchResolution}`)
     expect(patch.match(/^\+\s*dwFlags: 257,\r?$/gmu)).toHaveLength(2)
     expect(patch.match(/^\+\s*wShowWindow: 0,\r?$/gmu)).toHaveLength(2)
     expect(runtimeChunks).toHaveLength(1)
