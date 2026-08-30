@@ -136,7 +136,7 @@ function verifyChecksumManifest(
 /** Publish a prerelease only after the draft assets survive a fresh download and full verification. */
 export function publishPreview(options: PublishPreviewOptions = defaultOptions()): void {
   if (options.platform !== 'darwin') throw new Error('signed preview publishing must run on macOS')
-  if (!/^2\.1\.0-preview\.\d+$/u.test(options.version)) throw new Error(`unsupported preview version: ${options.version}`)
+  if (!/^\d+\.\d+\.\d+-preview\.\d+$/u.test(options.version)) throw new Error(`unsupported preview version: ${options.version}`)
   if (!/^[A-Z0-9]{10}$/u.test(options.teamId)) throw new Error('a 10-character DSH_MAC_RELEASE_TEAM_ID is required')
   const tag = `v${options.version}`
   const release = JSON.parse(options.run(
@@ -170,8 +170,13 @@ export function publishPreview(options: PublishPreviewOptions = defaultOptions()
   const finalDownload = options.makeTemporaryDirectory()
   try {
     options.run('gh', ['release', 'download', tag, '--repo', REPOSITORY, '--dir', firstDownload], options.desktopRoot)
-    const downloaded = assertExactAssets(firstDownload, expectedAssets, options)
-    const checksums = checksumManifest(downloaded, options.read)
+    const firstNames = options.listFiles(firstDownload).map(path => basename(path))
+    const expectedFirstDownload = firstNames.includes('SHA256SUMS.txt')
+      ? [...expectedAssets, 'SHA256SUMS.txt']
+      : expectedAssets
+    const downloaded = assertExactAssets(firstDownload, expectedFirstDownload, options)
+    const checksumInputs = downloaded.filter(path => basename(path) !== 'SHA256SUMS.txt')
+    const checksums = checksumManifest(checksumInputs, options.read)
     const checksumPath = join(firstDownload, 'SHA256SUMS.txt')
     options.write(checksumPath, checksums)
     options.run('gh', ['release', 'upload', tag, checksumPath, '--repo', REPOSITORY, '--clobber'], options.desktopRoot)

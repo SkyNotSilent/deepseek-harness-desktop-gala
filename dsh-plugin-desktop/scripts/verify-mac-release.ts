@@ -145,6 +145,29 @@ function commandOutput(result: VerificationCommandResult): string {
   return `${result.stdout}\n${result.stderr}`
 }
 
+function assertGatekeeperEnabled(options: MacReleaseVerificationOptions): void {
+  let output: string
+  try {
+    output = commandOutput(options.run('spctl', ['--status']))
+  } catch {
+    throw new Error('Gatekeeper assessments must be enabled before macOS release verification')
+  }
+  if (!/^assessments enabled$/imu.test(output.trim())) {
+    throw new Error('Gatekeeper assessments must be enabled before macOS release verification')
+  }
+}
+
+function verifyGatekeeper(
+  options: MacReleaseVerificationOptions,
+  args: readonly string[],
+  description: string,
+): void {
+  const output = commandOutput(options.run('spctl', args))
+  if (!/^source=Notarized Developer ID$/imu.test(output)) {
+    throw new Error(`${description} was not accepted as a Notarized Developer ID artifact`)
+  }
+}
+
 function verifyApp(appPath: string, options: MacReleaseVerificationOptions): void {
   options.run('codesign', ['--verify', '--deep', '--strict', '--verbose=4', appPath])
   const signature = commandOutput(options.run('codesign', ['--display', '--verbose=4', appPath]))
@@ -163,7 +186,11 @@ function verifyApp(appPath: string, options: MacReleaseVerificationOptions): voi
     throw new Error(`macOS application architecture mismatch: ${architectures.join(' ')}`)
   }
   options.run('syspolicy_check', ['distribution', appPath])
-  options.run('spctl', ['--assess', '--type', 'execute', '--verbose=4', appPath])
+  verifyGatekeeper(
+    options,
+    ['--assess', '--type', 'execute', '--verbose=4', appPath],
+    'macOS application',
+  )
   options.run('xcrun', ['stapler', 'validate', appPath])
   options.verifySmoke(appPath)
 }
@@ -172,6 +199,7 @@ function verifyApp(appPath: string, options: MacReleaseVerificationOptions): voi
 export function verifyMacRelease(
   options: MacReleaseVerificationOptions = defaultOptions(),
 ): { readonly dmgPath: string; readonly zipPath: string } {
+  assertGatekeeperEnabled(options)
   const files = options.listFiles(options.distDir)
   const prefix = `DeepSeek-Harness-Desktop-Gala-${options.version}-${options.arch}`
   const dmgPath = requireUniqueArtifact(files, `${prefix}.dmg`, 'versioned arm64 DMG')
@@ -185,8 +213,13 @@ export function verifyMacRelease(
   let failure: unknown
   try {
     options.run('hdiutil', ['verify', dmgPath])
+    options.run('codesign', ['--verify', '--strict', '--verbose=4', dmgPath])
     options.run('xcrun', ['stapler', 'validate', dmgPath])
-    options.run('spctl', ['--assess', '--type', 'open', '--context', 'context:primary-signature', '--verbose=4', dmgPath])
+    verifyGatekeeper(
+      options,
+      ['--assess', '--type', 'open', '--context', 'context:primary-signature', '--verbose=4', dmgPath],
+      'macOS disk image',
+    )
     options.run('hdiutil', ['attach', dmgPath, '-mountpoint', mountPoint, '-nobrowse', '-readonly'])
     mounted = true
     verifyApp(join(mountPoint, `${options.productName}.app`), options)

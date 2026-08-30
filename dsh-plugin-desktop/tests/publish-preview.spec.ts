@@ -110,6 +110,17 @@ describe('draft preview publishing gate', () => {
     expect(state.removals).toHaveLength(2)
   })
 
+  it('can resume a draft that already contains SHA256SUMS.txt', () => {
+    const state = harness()
+    state.remote.set('SHA256SUMS.txt', Buffer.from('stale checksum from an interrupted attempt'))
+
+    publishPreview(state.options)
+
+    expect(state.verifications).toHaveLength(2)
+    expect(state.commands.some(call => call.args[1] === 'edit')).toBe(true)
+    expect(state.remote.get('SHA256SUMS.txt')?.toString('utf8')).not.toContain('stale checksum')
+  })
+
   it('refuses a non-draft release before uploading any asset', () => {
     const state = harness({
       run: (command, args) => {

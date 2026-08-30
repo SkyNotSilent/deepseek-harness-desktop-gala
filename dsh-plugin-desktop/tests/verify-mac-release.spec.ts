@@ -55,6 +55,12 @@ function options(overrides: Partial<MacReleaseVerificationOptions> = {}) {
     makeTemporaryDirectory: prefix => `/private/tmp/${prefix}${temporary++}`,
     run: (command, args) => {
       calls.push({ command, args: [...args] })
+      if (command === 'spctl' && args[0] === '--status') {
+        return { stdout: 'assessments enabled\n', stderr: '' }
+      }
+      if (command === 'spctl' && args[0] === '--assess') {
+        return { stdout: '', stderr: 'accepted\nsource=Notarized Developer ID\n' }
+      }
       if (command === 'codesign' && args[0] === '--display') {
         return {
           stdout: '',
@@ -78,7 +84,12 @@ describe('macOS release artifact verification', () => {
     const harness = options()
     expect(verifyMacRelease(harness.value)).toEqual({ dmgPath: DMG, zipPath: ZIP })
 
+    expect(harness.calls[0]).toEqual({ command: 'spctl', args: ['--status'] })
     expect(harness.calls).toContainEqual({ command: 'hdiutil', args: ['verify', DMG] })
+    expect(harness.calls).toContainEqual({
+      command: 'codesign',
+      args: ['--verify', '--strict', '--verbose=4', DMG],
+    })
     expect(harness.calls).toContainEqual({ command: 'xcrun', args: ['stapler', 'validate', DMG] })
     expect(harness.calls).toContainEqual({
       command: 'ditto',
@@ -91,7 +102,7 @@ describe('macOS release artifact verification', () => {
         '/private/tmp/dsh-desktop-quarantine-2/DeepSeek Harness Desktop Gala.app',
       ],
     })
-    expect(harness.calls.filter(call => call.command === 'codesign' && call.args[0] === '--verify')).toHaveLength(3)
+    expect(harness.calls.filter(call => call.command === 'codesign' && call.args[0] === '--verify')).toHaveLength(4)
     expect(harness.calls.filter(call => call.command === 'syspolicy_check')).toHaveLength(3)
     expect(harness.smokes).toHaveLength(3)
     expect(harness.calls.at(-1)).toEqual({
@@ -108,7 +119,7 @@ describe('macOS release artifact verification', () => {
   it('rejects missing blockmaps or mismatched updater hashes before mounting', () => {
     const noBlockmap = options({ listFiles: () => Object.keys(CONTENTS).filter(path => path !== ZIP_BLOCKMAP) })
     expect(() => verifyMacRelease(noBlockmap.value)).toThrow('missing a non-empty blockmap')
-    expect(noBlockmap.calls).toEqual([])
+    expect(noBlockmap.calls).toEqual([{ command: 'spctl', args: ['--status'] }])
 
     const badUpdate = Buffer.from(CONTENTS[UPDATE]!.toString('utf8').replace(sha512(CONTENTS[ZIP]!), 'invalid'))
     const badMetadata = options({
@@ -116,6 +127,51 @@ describe('macOS release artifact verification', () => {
       size: path => (path === UPDATE ? badUpdate : CONTENTS[path]!).length,
     })
     expect(() => verifyMacRelease(badMetadata.value)).toThrow('SHA-512 mismatch')
+  })
+
+  it('refuses verification when Gatekeeper is disabled or does not identify notarization', () => {
+    const disabled = options({
+      run: (command, args) => {
+        disabled.calls.push({ command, args: [...args] })
+        if (command === 'spctl' && args[0] === '--status') {
+          return { stdout: 'assessments disabled\n', stderr: '' }
+        }
+        return { stdout: '', stderr: '' }
+      },
+    })
+    expect(() => verifyMacRelease(disabled.value)).toThrow('Gatekeeper assessments must be enabled')
+    expect(disabled.calls).toEqual([{ command: 'spctl', args: ['--status'] }])
+
+    const missingSource = options({
+      run: (command, args) => {
+        missingSource.calls.push({ command, args: [...args] })
+        if (command === 'spctl' && args[0] === '--status') {
+          return { stdout: 'assessments enabled\n', stderr: '' }
+        }
+        if (command === 'codesign' && args[0] === '--display') {
+          return {
+            stdout: '',
+            stderr: 'Identifier=io.github.skynotsilent.harnessgala\nTeamIdentifier=TEAM123456\nflags=0x10000(runtime)',
+          }
+        }
+        if (command === 'lipo') return { stdout: 'arm64\n', stderr: '' }
+        if (command === 'spctl' && args[0] === '--assess') {
+          return { stdout: '', stderr: 'accepted\nsource=Unnotarized Developer ID\n' }
+        }
+        return { stdout: '', stderr: '' }
+      },
+    })
+    const failure = (() => {
+      try {
+        verifyMacRelease(missingSource.value)
+      } catch (cause) {
+        return cause
+      }
+    })()
+    expect(failure).toBeInstanceOf(AggregateError)
+    expect((failure as AggregateError).errors[0]).toEqual(
+      expect.objectContaining({ message: expect.stringContaining('Notarized Developer ID') }),
+    )
   })
 
   it('rejects a wrong Team ID, runtime flag, or architecture', () => {
@@ -128,6 +184,8 @@ describe('macOS release artifact verification', () => {
           harness.calls.push({ command, args: [...args] })
           if (command === 'codesign' && args[0] === '--display') return { stdout: '', stderr: output }
           if (command === 'lipo') return { stdout: 'arm64\n', stderr: '' }
+          if (command === 'spctl' && args[0] === '--status') return { stdout: 'assessments enabled\n', stderr: '' }
+          if (command === 'spctl' && args[0] === '--assess') return { stdout: '', stderr: 'source=Notarized Developer ID\n' }
           return { stdout: '', stderr: '' }
         },
       })
@@ -140,6 +198,8 @@ describe('macOS release artifact verification', () => {
           return { stdout: '', stderr: 'Identifier=io.github.skynotsilent.harnessgala\nTeamIdentifier=TEAM123456\nflags=0x10000(runtime)' }
         }
         if (command === 'lipo') return { stdout: 'x86_64 arm64\n', stderr: '' }
+        if (command === 'spctl' && args[0] === '--status') return { stdout: 'assessments enabled\n', stderr: '' }
+        if (command === 'spctl' && args[0] === '--assess') return { stdout: '', stderr: 'source=Notarized Developer ID\n' }
         return { stdout: '', stderr: '' }
       },
     })
@@ -156,6 +216,10 @@ describe('macOS release artifact verification', () => {
           return { stdout: '', stderr: 'Identifier=io.github.skynotsilent.harnessgala\nTeamIdentifier=TEAM123456\nflags=0x10000(runtime)' }
         }
         if (command === 'lipo') return { stdout: 'arm64', stderr: '' }
+        if (command === 'spctl' && args[0] === '--status') return { stdout: 'assessments enabled\n', stderr: '' }
+        if (command === 'spctl' && args[0] === '--assess' && args[2] !== 'execute') {
+          return { stdout: '', stderr: 'source=Notarized Developer ID\n' }
+        }
         if (command === 'spctl' && args[1] === '--type' && args[2] === 'execute') throw verifyFailure
         if (command === 'hdiutil' && args[0] === 'detach') throw detachFailure
         return { stdout: '', stderr: '' }

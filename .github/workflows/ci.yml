@@ -65,6 +65,8 @@ jobs:
           node-version: 22.23.2
       - run: corepack enable
       - run: corepack yarn install --immutable
+      - name: Run desktop tests on macOS
+        run: corepack yarn workspace dsh-plugin-desktop test
       - run: corepack yarn build
       - name: Build unsigned artifacts
         working-directory: dsh-plugin-desktop
