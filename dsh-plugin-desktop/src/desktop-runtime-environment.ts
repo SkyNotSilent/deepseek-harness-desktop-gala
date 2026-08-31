@@ -194,13 +194,29 @@ function replacePrivateFile(filename: string, contents: string, mode: number): v
 }
 
 /** Module preloaded into RunAsNode children before their requested entry. */
-function clearEnvironmentModule(): string {
-  return [
+function clearEnvironmentModule(
+  platform: NodeJS.Platform,
+  nodeShimPath: string,
+  pnpmBinPath: string,
+): string {
+  const lines = [
+    ...(platform === 'win32'
+      ? [
+          `const keepRunAsNode = process.argv[1]?.toLowerCase() === ${JSON.stringify(pnpmBinPath.toLowerCase())}`,
+        ]
+      : [
+          `Object.defineProperty(process, 'execPath', {`,
+          `  configurable: true, enumerable: true, writable: false,`,
+          `  value: ${JSON.stringify(nodeShimPath)},`,
+          '})',
+        ]),
     `for (const name of Object.keys(process.env)) {`,
     `  if (name.toUpperCase() === '${RUN_AS_NODE}') delete process.env[name]`,
     '}',
+    ...(platform === 'win32' ? [`if (keepRunAsNode) process.env.${RUN_AS_NODE} = '1'`] : []),
     '',
-  ].join('\n')
+  ]
+  return lines.join('\n')
 }
 
 /** Build the private POSIX Node command used only by pnpm lifecycle scripts. */
@@ -376,7 +392,11 @@ export function installDesktopPnpmRuntime(options: DesktopPnpmRuntimeOptions): D
     const pnpmShimPath = join(pathDir, pnpmShimName)
     const nodeShimPath = join(nodeBinDir, nodeShimName)
     const clearEnvironmentPath = join(privateDir, 'clear-env.mjs')
-    replacePrivateFile(clearEnvironmentPath, clearEnvironmentModule(), PRIVATE_FILE_MODE)
+    replacePrivateFile(
+      clearEnvironmentPath,
+      clearEnvironmentModule(options.platform, nodeShimPath, options.pnpmBinPath),
+      PRIVATE_FILE_MODE,
+    )
     const clearEnvironmentUrl = pathToFileURL(clearEnvironmentPath).href
     replacePrivateFile(
       nodeShimPath,

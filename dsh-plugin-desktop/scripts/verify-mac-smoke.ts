@@ -259,7 +259,13 @@ export async function verifyMacSmoke(appPath: string, options: MacSmokeOptions =
     if (typeof pnpmPackage.version !== 'string') {
       throw new Error('packaged pnpm manifest does not contain a string version')
     }
-    const commandEnvironment = { ...process.env, DSH_PTY_SMOKE_ROOT: workDir }
+    const commandEnvironment = {
+      ...process.env,
+      DSH_PTY_SMOKE_ROOT: workDir,
+      // Force pnpm's process.execPath self-spawn path on every machine instead of relying on
+      // machine-specific dependency state to decide whether the pre-run install is needed.
+      pnpm_config_verify_deps_before_run: 'install',
+    }
     installation = await options.installRuntime(
       join(unpackedRoot, 'lib', 'desktop-runtime-environment.js'),
       {

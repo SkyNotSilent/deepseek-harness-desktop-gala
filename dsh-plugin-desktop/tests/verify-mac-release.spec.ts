@@ -209,6 +209,7 @@ describe('macOS release artifact verification', () => {
   it('detaches the image and preserves verification and cleanup failures', () => {
     const verifyFailure = new Error('Gatekeeper rejected the app')
     const detachFailure = new Error('detach failed')
+    const fallbackFailure = new Error('device detach failed')
     const harness = options({
       run: (command, args) => {
         harness.calls.push({ command, args: [...args] })
@@ -221,7 +222,15 @@ describe('macOS release artifact verification', () => {
           return { stdout: '', stderr: 'source=Notarized Developer ID\n' }
         }
         if (command === 'spctl' && args[1] === '--type' && args[2] === 'execute') throw verifyFailure
-        if (command === 'hdiutil' && args[0] === 'detach') throw detachFailure
+        if (command === 'hdiutil' && args[0] === 'attach') {
+          return { stdout: '/dev/disk27\tGUID_partition_scheme\n/dev/disk27s1\tApple_HFS\n', stderr: '' }
+        }
+        if (command === 'hdiutil' && args[0] === 'detach' && args[1]?.startsWith('/private/tmp/')) {
+          throw detachFailure
+        }
+        if (command === 'hdiutil' && args[0] === 'detach' && args[1] === '/dev/disk27') {
+          throw fallbackFailure
+        }
         return { stdout: '', stderr: '' }
       },
     })
@@ -233,7 +242,45 @@ describe('macOS release artifact verification', () => {
       caught = cause
     }
     expect(caught).toBeInstanceOf(AggregateError)
-    expect((caught as AggregateError).errors).toEqual([verifyFailure, detachFailure])
+    expect((caught as AggregateError).errors).toEqual([verifyFailure, detachFailure, fallbackFailure])
+    expect(harness.calls).toContainEqual({
+      command: 'diskutil',
+      args: ['unmount', '/private/tmp/dsh-desktop-dmg-0'],
+    })
+    expect(harness.calls).toContainEqual({ command: 'hdiutil', args: ['detach', '/dev/disk27'] })
     expect(harness.removed).toHaveLength(3)
+  })
+
+  it('recovers a busy mountpoint by unmounting and detaching the exact attached device', () => {
+    const harness = options({
+      run: (command, args) => {
+        harness.calls.push({ command, args: [...args] })
+        if (command === 'spctl' && args[0] === '--status') return { stdout: 'assessments enabled\n', stderr: '' }
+        if (command === 'spctl' && args[0] === '--assess') {
+          return { stdout: '', stderr: 'source=Notarized Developer ID\n' }
+        }
+        if (command === 'codesign' && args[0] === '--display') {
+          return {
+            stdout: '',
+            stderr: 'Identifier=io.github.skynotsilent.harnessgala\nTeamIdentifier=TEAM123456\nflags=0x10000(runtime)',
+          }
+        }
+        if (command === 'lipo') return { stdout: 'arm64\n', stderr: '' }
+        if (command === 'hdiutil' && args[0] === 'attach') {
+          return { stdout: '/dev/disk31s1\tApple_HFS\t/private/tmp/dsh-desktop-dmg-0\n', stderr: '' }
+        }
+        if (command === 'hdiutil' && args[0] === 'detach' && args[1]?.startsWith('/private/tmp/')) {
+          throw new Error('resource busy')
+        }
+        return { stdout: '', stderr: '' }
+      },
+    })
+
+    expect(verifyMacRelease(harness.value)).toEqual({ dmgPath: DMG, zipPath: ZIP })
+    expect(harness.calls).toContainEqual({
+      command: 'diskutil',
+      args: ['unmount', '/private/tmp/dsh-desktop-dmg-0'],
+    })
+    expect(harness.calls).toContainEqual({ command: 'hdiutil', args: ['detach', '/dev/disk31'] })
   })
 })

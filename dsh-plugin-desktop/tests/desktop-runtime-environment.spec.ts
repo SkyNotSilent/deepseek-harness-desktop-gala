@@ -159,6 +159,7 @@ describe('desktop Host pnpm runtime', () => {
       '  disturl: process.env.npm_config_disturl,',
       '  node: process.env.NODE,',
       '  path: process.env.PATH,',
+      '  execPath: process.execPath,',
       '}))',
       '',
     ].join('\n'))
@@ -184,9 +185,54 @@ describe('desktop Host pnpm runtime', () => {
       disturl: 'https://electronjs.org/headers',
       node: installation.nodeShimPath,
       path: `${installation.nodeBinDir}:${environment.PATH ?? ''}`,
+      execPath: installation.nodeShimPath,
     })
     expect(environment).not.toHaveProperty('ELECTRON_RUN_AS_NODE')
     expect(environment).not.toHaveProperty('npm_config_runtime')
+    installation.dispose()
+  })
+
+  it('routes a pnpm process.execPath self-spawn back through the Node shim', () => {
+    const root = temporaryDirectory()
+    const stateDir = join(root, 'runtime')
+    const selfSpawnEntry = join(root, 'self-spawn.mjs')
+    const receiptPath = join(root, 'self-spawn.json')
+    writeFileSync(selfSpawnEntry, [
+      "import { spawnSync } from 'node:child_process'",
+      "import { writeFileSync } from 'node:fs'",
+      "if (process.argv[2] === 'child') {",
+      '  writeFileSync(process.argv[3], JSON.stringify({',
+      '    execPath: process.execPath,',
+      "    runAsNode: Object.keys(process.env).filter(name => name.toUpperCase() === 'ELECTRON_RUN_AS_NODE'),",
+      '  }))',
+      '} else {',
+      "  const child = spawnSync(process.execPath, [process.argv[1], 'child', process.argv[2]], {",
+      "    env: process.env, stdio: 'inherit',",
+      '  })',
+      '  if (child.error) throw child.error',
+      '  if (child.status !== 0) process.exit(child.status ?? 9)',
+      '}',
+      '',
+    ].join('\n'))
+    const environment: NodeJS.ProcessEnv = { PATH: process.env.PATH }
+    const installation = installDesktopPnpmRuntime({
+      ...options(stateDir, 'linux', environment),
+      appExecutable: process.execPath,
+      pnpmBinPath: selfSpawnEntry,
+    })
+
+    const result = spawnSync(installation.pnpmShimPath, [receiptPath], {
+      encoding: 'utf8',
+      env: environment,
+      shell: false,
+    })
+
+    expect(result.error).toBeUndefined()
+    expect(result.status).toBe(0)
+    expect(JSON.parse(readFileSync(receiptPath, 'utf8'))).toEqual({
+      execPath: installation.nodeShimPath,
+      runAsNode: [],
+    })
     installation.dispose()
   })
 
@@ -218,6 +264,9 @@ describe('desktop Host pnpm runtime', () => {
     expect(node).toContain('set "ELECTRON_RUN_AS_NODE=1"')
     expect(node).toContain(`--import "${escapedClearEnvironmentUrl}" %*`)
     expect(node).not.toContain('npm_config_')
+    expect(readFileSync(installation.clearEnvironmentPath, 'utf8')).toContain(
+      "if (keepRunAsNode) process.env.ELECTRON_RUN_AS_NODE = '1'",
+    )
 
     expect(environment).toEqual({
       Path: `${installation.pathDir};C:\\Windows\\System32;C:\\Windows`,

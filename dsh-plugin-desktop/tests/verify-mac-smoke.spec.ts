@@ -75,7 +75,10 @@ describe('packaged macOS PTY smoke', () => {
     expect(harness.run).toHaveBeenCalledWith(
       'pnpm',
       ['run', 'build'],
-      expect.objectContaining({ DSH_PTY_SMOKE_ROOT: '/private/tmp/dsh-pty-smoke-test' }),
+      expect.objectContaining({
+        DSH_PTY_SMOKE_ROOT: '/private/tmp/dsh-pty-smoke-test',
+        pnpm_config_verify_deps_before_run: 'install',
+      }),
       PACKAGED_COMMAND_TIMEOUT_MS,
       'short-build',
       '/private/tmp/dsh-pty-smoke-test/short-process-build',

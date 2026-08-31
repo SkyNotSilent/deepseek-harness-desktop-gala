@@ -145,6 +145,10 @@ function commandOutput(result: VerificationCommandResult): string {
   return `${result.stdout}\n${result.stderr}`
 }
 
+function attachedDiskDevice(result: VerificationCommandResult): string | undefined {
+  return /^(\/dev\/disk\d+)(?:s\d+)?\b/mu.exec(commandOutput(result))?.[1]
+}
+
 function assertGatekeeperEnabled(options: MacReleaseVerificationOptions): void {
   let output: string
   try {
@@ -210,6 +214,7 @@ export function verifyMacRelease(
   const zipDirectory = options.makeTemporaryDirectory('dsh-desktop-zip-')
   const quarantineDirectory = options.makeTemporaryDirectory('dsh-desktop-quarantine-')
   let mounted = false
+  let mountedDevice: string | undefined
   let failure: unknown
   try {
     options.run('hdiutil', ['verify', dmgPath])
@@ -220,7 +225,8 @@ export function verifyMacRelease(
       ['--assess', '--type', 'open', '--context', 'context:primary-signature', '--verbose=4', dmgPath],
       'macOS disk image',
     )
-    options.run('hdiutil', ['attach', dmgPath, '-mountpoint', mountPoint, '-nobrowse', '-readonly'])
+    const attachResult = options.run('hdiutil', ['attach', dmgPath, '-mountpoint', mountPoint, '-nobrowse', '-readonly'])
+    mountedDevice = attachedDiskDevice(attachResult)
     mounted = true
     verifyApp(join(mountPoint, `${options.productName}.app`), options)
 
@@ -241,7 +247,22 @@ export function verifyMacRelease(
     try {
       options.run('hdiutil', ['detach', mountPoint])
     } catch (cause) {
-      cleanupFailures.push(cause)
+      if (mountedDevice === undefined) {
+        cleanupFailures.push(cause)
+      } else {
+        const fallbackFailures: unknown[] = []
+        try {
+          options.run('diskutil', ['unmount', mountPoint])
+        } catch (fallbackCause) {
+          fallbackFailures.push(fallbackCause)
+        }
+        try {
+          options.run('hdiutil', ['detach', mountedDevice])
+        } catch (fallbackCause) {
+          fallbackFailures.push(fallbackCause)
+        }
+        if (fallbackFailures.length > 0) cleanupFailures.push(cause, ...fallbackFailures)
+      }
     }
   }
   for (const directory of [mountPoint, zipDirectory, quarantineDirectory]) {
