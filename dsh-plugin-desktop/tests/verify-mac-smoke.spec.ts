@@ -80,6 +80,13 @@ describe('packaged macOS PTY smoke', () => {
       'short-build',
       '/private/tmp/dsh-pty-smoke-test/short-process-build',
     )
+    expect(harness.installRuntime).toHaveBeenCalledWith(
+      '/Applications/Gala.app/Contents/Resources/app.asar.unpacked/lib/desktop-runtime-environment.js',
+      expect.objectContaining({
+        appExecutable: '/Applications/Gala.app/Contents/Frameworks/Gala Helper.app/Contents/MacOS/Gala Helper',
+        electronVersion: '43.4.0',
+      }),
+    )
     const runtime = await vi.mocked(harness.installRuntime).mock.results[0]?.value
     expect(runtime?.dispose).toHaveBeenCalledOnce()
     expect(harness.remove).toHaveBeenCalledOnce()

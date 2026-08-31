@@ -15,6 +15,7 @@ import { pathToFileURL } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
 import {
   installDesktopPnpmRuntime,
+  resolveDesktopRunAsNodeExecutable,
   type DesktopPnpmRuntimeOptions,
 } from '../src/desktop-runtime-environment.ts'
 
@@ -52,6 +53,21 @@ afterEach(() => {
 })
 
 describe('desktop Host pnpm runtime', () => {
+  it('uses the bundled macOS Helper as the Node-mode executable', () => {
+    expect(resolveDesktopRunAsNodeExecutable(
+      'darwin',
+      "/Applications/Gala O'Brien.app/Contents/MacOS/DeepSeek Harness Desktop Gala",
+    )).toBe(
+      "/Applications/Gala O'Brien.app/Contents/Frameworks/DeepSeek Harness Desktop Gala Helper.app/Contents/MacOS/DeepSeek Harness Desktop Gala Helper",
+    )
+    expect(resolveDesktopRunAsNodeExecutable(
+      'linux',
+      '/opt/deepseek-harness/DeepSeek Harness Desktop Gala',
+    )).toBe('/opt/deepseek-harness/DeepSeek Harness Desktop Gala')
+    expect(resolveDesktopRunAsNodeExecutable('darwin', '/usr/local/bin/electron'))
+      .toBe('/usr/local/bin/electron')
+  })
+
   it.each(['darwin', 'linux'] as const)('creates a public Node and pnpm PATH on %s', (platform) => {
     const stateDir = join(temporaryDirectory(), 'runtime state')
     const environment: NodeJS.ProcessEnv = {

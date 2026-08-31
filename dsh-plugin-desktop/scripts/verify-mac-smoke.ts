@@ -22,6 +22,7 @@ import type {
   DesktopPnpmRuntimeInstallation,
   DesktopPnpmRuntimeOptions,
 } from '../src/desktop-runtime-environment.ts'
+import { resolveDesktopRunAsNodeExecutable } from '../src/desktop-runtime-environment.ts'
 
 const SUCCESS_MARKER = '__dsh_packaged_pty_ok__'
 export const PACKAGED_PTY_TIMEOUT_MS = 30_000
@@ -250,6 +251,7 @@ export async function verifyMacSmoke(appPath: string, options: MacSmokeOptions =
     }
     const runtimeVersions = parseRuntimeVersions(result.stdout)
 
+    const runAsNodeExecutable = resolveDesktopRunAsNodeExecutable('darwin', executable)
     const pnpmBinPath = join(unpackedRoot, 'node_modules', 'pnpm', 'bin', 'pnpm.mjs')
     const pnpmPackage = JSON.parse(options.readText(
       join(unpackedRoot, 'node_modules', 'pnpm', 'package.json'),
@@ -262,7 +264,7 @@ export async function verifyMacSmoke(appPath: string, options: MacSmokeOptions =
       join(unpackedRoot, 'lib', 'desktop-runtime-environment.js'),
       {
         platform: process.platform,
-        appExecutable: executable,
+        appExecutable: runAsNodeExecutable,
         pnpmBinPath,
         electronVersion: runtimeVersions.electron,
         stateDir: join(workDir, 'runtime-commands'),

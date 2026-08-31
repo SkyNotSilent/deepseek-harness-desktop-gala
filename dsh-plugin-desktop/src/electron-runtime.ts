@@ -20,6 +20,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { desktopTerminalStateDirectory, openDesktopTerminal } from './desktop-terminal.ts'
+import { resolveDesktopRunAsNodeExecutable } from './desktop-runtime-environment.ts'
 import { packagedDependencyPath } from './packaged-runtime-path.ts'
 import type {
   DesktopNotification,
@@ -252,7 +253,7 @@ export class ElectronDesktopRuntime implements DesktopRuntime {
       }
       openDesktopTerminal({
         platform: this.platform,
-        appExecutable: process.execPath,
+        appExecutable: resolveDesktopRunAsNodeExecutable(this.platform, process.execPath),
         dshBootstrapPath: fileURLToPath(new URL('./desktop-cli.js', import.meta.url)),
         pnpmBinPath: packagedDependencyPath(import.meta.url, 'pnpm/bin/pnpm.mjs'),
         electronVersion,

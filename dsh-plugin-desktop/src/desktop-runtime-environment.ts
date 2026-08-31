@@ -60,6 +60,36 @@ export interface DesktopPnpmRuntimeInstallation {
   dispose(): void
 }
 
+/**
+ * Resolve the executable used for Electron's Node mode.
+ *
+ * The main macOS app executable starts a Crashpad helper even with ELECTRON_RUN_AS_NODE. When
+ * pnpm captures lifecycle output on hosted or sandboxed Macs, that helper can inherit pnpm's pipe
+ * and keep a completed short script open forever. Electron Builder's plain Helper executable is
+ * the app-bundled Node-capable binary and does not create that extra main-app Crashpad tree.
+ */
+export function resolveDesktopRunAsNodeExecutable(
+  platform: NodeJS.Platform,
+  appExecutable: string,
+): string {
+  assertScriptValue('application executable', appExecutable)
+  if (platform !== 'darwin') return appExecutable
+  const executableDirectory = dirname(appExecutable)
+  const contentsDirectory = dirname(executableDirectory)
+  if (basename(executableDirectory) !== 'MacOS' || basename(contentsDirectory) !== 'Contents') {
+    return appExecutable
+  }
+  const productName = basename(appExecutable)
+  return join(
+    contentsDirectory,
+    'Frameworks',
+    `${productName} Helper.app`,
+    'Contents',
+    'MacOS',
+    `${productName} Helper`,
+  )
+}
+
 /** Reject a value that cannot be represented in a generated command file. */
 function assertScriptValue(label: string, value: string): void {
   if (value.length === 0) {
