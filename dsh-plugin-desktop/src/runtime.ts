@@ -129,6 +129,8 @@ export interface DesktopTerminalSpec {
 export interface DesktopShellSpec extends DesktopWindowConfig {
   /** Unmodified Web root served by the active DSH profile. */
   url: string
+  /** One-time launch-token URL used to mint the BrowserWindow session cookie. */
+  authenticationUrl: string
   /** Native application and tray label. */
   productName: string
   /** Visible native caption on platforms that retain a title. */

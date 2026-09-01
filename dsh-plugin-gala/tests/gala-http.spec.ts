@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   createGalaEventHub,
   createGalaHttpHandler,
@@ -73,6 +73,7 @@ function makeHandler(overrides: Partial<GalaHttpOptions> = {}) {
     ;(calls[name] ??= []).push(args)
   }
   const options: GalaHttpOptions = {
+    requestRejection: () => undefined,
     origin: ORIGIN,
     renderPanel: (view, nonce) => `<html data-view="${view}" data-nonce="${nonce}"></html>`,
     assetRoot: () => undefined,
@@ -109,6 +110,19 @@ afterEach(() => {
 })
 
 describe('Gala HTTP · 面板与静态端点', () => {
+  it.each([401, 403] as const)('在任何业务路由前应用 Connection fence（%s）', async (status) => {
+    const rejection = vi.fn(() => status)
+    const { handler } = makeHandler({ requestRejection: rejection })
+    const req = fakeRequest('GET', path('/panel'))
+    const res = fakeResponse()
+
+    await handler(req, res)
+
+    expect(rejection).toHaveBeenCalledWith(req)
+    expect(res.statusCode).toBe(status)
+    expect(res.body()).toBe('')
+  })
+
   it('GET /panel 返回页面并带 nonce CSP 头', async () => {
     const { handler } = makeHandler()
     const res = fakeResponse()

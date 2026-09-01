@@ -62,6 +62,7 @@ const electron = vi.hoisted(() => {
   const browserWindowOn = vi.fn()
   const browserWindowOff = vi.fn()
   const loadURL = vi.fn(async (_url: string) => {})
+  const sessionFetch = vi.fn(async (_url: string, _init?: RequestInit) => new Response(null, { status: 200 }))
   const menuTemplates: unknown[][] = []
   const notifications: Notification[] = []
   const dialog = {
@@ -84,6 +85,7 @@ const electron = vi.hoisted(() => {
     on: vi.fn(),
     off: vi.fn(),
     setWindowOpenHandler: vi.fn(),
+    session: { fetch: sessionFetch },
   }
   const nativeTheme = { themeSource: 'system' }
 
@@ -160,6 +162,7 @@ const electron = vi.hoisted(() => {
     browserWindowOff,
     browserWindowOn,
     loadURL,
+    sessionFetch,
     dialog,
     Menu: {
       buildFromTemplate: vi.fn((template: unknown[]) => {
@@ -202,7 +205,8 @@ const spec: DesktopShellSpec = {
   height: 840,
   minWidth: 900,
   minHeight: 640,
-  url: 'http://127.0.0.1:43120/',
+  url: 'http://127.0.0.1:43120/?dsh-desktop-mode=compatibility&dsh-desktop-platform=darwin',
+  authenticationUrl: 'http://127.0.0.1:43120/?token=launch-once',
   productName: 'DeepSeek Harness Desktop Gala',
   windowTitle: 'DeepSeek Harness Desktop',
   iconPath: '/tmp/app-icon.png',
@@ -228,6 +232,8 @@ describe('Electron compatibility runtime', () => {
     vi.clearAllMocks()
     electron.loadURL.mockReset()
     electron.loadURL.mockResolvedValue(undefined)
+    electron.sessionFetch.mockReset()
+    electron.sessionFetch.mockResolvedValue(new Response(null, { status: 200 }))
     electron.dialog.showMessageBox.mockResolvedValue({ response: 0, checkboxChecked: false })
     electron.shell.openPath.mockResolvedValue('')
     electron.nativeTheme.themeSource = 'system'
@@ -295,6 +301,43 @@ describe('Electron compatibility runtime', () => {
     await release()
     expect(electron.browserWindowOff).toHaveBeenCalledWith('page-title-updated', titleListener)
     expect(electron.trays[0]?.off).toHaveBeenCalledWith('click', expect.any(Function))
+  })
+
+  it('mints the browser cookie before loading the query-preserving renderer URL', async () => {
+    vi.spyOn(process, 'platform', 'get').mockReturnValue('darwin')
+    const { ElectronDesktopRuntime } = await import('../src/electron-runtime.ts')
+    const runtime = new ElectronDesktopRuntime(async () => {})
+    const release = runtime.schedule(spec)
+
+    await runtime.mountScheduled()
+
+    expect(electron.sessionFetch).toHaveBeenCalledWith(spec.authenticationUrl, {
+      method: 'GET',
+      credentials: 'include',
+      redirect: 'follow',
+      cache: 'no-store',
+    })
+    expect(electron.loadURL).toHaveBeenCalledOnce()
+    expect(electron.loadURL).toHaveBeenCalledWith(spec.url)
+    expect(electron.loadURL.mock.invocationCallOrder[0])
+      .toBeGreaterThan(electron.sessionFetch.mock.invocationCallOrder[0] as number)
+    expect(new URL(vi.mocked(electron.loadURL).mock.calls[0]![0] as string).searchParams.has('token')).toBe(false)
+
+    await release()
+  })
+
+  it('destroys the native shell without loading a renderer when authentication fails', async () => {
+    vi.spyOn(process, 'platform', 'get').mockReturnValue('darwin')
+    electron.sessionFetch.mockResolvedValueOnce(new Response(null, { status: 401 }))
+    const { ElectronDesktopRuntime } = await import('../src/electron-runtime.ts')
+    const runtime = new ElectronDesktopRuntime(async () => {})
+    runtime.schedule(spec)
+
+    await expect(runtime.mountScheduled()).rejects.toThrow('renderer authentication failed with HTTP 401')
+
+    expect(electron.loadURL).not.toHaveBeenCalled()
+    expect(electron.browserWindows[0]?.destroy).toHaveBeenCalledOnce()
+    expect(electron.trays).toHaveLength(0)
   })
 
   it('uses the Windows caption, hidden menu bar, removed menu, and fixed blue tray image', async () => {
@@ -509,7 +552,7 @@ describe('Electron compatibility runtime', () => {
         pnpmBinPath: expect.stringMatching(/\/node_modules\/pnpm\/bin\/pnpm\.mjs$/u),
         electronVersion: '43.4.0',
         profileName: 'desktop',
-        productVersion: '2.1.0-preview.4',
+        productVersion: '2.2.0-preview.1',
         profileDir: '/tmp/dsh-home/profiles/desktop',
         homeDir: '/tmp/dsh-home',
         stateDir: expect.stringMatching(/^\/tmp\/dsh-desktop-user-data\/cli\/[a-f0-9]{64}$/u),
@@ -655,13 +698,13 @@ describe('Electron compatibility runtime', () => {
     expect(runtime.updates).toMatchObject({
       isPackaged: false,
       mode: 'manual-release',
-      currentVersion: '2.1.0-preview.4',
+      currentVersion: '2.2.0-preview.1',
       statePath: '/tmp/dsh-desktop-user-data/updates/state.json',
     })
     electron.app.isPackaged = true
     expect(runtime.updates.mode).toBe('manual-release')
     expect(desktopProductMetadata()).toEqual({
-      version: '2.1.0-preview.4',
+      version: '2.2.0-preview.1',
       desktopUpdateMode: 'manual-release',
     })
     expect(desktopUpdateMode(true, '2.1.0-preview.1', 'signed-auto', 'darwin')).toBe('manual-release')

@@ -1,6 +1,6 @@
 /** Actionable replacement for the terminal turn-error renderer. */
 
-import type { PropsLocale } from '@deepseek-ai/dsh-client-ui-slots'
+import type { PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import { DESKTOP_CONVERSATION_NS } from './locales.ts'
 
 export const DEEPSEEK_BALANCE_URL = 'https://platform.deepseek.com/top_up'
@@ -20,26 +20,7 @@ export function classifyTurnError(failure: TurnErrorFailure): TurnErrorKind {
     : 'generic'
 }
 
-interface DesktopTurnErrorNode {
-  kind: 'turn-error'
-  key: string
-  data: TurnErrorFailure
-}
-
-declare module '@deepseek-ai/dsh-client-ui-slots' {
-  interface SlotMap {
-    /** rc.2 turn-error seat, mirrored locally to avoid loading Host session declarations in the browser graph. */
-    'conversation.chat.node': {
-      kind: 'keyed'
-      scope: 'session'
-      owner: { node: DesktopTurnErrorNode }
-      keyProps: { 'turn-error': { node: DesktopTurnErrorNode } }
-    }
-  }
-}
-
-export type DesktopTurnErrorProps =
-  & { node: DesktopTurnErrorNode }
+export type DesktopTurnErrorProps = PropsRuntime<'conversation.chat.node', 'turn-error'>
   & PropsLocale<typeof DESKTOP_CONVERSATION_NS>
 
 const rowStyle: React.CSSProperties = {

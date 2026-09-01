@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { readFileSync, readdirSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
 import sharp from 'sharp'
@@ -97,11 +97,14 @@ describe('published package surface', () => {
     expect(manifest.dsh?.client).toEqual({
       platform: 'web',
       inject: [
-        '@deepseek-ai/dsh-client-runtime',
+        '@deepseek-ai/dsh-api-remotes',
+        '@deepseek-ai/dsh-client-connection',
         '@deepseek-ai/dsh-client-locale',
         '@deepseek-ai/dsh-client-ui-conversation',
+        '@deepseek-ai/dsh-client-ui-renderer',
         '@deepseek-ai/dsh-client-ui-sidebar',
         '@deepseek-ai/dsh-client-ui-theme',
+        '@deepseek-ai/dsh-client-ui-workspace',
       ],
     })
     expect(readFileSync(new URL('cordis.patch.yml', packageRoot), 'utf8')).toContain('name: dsh-plugin-desktop')
@@ -232,6 +235,8 @@ describe('published package surface', () => {
     expect(manifest.scripts?.['publish:preview']).toBe('node scripts/publish-preview.ts')
     expect(manifest.scripts?.['verify:mac-smoke']).toBe('node scripts/verify-mac-smoke.ts')
     expect(manifest.scripts?.['dist:win']).toBe('node scripts/package-win.ts')
+    expect(manifest.scripts?.['check:win-package'])
+      .toMatch(/^yarn workspace dsh-plugin-gala build && yarn run build/)
     expect(manifest.scripts?.['check:win-package']).toContain('yarn run build')
     expect(manifest.scripts?.['check:win-package']).toContain('yarn run typecheck')
     expect(manifest.scripts?.['check:win-package']).toContain('tests/package-win.spec.ts')
@@ -282,6 +287,30 @@ describe('published package surface', () => {
     expect(previewWorkflow).toContain('--draft')
     expect(previewWorkflow).not.toContain('merge-multiple: true')
     expect(previewWorkflow).not.toContain('Create checksums')
+  })
+
+  it('runs the real assembled Linux renderer check with a virtual display', () => {
+    const ciWorkflow = readFileSync(
+      new URL('.github/workflows/ci.yml', workspaceRoot),
+      'utf8',
+    )
+
+    expect(ciWorkflow).toContain('run: xvfb-run -a corepack yarn check')
+  })
+
+  it('runs executable macOS smoke only after Electron Builder applies fuses and seals artifacts', () => {
+    const ciWorkflow = readFileSync(
+      new URL('.github/workflows/ci.yml', workspaceRoot),
+      'utf8',
+    )
+    const build = ciWorkflow.indexOf('corepack yarn exec electron-builder --mac dmg zip --arm64')
+    const smoke = ciWorkflow.indexOf('corepack yarn verify:mac-smoke')
+
+    expect(build).toBeGreaterThan(-1)
+    expect(smoke).toBeGreaterThan(build)
+    expect(ciWorkflow).toContain('artifact_version="$(node -p "require(\'./package.json\').version\")"')
+    expect(ciWorkflow).toContain('hdiutil verify "dist/DeepSeek-Harness-Desktop-Gala-${artifact_version}-arm64.dmg"')
+    expect(ciWorkflow).toContain('unzip -tq "dist/DeepSeek-Harness-Desktop-Gala-${artifact_version}-arm64.zip"')
   })
 
   it('keeps one fixed brand-blue tray source for generated native assets', () => {
@@ -372,32 +401,20 @@ describe('published package surface', () => {
   it('starts restricted Windows shells with a hidden console show state', () => {
     const runtimeVersion = String(manifest.dependencies?.['@deepseek-ai/dsh'])
     expect(runtimeVersion).toMatch(/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u)
-    const sandboxPatchPath = `patches/dsh-sandbox-windows-acl@${runtimeVersion}.patch`
-    const patchResolution = `patch:@deepseek-ai/dsh-sandbox-windows-acl@npm%3A${runtimeVersion}#./${sandboxPatchPath}`
+    const processPatchPath = `patches/dsh-win32-process@${runtimeVersion}.patch`
     const lockfile = readFileSync(new URL('yarn.lock', workspaceRoot), 'utf8')
-    const patch = readFileSync(new URL(sandboxPatchPath, workspaceRoot), 'utf8')
+    const patch = readFileSync(new URL(processPatchPath, workspaceRoot), 'utf8')
     const workspaceRequire = createRequire(new URL('package.json', packageRoot))
-    const sandboxManifest = workspaceRequire.resolve('@deepseek-ai/dsh-sandbox-windows-acl/package.json')
-    const sandboxLocalManifest = workspaceRequire.resolve('@deepseek-ai/dsh-sandbox-local/package.json')
-    const sandboxLocalRequire = createRequire(sandboxLocalManifest)
-    const sandboxLib = join(dirname(sandboxManifest), 'lib')
-    const runtimeChunks = readdirSync(sandboxLib).filter(name => /^types-.*\.js$/u.test(name))
+    const processManifest = workspaceRequire.resolve('@deepseek-ai/dsh-win32-process/package.json')
+    const processLib = join(dirname(processManifest), 'lib', 'index.js')
 
-    expect(workspaceManifest.resolutions).toMatchObject({
-      [`@deepseek-ai/dsh-sandbox-windows-acl@npm:${runtimeVersion}`]: patchResolution,
-      [`@deepseek-ai/dsh-sandbox-windows-acl@npm:^${runtimeVersion}`]: patchResolution,
-    })
-    expect(sandboxLocalRequire.resolve('@deepseek-ai/dsh-sandbox-windows-acl/package.json'))
-      .toBe(sandboxManifest)
-    expect(lockfile).toContain(`@deepseek-ai/dsh-sandbox-windows-acl@${patchResolution}`)
+    expect(String(workspaceManifest.resolutions?.['@deepseek-ai/dsh-win32-process']))
+      .toContain(`#./${processPatchPath}`)
+    expect(lockfile).toContain(`./${processPatchPath}`)
     expect(patch.match(/^\+\s*dwFlags: 257,\r?$/gmu)).toHaveLength(2)
     expect(patch.match(/^\+\s*wShowWindow: 0,\r?$/gmu)).toHaveLength(2)
-    expect(runtimeChunks).toHaveLength(1)
-    const installedRuntime = readFileSync(join(sandboxLib, runtimeChunks[0] as string), 'utf8')
+    const installedRuntime = readFileSync(processLib, 'utf8')
     expect(installedRuntime.match(/dwFlags: 257,/gu)).toHaveLength(2)
     expect(installedRuntime.match(/wShowWindow: 0,/gu)).toHaveLength(2)
-    expect(installedRuntime).toContain('api.createProcessAsUserW(token, null, commandLine, null, null, 1, 0, null')
-    expect(installedRuntime).toContain('api.createProcessAsUserW(token, null, commandLine, null, null, 1, 4, null')
-    expect(installedRuntime).not.toContain('134217728')
   })
 })

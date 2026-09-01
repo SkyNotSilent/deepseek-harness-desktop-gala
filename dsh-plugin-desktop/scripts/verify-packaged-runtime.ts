@@ -4,7 +4,6 @@ import { existsSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { isAbsolute, join, relative, sep } from 'node:path'
 import { listPackage } from '@electron/asar'
-import { verifyMacSmoke } from './verify-mac-smoke.ts'
 import { verifyPackagedNodePty } from './verify-packaged-node-pty.ts'
 
 /** AfterPack fields consumed without importing Electron Builder's incomplete declaration graph. */
@@ -127,6 +126,9 @@ export type PackageResolver = (specifier: string) => string
 
 /** Injectable node-pty verifier used by focused runtime-layout tests. */
 export type NodePtyVerifier = (unpackedRoot: string, platform: string, arch: string) => void
+
+/** Static packaged-runtime verifier injected into the Electron Builder lifecycle hook. */
+export type PackagedRuntimeVerifier = (context: PackagedRuntimeContext) => void
 
 /**
  * Resolve the platform-specific archive produced by Electron Builder.
@@ -268,17 +270,19 @@ export function verifyPackagedRuntime(
 
 /**
  * Run the static packaged-runtime check as Electron Builder's afterPack hook.
+ *
+ * Executable smoke tests must run after Electron Builder returns. Its afterPack hook fires
+ * before electronFuses.runAsNode is applied, so launching the app here can open the GUI and
+ * leak Chromium children instead of executing the Node probe on clean macOS runners.
  * @param context - Electron Builder's afterPack context.
+ * @param verify - static verifier seam used by focused lifecycle tests.
  * @returns A promise that rejects before signing when the runtime is incomplete.
  */
-export async function afterPack(context: PackagedRuntimeContext): Promise<void> {
-  verifyPackagedRuntime(context)
-  if (context.electronPlatformName === 'darwin') {
-    verifyMacSmoke(join(
-      context.appOutDir,
-      `${context.packager.appInfo.productFilename}.app`,
-    ))
-  }
+export async function afterPack(
+  context: PackagedRuntimeContext,
+  verify: PackagedRuntimeVerifier = verifyPackagedRuntime,
+): Promise<void> {
+  verify(context)
 }
 
 export default afterPack

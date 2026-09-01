@@ -18,7 +18,10 @@ import {
 import { provideCmdline } from '@deepseek-ai/dsh-cmdline'
 import { resolveDshHome } from '@deepseek-ai/dsh-home-paths'
 import { DSH_LAUNCH_ENVIRONMENT_KEY } from '@deepseek-ai/dsh-launch-environment'
-import { installDesktopPnpmRuntime } from './desktop-runtime-environment.ts'
+import {
+  installDesktopPnpmRuntime,
+  resolveDesktopRunAsNodeExecutable,
+} from './desktop-runtime-environment.ts'
 import { installDesktopFaultMonitor, openDesktopFaultLog } from './desktop-fault-log.ts'
 import { recoverGuiPath } from './gui-path.ts'
 import { desktopProductVersion, ElectronDesktopRuntime } from './electron-runtime.ts'
@@ -45,7 +48,11 @@ import {
   type DesktopProfileStartup,
 } from './profile-manager.ts'
 import { DesktopProfileService } from './profile-service.ts'
-import { prepareDesktopProfile, type SkippedOptionalEntry } from './profile.ts'
+import {
+  healDesktopProfileModuleFallback,
+  prepareDesktopProfile,
+  type SkippedOptionalEntry,
+} from './profile.ts'
 import type { DesktopPnpmBootstrap } from './pnpm.ts'
 import {
   createDesktopExitCoordinator,
@@ -310,9 +317,10 @@ async function start(): Promise<void> {
       throw new Error(`${BIN_NAME}: plugin runtime requires the Electron runtime version`)
     }
     const pnpmBinPath = packagedDependencyPath(import.meta.url, 'pnpm/bin/pnpm.mjs')
+    const runAsNodeExecutable = resolveDesktopRunAsNodeExecutable(process.platform, process.execPath)
     const pnpmRuntime = installDesktopPnpmRuntime({
       platform: process.platform,
-      appExecutable: process.execPath,
+      appExecutable: runAsNodeExecutable,
       pnpmBinPath,
       electronVersion,
       stateDir: join(app.getPath('userData'), 'runtime-commands'),
@@ -333,17 +341,19 @@ async function start(): Promise<void> {
         added: recoveredPath.added,
       })
     }
+    await healDesktopProfileModuleFallback(homeDir)
     const prepared = prepareDesktopProfile(
       process.env.DSH_TELEMETRY_DISABLED,
       homeDir,
       process.platform,
       activeProfileName,
     )
+    await healDesktopProfileModuleFallback(homeDir, prepared.profile)
     const desktopPnpmBootstrap: DesktopPnpmBootstrap = {
       activeProfileName,
       activeProfileDir: prepared.profile.dir,
       homeDir,
-      appExecutable: process.execPath,
+      appExecutable: runAsNodeExecutable,
       pnpmBinPath,
       electronVersion,
       nodeBinDir: pnpmRuntime.nodeBinDir,

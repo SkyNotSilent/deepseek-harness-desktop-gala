@@ -1,7 +1,7 @@
-/** Gala occupants for the official rc.2 brand slots. */
+/** Gala occupants for the official alpha.2 brand slots. */
 
 import { useSyncExternalStore } from 'react'
-import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
+import type { Context } from '@deepseek-ai/cordis'
 import { BrandWordmark, FishLogo } from '@deepseek-ai/dsh-client-ui-primitives'
 import type {} from '@deepseek-ai/dsh-client-ui-sidebar/client'
 import { GALA_EVENTS_PATH, GALA_PICKER_PATH } from './gala-paths.ts'
@@ -14,7 +14,7 @@ export interface GalaLogoInfo {
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {
   interface SlotMap {
-    /** rc.2 official hero-brand slot, mirrored locally to avoid host/client Context convergence. */
+    /** alpha.2 official hero-brand slot, mirrored locally to avoid host/client Context convergence. */
     'conversation.hero.brand.mark': {
       kind: 'single'
       scope: 'session-maybe'
@@ -92,8 +92,8 @@ export function GalaBrandName(): React.JSX.Element {
   return <GalaBrandNameView logo={useGalaLogo()} />
 }
 
-/** Register the three rc.2 brand cells below the official occupant's priority. */
-export function registerGalaBrandSlots(ctx: ClientContext): void {
+/** Register the three alpha.2 brand cells below the official occupant's priority. */
+export function registerGalaBrandSlots(ctx: Context): void {
   ctx.slots.inject('sidebar.brand.mark', () => ctx.slots.register(
     { name: 'sidebar.brand.mark', priority: -1 },
     GalaBrandMark,

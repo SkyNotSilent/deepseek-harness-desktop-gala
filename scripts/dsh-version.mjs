@@ -1,32 +1,27 @@
+import { createHash } from 'node:crypto'
+import {
+  existsSync,
+  readFileSync,
+  readdirSync,
+  renameSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs'
+import { basename, dirname, join } from 'node:path'
+import { gunzipSync } from 'node:zlib'
+
 const RUNTIME_PACKAGE = '@deepseek-ai/dsh'
 const RUNTIME_PREFIX = '@deepseek-ai/dsh-'
-const SANDBOX_ACL_PACKAGE = '@deepseek-ai/dsh-sandbox-windows-acl'
-const SANDBOX_ACL_PATCH_STEM = 'dsh-sandbox-windows-acl'
-const DEPENDENCY_SECTIONS = ['dependencies', 'devDependencies', 'optionalDependencies', 'peerDependencies']
+export const DEPENDENCY_SECTIONS = ['dependencies', 'devDependencies', 'optionalDependencies', 'peerDependencies']
 const VERSION_PATTERN = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z.-]+))?(?:\+([0-9A-Za-z.-]+))?$/u
 const NUMERIC_IDENTIFIER = /^(?:0|[1-9]\d*)$/u
 const PROSE_SERIES_PATTERN = /(?:Harness|上游)\s*(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)/gu
 
-/**
- * Decide whether a package name belongs to the upstream DSH runtime train, whose
- * whole graph is released with one shared version. The rule is an exact match on
- * `@deepseek-ai/dsh` or the `@deepseek-ai/dsh-` prefix, which deliberately excludes
- * `@deepseek-ai/cordis`, `@deepseek-ai/cordis-plugin-*` and `@deepseek-ai/schemastery`
- * because those are versioned independently of the runtime.
- * @param {string} name - package name.
- * @returns {boolean}
- */
 export function isRuntimePackage(name) {
   return name === RUNTIME_PACKAGE || name.startsWith(RUNTIME_PREFIX)
 }
 
-/**
- * Parse a strict semver 2.0.0 version string into its comparable parts. Leading zeroes
- * are rejected in the major, minor and patch identifiers and in numeric prerelease
- * identifiers, per semver §2 and §9.
- * @param {unknown} value - candidate version string.
- * @returns {{ major: number, minor: number, patch: number, prerelease: string[], build: string | undefined }}
- */
 export function parseVersion(value) {
   if (typeof value !== 'string') throw new TypeError(`version must be a string, received ${typeof value}`)
   const match = VERSION_PATTERN.exec(value)
@@ -47,16 +42,6 @@ export function parseVersion(value) {
   }
 }
 
-/**
- * Compare two version strings by semver precedence, including prerelease ordering
- * per semver §11: numeric identifiers compare numerically, alphanumeric ones compare
- * lexically in ASCII order, numeric sorts before alphanumeric, a shorter prerelease
- * sorts before its own longer prefix, and any prerelease sorts before the release.
- * Build metadata is ignored.
- * @param {string} a - left version string.
- * @param {string} b - right version string.
- * @returns {-1 | 0 | 1}
- */
 export function compareVersions(a, b) {
   const left = parseVersion(a)
   const right = parseVersion(b)
@@ -66,191 +51,204 @@ export function compareVersions(a, b) {
   return comparePrerelease(left.prerelease, right.prerelease)
 }
 
-/**
- * Reduce a pinned runtime version to the `MAJOR.MINOR.PATCH` release series used in
- * marketing prose, i.e. strip any prerelease and build suffix: the `0.1.1-rc.2` pin is
- * advertised as upstream `0.1.1`, and a `0.1.2-rc.1` pin would be advertised as `0.1.2`.
- * @param {string} version - pinned runtime version.
- * @returns {string}
- */
 export function minorSeries(version) {
   const parsed = parseVersion(version)
   return `${parsed.major}.${parsed.minor}.${parsed.patch}`
 }
 
-/**
- * Read the single canonical DSH runtime version out of a workspace manifest by looking
- * at its `@deepseek-ai/dsh` dependency edge.
- * @param {object} manifest - parsed package manifest declaring the runtime.
- * @returns {string}
- */
 export function readPinnedVersion(manifest) {
   for (const section of DEPENDENCY_SECTIONS) {
     const entries = readSection(manifest, section)
-    if (entries === undefined) continue
-    const value = entries[RUNTIME_PACKAGE]
+    const value = entries?.[RUNTIME_PACKAGE]
     if (value === undefined) continue
     parseVersion(value)
     return value
   }
-  throw new Error(`manifest declares no ${RUNTIME_PACKAGE} dependency, so the pinned DSH version cannot be derived`)
+  throw new Error(`manifest declares no ${RUNTIME_PACKAGE} dependency`)
 }
 
-/**
- * List every DSH runtime dependency edge declared by a manifest, in section order and
- * alphabetically inside each section. Membership follows `isRuntimePackage`, so only
- * `@deepseek-ai/dsh` and `@deepseek-ai/dsh-*` are reported and the independently
- * versioned `@deepseek-ai/cordis*` and `@deepseek-ai/schemastery` edges are ignored.
- * @param {object} manifest - parsed package manifest.
- * @returns {{ section: string, name: string, version: unknown }[]}
- */
 export function collectRuntimePins(manifest) {
   const pins = []
   for (const section of DEPENDENCY_SECTIONS) {
     const entries = readSection(manifest, section)
     if (entries === undefined) continue
     for (const name of Object.keys(entries).sort()) {
-      if (!isRuntimePackage(name)) continue
-      pins.push({ section, name, version: entries[name] })
+      if (isRuntimePackage(name)) pins.push({ section, name, version: entries[name] })
     }
   }
   return pins
 }
 
-/**
- * Plan the dependency edges a manifest must change to move the runtime pin, without
- * mutating the input. Only entries that are both a DSH runtime package and pinned at
- * exactly `fromVersion` are planned, so independently versioned `@deepseek-ai` packages
- * and range specifiers are left for the drift guard to report instead of being rewritten.
- * @param {object} manifest - parsed package manifest.
- * @param {string} fromVersion - currently pinned runtime version.
- * @param {string} toVersion - target runtime version.
- * @returns {{ changes: { section: string, name: string, from: string, to: string }[] }}
- */
 export function planManifestRewrite(manifest, fromVersion, toVersion) {
   parseVersion(fromVersion)
   parseVersion(toVersion)
-  const changes = []
-  for (const pin of collectRuntimePins(manifest)) {
-    if (pin.version !== fromVersion) continue
-    changes.push({ section: pin.section, name: pin.name, from: fromVersion, to: toVersion })
+  return {
+    changes: collectRuntimePins(manifest)
+      .filter(pin => pin.version === fromVersion)
+      .map(pin => ({ section: pin.section, name: pin.name, from: fromVersion, to: toVersion })),
   }
-  return { changes }
 }
 
-/**
- * Produce a copy of a manifest with planned dependency rewrites applied, preserving key
- * insertion order so re-serialisation stays line-scoped.
- * @param {object} manifest - parsed package manifest.
- * @param {{ section: string, name: string, to: string }[]} changes - planned rewrites.
- * @returns {object}
- */
 export function applyManifestRewrite(manifest, changes) {
   const next = structuredClone(manifest)
   for (const change of changes) next[change.section][change.name] = change.to
   return next
 }
 
-/**
- * Build the repository-relative path of the Windows ACL sandbox patch for a version.
- * @param {string} version - runtime version.
- * @returns {string}
- */
-export function sandboxPatchPath(version) {
-  return `patches/${SANDBOX_ACL_PATCH_STEM}@${version}.patch`
+export function patchPath(name, version) {
+  if (!isRuntimePackage(name)) throw new Error(`not a DSH runtime package: ${name}`)
+  return `patches/${name.slice('@deepseek-ai/'.length)}@${version}.patch`
 }
 
-/**
- * Build the two Yarn resolution keys that pin the patched Windows ACL sandbox: the exact
- * descriptor requested by the workspaces and the caret descriptor requested by upstream
- * packages.
- * @param {string} version - runtime version.
- * @returns {string[]}
- */
-export function resolutionKeys(version) {
-  return [`${SANDBOX_ACL_PACKAGE}@npm:${version}`, `${SANDBOX_ACL_PACKAGE}@npm:^${version}`]
+export function expectedResolution(entry, vendorVersion, patches) {
+  const source = `file:vendor/dsh-runtime/${vendorVersion}/${entry.filename}`
+  return patches.includes(entry.name)
+    ? `patch:${entry.name}@${source.replace(':', '%3A')}#./${patchPath(entry.name, vendorVersion)}`
+    : source
 }
 
-/**
- * Build the Yarn patch protocol value both sandbox resolution keys must carry, including
- * the `%3A` encoded inner descriptor and the versioned patch filename.
- * @param {string} version - runtime version.
- * @returns {string}
- */
-export function resolutionValue(version) {
-  return `patch:${SANDBOX_ACL_PACKAGE}@npm%3A${version}#./${sandboxPatchPath(version)}`
-}
-
-/**
- * List the sandbox resolution entries a manifest currently declares, so the drift guard
- * can compare them against the canonical pair without depending on key order.
- * @param {object | undefined} resolutions - root `resolutions` block.
- * @returns {{ key: string, value: unknown }[]}
- */
-export function collectSandboxResolutions(resolutions) {
-  const entries = resolutions === null || typeof resolutions !== 'object' ? [] : Object.entries(resolutions)
-  return entries
-    .filter(([key]) => key.startsWith(`${SANDBOX_ACL_PACKAGE}@`))
-    .map(([key, value]) => ({ key, value }))
-}
-
-/**
- * Plan the root `resolutions` rewrite that moves both sandbox descriptors and the patch
- * filename to a new version, without mutating the input and keeping every unrelated
- * resolution such as `app-builder-lib` and `node-pty` in place and in position.
- * @param {object | undefined} resolutions - root `resolutions` block.
- * @param {string} fromVersion - currently pinned runtime version.
- * @param {string} toVersion - target runtime version.
- * @returns {{ changes: { from: string, to: string, fromValue: string, toValue: string }[], resolutions: object }}
- */
-export function planResolutionRewrite(resolutions, fromVersion, toVersion) {
-  const fromKeys = resolutionKeys(fromVersion)
-  const toKeys = resolutionKeys(toVersion)
-  const fromValue = resolutionValue(fromVersion)
-  const toValue = resolutionValue(toVersion)
+export function planResolutionRewrite(resolutions, currentClosure, targetClosure) {
   const source = resolutions === null || typeof resolutions !== 'object' ? {} : resolutions
-  const changes = []
-  const entries = []
-
-  for (const [key, value] of Object.entries(source)) {
-    const index = fromKeys.indexOf(key)
-    if (index === -1) {
-      entries.push([key, value])
-      continue
-    }
-    if (value !== fromValue) {
-      throw new Error(`resolution ${key} does not carry the expected patch value ${fromValue}`)
-    }
-    changes.push({ from: key, to: toKeys[index], fromValue, toValue })
-    entries.push([toKeys[index], toValue])
+  const currentEntries = new Map(currentClosure.packages.map(entry => [entry.name, entry]))
+  const targetEntries = new Map(targetClosure.packages.map(entry => [entry.name, entry]))
+  const currentNames = [...currentEntries.keys()]
+  const targetNames = [...targetEntries.keys()]
+  if (JSON.stringify(currentNames) !== JSON.stringify(targetNames)) {
+    throw new Error('runtime package closure changed; adapt manifests and patches before using the version tool')
   }
-
-  const missing = fromKeys.filter((key) => !Object.hasOwn(source, key))
-  if (missing.length > 0) throw new Error(`root resolutions are missing ${missing.join(' and ')}`)
-
-  return { changes, resolutions: Object.fromEntries(entries) }
+  if (JSON.stringify(currentClosure.patches) !== JSON.stringify(targetClosure.patches)) {
+    throw new Error('runtime patch inventory changed; adapt patches before using the version tool')
+  }
+  for (const name of currentNames) {
+    const expected = expectedResolution(currentEntries.get(name), currentClosure.version, currentClosure.patches)
+    if (source[name] !== expected) throw new Error(`root resolution ${name} differs from the current vendor manifest`)
+  }
+  for (const key of Object.keys(source).filter(isRuntimePackage)) {
+    if (!currentEntries.has(key)) throw new Error(`root resolutions contain stale runtime package ${key}`)
+  }
+  const targetValues = new Map(targetNames.map(name => [
+    name,
+    expectedResolution(targetEntries.get(name), targetClosure.version, targetClosure.patches),
+  ]))
+  return Object.fromEntries(Object.entries(source).map(([key, value]) => [key, targetValues.get(key) ?? value]))
 }
 
-/**
- * Find every upstream release series stated in marketing prose, matching the series that
- * follows a `Harness` or `上游` mention so app versions and unrelated numbers are ignored.
- * @param {string} text - file contents.
- * @returns {{ line: number, series: string }[]}
- */
+export function validateVendorClosure(repoRoot, version) {
+  parseVersion(version)
+  const directory = join(repoRoot, 'vendor', 'dsh-runtime', version)
+  const manifestPath = join(directory, 'manifest.json')
+  if (!existsSync(manifestPath)) throw new Error(`missing vendor/dsh-runtime/${version}/manifest.json`)
+  const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'))
+  if (manifest.formatVersion !== 2 || manifest.version !== version || manifest.registry !== 'https://registry.npmjs.org') {
+    throw new Error(`vendor ${version} does not use the registry-backed manifest format`)
+  }
+  if (!Array.isArray(manifest.packages) || manifest.packages.length === 0) throw new Error(`vendor ${version} has no packages`)
+  if (!Array.isArray(manifest.patches) || new Set(manifest.patches).size !== manifest.patches.length) {
+    throw new Error(`vendor ${version} has an invalid patch inventory`)
+  }
+  const names = new Set()
+  const expectedFiles = new Set(['manifest.json', 'licenses.json'])
+  for (const entry of manifest.packages) {
+    if (typeof entry.name !== 'string' || !isRuntimePackage(entry.name) || names.has(entry.name)) {
+      throw new Error(`vendor ${version} has an invalid package entry`)
+    }
+    names.add(entry.name)
+    expectedFiles.add(entry.filename)
+    const path = join(directory, entry.filename)
+    if (basename(path) !== entry.filename || !existsSync(path) || !statSync(path).isFile()) {
+      throw new Error(`vendor ${version} is missing ${entry.filename}`)
+    }
+    const bytes = readFileSync(path)
+    const sha256 = createHash('sha256').update(bytes).digest('hex')
+    const integrity = `sha512-${createHash('sha512').update(bytes).digest('base64')}`
+    if (bytes.byteLength !== entry.size || sha256 !== entry.sha256 || integrity !== entry.integrity) {
+      throw new Error(`vendor ${version} integrity differs for ${entry.filename}`)
+    }
+    const pkg = packageManifest(bytes, entry.filename)
+    if (pkg.name !== entry.name || pkg.version !== version || pkg.license !== entry.license) {
+      throw new Error(`vendor ${version} package metadata differs for ${entry.filename}`)
+    }
+  }
+  for (const name of manifest.patches) {
+    if (!names.has(name)) throw new Error(`vendor ${version} patch target is absent: ${name}`)
+    if (!existsSync(join(repoRoot, patchPath(name, version)))) throw new Error(`missing ${patchPath(name, version)}`)
+  }
+  const actualFiles = readdirSync(directory, { withFileTypes: true })
+  if (actualFiles.some(entry => !entry.isFile() || !expectedFiles.has(entry.name))) {
+    throw new Error(`vendor ${version} contains entries outside its manifest`)
+  }
+  return manifest
+}
+
+export function assertManifestPins(manifest, version, closure) {
+  const names = new Set(closure.packages.map(entry => entry.name))
+  for (const pin of collectRuntimePins(manifest)) {
+    if (!names.has(pin.name)) throw new Error(`${pin.section}.${pin.name} is absent from vendor ${version}`)
+    if (pin.version !== version) throw new Error(`${pin.section}.${pin.name} is ${JSON.stringify(pin.version)}, expected ${version}`)
+  }
+}
+
+export function writeManagedFiles(entries, afterWrite = () => {}) {
+  const staged = []
+  try {
+    for (const [index, entry] of entries.entries()) {
+      const temporary = join(dirname(entry.path), `.${basename(entry.path)}.dsh-version-${String(process.pid)}-${String(index)}`)
+      if (existsSync(temporary)) rmSync(temporary)
+      writeFileSync(temporary, entry.next)
+      staged.push({ ...entry, temporary })
+    }
+    const written = []
+    try {
+      for (const [index, entry] of staged.entries()) {
+        renameSync(entry.temporary, entry.path)
+        written.push(entry)
+        afterWrite(index, entry.path)
+      }
+    } catch (cause) {
+      for (const entry of written) writeFileSync(entry.path, entry.original)
+      throw cause
+    }
+  } finally {
+    for (const entry of staged) {
+      if (existsSync(entry.temporary)) rmSync(entry.temporary)
+    }
+  }
+}
+
 export function findProseSeries(text) {
   const found = []
   for (const [index, line] of text.split('\n').entries()) {
-    for (const match of line.matchAll(PROSE_SERIES_PATTERN)) {
-      found.push({ line: index + 1, series: match[1] })
-    }
+    for (const match of line.matchAll(PROSE_SERIES_PATTERN)) found.push({ line: index + 1, series: match[1] })
   }
   return found
 }
 
+function packageManifest(tgz, filename) {
+  const tar = gunzipSync(tgz)
+  for (let offset = 0; offset + 512 <= tar.length;) {
+    const name = tarString(tar, offset, 100)
+    if (name.length === 0) break
+    const prefix = tarString(tar, offset + 345, 155)
+    const path = prefix.length === 0 ? name : `${prefix}/${name}`
+    const sizeText = tarString(tar, offset + 124, 12).trim()
+    const size = sizeText.length === 0 ? 0 : Number.parseInt(sizeText, 8)
+    if (!Number.isSafeInteger(size) || size < 0) throw new Error(`invalid tar entry in ${filename}`)
+    const body = offset + 512
+    if (body + size > tar.length) throw new Error(`truncated tar entry in ${filename}`)
+    if (path === 'package/package.json') return JSON.parse(tar.subarray(body, body + size).toString('utf8'))
+    offset = body + Math.ceil(size / 512) * 512
+  }
+  throw new Error(`missing package/package.json in ${filename}`)
+}
+
+function tarString(buffer, offset, length) {
+  const end = buffer.indexOf(0, offset)
+  return buffer.subarray(offset, end === -1 || end > offset + length ? offset + length : end).toString('utf8')
+}
+
 function readSection(manifest, section) {
   const entries = manifest === null || typeof manifest !== 'object' ? undefined : manifest[section]
-  if (entries === null || typeof entries !== 'object') return undefined
-  return entries
+  return entries === null || typeof entries !== 'object' ? undefined : entries
 }
 
 function comparePrerelease(left, right) {

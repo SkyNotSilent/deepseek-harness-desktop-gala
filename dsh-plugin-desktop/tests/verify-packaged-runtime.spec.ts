@@ -1,6 +1,7 @@
 import { join } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
 import {
+  afterPack,
   REQUIRED_PACKAGED_RUNTIME_ENTRIES,
   REQUIRED_UNPACKED_PACKAGE_SPECIFIERS,
   REQUIRED_UNPACKED_RUNTIME_ENTRIES,
@@ -13,6 +14,7 @@ import {
   type PackageResolver,
   type PackagedRuntimeContext,
   type NodePtyVerifier,
+  type PackagedRuntimeVerifier,
 } from '../scripts/verify-packaged-runtime.ts'
 
 function context(appOutDir: string, electronPlatformName: string): PackagedRuntimeContext {
@@ -32,6 +34,16 @@ function completePackageResolver(unpackedRoot: string): PackageResolver {
 }
 
 describe('packaged desktop runtime verification', () => {
+  it('keeps afterPack static so executable smoke runs only after Electron fuses are applied', async () => {
+    const runtimeContext = context('/build', 'darwin')
+    const verify = vi.fn<PackagedRuntimeVerifier>()
+
+    await afterPack(runtimeContext, verify)
+
+    expect(verify).toHaveBeenCalledOnce()
+    expect(verify).toHaveBeenCalledWith(runtimeContext)
+  })
+
   it.each([
     [
       'darwin',

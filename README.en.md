@@ -43,7 +43,7 @@ The GALA Stars skin is active on first launch. Pick an individual Gala character
 - 🎀 **Gala character skins** — GALA Stars plus ten individual characters, each with its own palette, avatar, stage artwork and lines; import `.ggal` packs, favourite and fuse characters.
 - 💬 **Opt-in personas** — each official character has her own speaking style and role-aware composer prompt; personas are off by default and never change code, commands or factual requirements.
 - 🪐 **Role workspaces** — an optional hard-mode switch gives each IP its own managed profile, non-sensitive settings and plugin roster while credentials, conversations and working directories stay shared.
-- 🖼️ **Multimodal chat** — tracks DeepSeek Harness 0.1.1 with image input and DeepSeek-V4 Flash Vision.
+- 🖼️ **Multimodal chat** — tracks DeepSeek Harness 0.1.2 (runtime pinned to `0.1.2-alpha.2`) with image input and DeepSeek-V4 Flash Vision.
 - 🖥️ **Zero-setup local Host** — Electron, Node and a pinned DSH runtime are bundled; no Node.js or pnpm install required.
 - 🧩 **Plugin-compatible** — keeps the official `dsh plugin` semantics; compatibility mode preserves the upstream Web client, advanced mode adds a desktop-owned layout.
 - 🧰 **Tray, terminal, profiles** — open a pre-configured terminal from the tray, switch profiles, close-to-tray.

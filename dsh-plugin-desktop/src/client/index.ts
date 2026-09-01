@@ -1,12 +1,17 @@
-import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
+import type { Context } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/cordis-plugin-loader'
+import type {} from '@deepseek-ai/dsh-api-session-controller/client'
+import type {} from '@deepseek-ai/dsh-api-workspace-controller/client'
 import type {} from '@deepseek-ai/dsh-client-locale/client'
+import type {} from '@deepseek-ai/dsh-client-ui-chat/client'
+import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
 // Type convergence only: locale/theme declarations expose settings slot rows.
 // The desktop client does not load or register a settings surface.
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import type {} from '@deepseek-ai/dsh-client-ui-theme/client'
 // 类型收敛：官方侧边栏声明的 sidebar.footer.action 扩展位（设置旁的动作位）
 import type {} from '@deepseek-ai/dsh-client-ui-sidebar/client'
+import type {} from '@deepseek-ai/dsh-client-ui-workspace/client'
 import { applyAdvancedShell } from './advanced-shell.ts'
 import { startRendererBootReporter } from './boot-health.ts'
 import { parseDesktopClientEnvironment } from './environment.ts'
@@ -35,11 +40,12 @@ export const inject = [
   'locale',
   'sessions',
   'theme',
+  'uiWorkspace',
   'workspaces',
 ]
 
 /** Register desktop-owned client surfaces for the current BrowserWindow mode. @param ctx - browser Cordis context. */
-export function apply(ctx: ClientContext): void {
+export function apply(ctx: Context): void {
   const environment = parseDesktopClientEnvironment(window.location.search)
   ctx.effect(
     () => startRendererBootReporter(ctx.loader),
@@ -50,7 +56,7 @@ export function apply(ctx: ClientContext): void {
     'dsh-plugin-desktop: conversation locale',
   )
   ctx.effect(
-    () => installCurrentBlankNewSessionFix(ctx.workspaces),
+    () => installCurrentBlankNewSessionFix(ctx.uiWorkspace, ctx.sessions, ctx.workspaces),
     'dsh-plugin-desktop: current blank New Session compatibility',
   )
   ctx.slots.inject('conversation.chat.node', () => ctx.slots.register({

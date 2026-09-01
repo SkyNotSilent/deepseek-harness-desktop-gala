@@ -4,12 +4,12 @@ import { fileURLToPath } from 'node:url'
 import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import type {} from '@deepseek-ai/dsh-cmdline'
+import type {} from '@deepseek-ai/dsh-client-connection'
 import type {} from '@deepseek-ai/dsh-host-webserver'
 import {
   THEME_SETTINGS_NAMESPACE,
   type ThemeSettings,
 } from '@deepseek-ai/dsh-client-ui-theme'
-import { settingsNamespace } from '@deepseek-ai/dsh-settings'
 import {
   handleRendererBootRequest,
   RENDERER_BOOT_REPORT_PATH,
@@ -21,12 +21,12 @@ import type {} from './runtime.ts'
 export const name = 'desktop-shell'
 
 /** Services required before the shell can register its renderer generation. */
-export const inject = ['desktopRuntime', 'webServer', 'webRuntime', 'appExit', 'settings']
+export const inject = ['desktopRuntime', 'webServer', 'webRuntime', 'appExit', 'settings', 'connection']
 
 /** Standard settings namespace shared by tray and configuration surfaces. */
-export const DESKTOP_SETTINGS_NAMESPACE = settingsNamespace('dsh-desktop')
+export const DESKTOP_SETTINGS_NAMESPACE = 'dsh-desktop'
 
-const UI_THEME_SETTINGS_NAMESPACE = settingsNamespace(THEME_SETTINGS_NAMESPACE)
+const UI_THEME_SETTINGS_NAMESPACE = THEME_SETTINGS_NAMESPACE
 
 /** Desktop settings presented by the standard settings service. */
 export interface DesktopSettings {
@@ -114,6 +114,7 @@ export function apply(ctx: Context, config: Config): void {
     },
   )
   const rendererOrigin = `http://127.0.0.1:${String(ctx.webServer.port)}`
+  const rendererUrl = desktopRendererUrl(ctx.webServer.port, config.mode, ctx.desktopRuntime.platform)
   ctx.effect(
     () => ctx.webServer.register({
       kind: 'exact',
@@ -123,6 +124,7 @@ export function apply(ctx: Context, config: Config): void {
         res,
         rendererOrigin,
         report => { ctx.desktopRuntime.reportRendererBoot(report) },
+        request => ctx.connection.requestRejection(request),
       ),
     }),
     'dsh-plugin-desktop: renderer boot report route',
@@ -157,7 +159,8 @@ export function apply(ctx: Context, config: Config): void {
   ctx.effect(
     () => ctx.desktopRuntime.schedule({
       ...config,
-      url: desktopRendererUrl(ctx.webServer.port, config.mode, ctx.desktopRuntime.platform),
+      url: rendererUrl,
+      authenticationUrl: ctx.connection.authenticatedUrl(rendererOrigin),
       productName: 'DeepSeek Harness Desktop Gala',
       windowTitle: 'DeepSeek Harness Desktop',
       iconPath,

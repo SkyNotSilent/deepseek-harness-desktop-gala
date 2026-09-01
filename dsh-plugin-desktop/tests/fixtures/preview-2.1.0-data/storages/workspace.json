@@ -1,0 +1,26 @@
+{
+  "unit": {
+    "name": "workspace",
+    "version": 2
+  },
+  "global": {
+    "initialized": true,
+    "workspaceIds": [
+      "799837bc-5ea7-40a7-a74f-145ed8e89d1b"
+    ],
+    "archivedSessionIds": []
+  },
+  "tables": {
+    "workspaces": {
+      "799837bc-5ea7-40a7-a74f-145ed8e89d1b": {
+        "path": "/private/var/folders/0r/_djw0jks3ys50q4khgvqb5440000gn/T/dsh-preview-2.1.0-nonblank-QEcSmt/workspace with spaces 中文",
+        "title": "Preview 2.1.0 Fixture 中文",
+        "sessionIds": [
+          "session-preview-2-1-0-fixture"
+        ],
+        "createdAt": "2026-08-30T19:23:20.120Z",
+        "updatedAt": "2026-08-30T19:23:20.172Z"
+      }
+    }
+  }
+}

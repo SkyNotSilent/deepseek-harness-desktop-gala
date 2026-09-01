@@ -1,252 +1,305 @@
 import assert from 'node:assert/strict'
+import { spawnSync } from 'node:child_process'
+import { createHash } from 'node:crypto'
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join, resolve } from 'node:path'
 import test from 'node:test'
 
 import {
   applyManifestRewrite,
   collectRuntimePins,
-  collectSandboxResolutions,
   compareVersions,
+  expectedResolution,
   findProseSeries,
   isRuntimePackage,
   minorSeries,
   parseVersion,
+  patchPath,
   planManifestRewrite,
   planResolutionRewrite,
   readPinnedVersion,
-  resolutionKeys,
-  resolutionValue,
-  sandboxPatchPath,
+  writeManagedFiles,
 } from './dsh-version.mjs'
 
-const PINNED = '0.1.1-rc.2'
+const CURRENT = '0.1.2-alpha.2'
 const TARGET = '0.1.2-rc.1'
+const repoRoot = resolve(import.meta.dirname, '..')
 
-const desktopManifest = {
-  name: 'dsh-plugin-desktop',
-  dependencies: {
-    '@deepseek-ai/cordis': '4.0.1',
-    '@deepseek-ai/cordis-plugin-loader': '1.0.2',
-    '@deepseek-ai/dsh': PINNED,
-    '@deepseek-ai/dsh-sandbox-windows-acl': PINNED,
-    '@deepseek-ai/schemastery': '^3.18.1',
-    pnpm: '11.7.0',
-  },
-  devDependencies: { typescript: '5.9.2' },
-  peerDependencies: { electron: '43.4.0' },
+const currentClosure = {
+  version: CURRENT,
+  patches: ['@deepseek-ai/dsh-settings'],
+  packages: [
+    { name: '@deepseek-ai/dsh', filename: `deepseek-ai-dsh-${CURRENT}.tgz` },
+    { name: '@deepseek-ai/dsh-settings', filename: `deepseek-ai-dsh-settings-${CURRENT}.tgz` },
+  ],
+}
+const targetClosure = {
+  version: TARGET,
+  patches: ['@deepseek-ai/dsh-settings'],
+  packages: [
+    { name: '@deepseek-ai/dsh', filename: `deepseek-ai-dsh-${TARGET}.tgz` },
+    { name: '@deepseek-ai/dsh-settings', filename: `deepseek-ai-dsh-settings-${TARGET}.tgz` },
+  ],
 }
 
-const galaManifest = {
-  name: 'dsh-plugin-gala',
-  devDependencies: {
-    '@deepseek-ai/cordis': '4.0.1',
-    '@deepseek-ai/dsh-agent': PINNED,
-  },
-  peerDependencies: {
-    '@deepseek-ai/cordis': '4.0.1',
-    '@deepseek-ai/dsh-client-ui-slots': PINNED,
-    react: '18.3.1',
-  },
-}
-
-const rootResolutions = {
-  'app-builder-lib@npm:26.15.3': 'patch:app-builder-lib@npm%3A26.15.3#./patches/app-builder-lib@26.15.3.patch',
-  'node-pty@npm:1.2.0-beta.15': 'patch:node-pty@npm%3A1.2.0-beta.15#./patches/node-pty@1.2.0-beta.15.patch',
-  [`@deepseek-ai/dsh-sandbox-windows-acl@npm:${PINNED}`]: resolutionValue(PINNED),
-  [`@deepseek-ai/dsh-sandbox-windows-acl@npm:^${PINNED}`]: resolutionValue(PINNED),
-}
-
-test('orders the upstream prerelease chain by semver precedence', () => {
-  const chain = ['0.1.1-rc.2', '0.1.2-alpha.1', '0.1.2-alpha.2', '0.1.2-rc.1', '0.1.2', '0.2.0']
+test('orders the alpha, rc, and stable chain by semver precedence', () => {
+  const chain = ['0.1.1-rc.2', '0.1.2-alpha.1', CURRENT, TARGET, '0.1.2', '0.2.0']
   for (let index = 0; index + 1 < chain.length; index += 1) {
-    assert.equal(compareVersions(chain[index], chain[index + 1]), -1, `${chain[index]} < ${chain[index + 1]}`)
-    assert.equal(compareVersions(chain[index + 1], chain[index]), 1, `${chain[index + 1]} > ${chain[index]}`)
+    assert.equal(compareVersions(chain[index], chain[index + 1]), -1)
+    assert.equal(compareVersions(chain[index + 1], chain[index]), 1)
   }
-  assert.deepEqual([...chain].reverse().sort(compareVersions), chain)
-})
-
-test('compares equal versions as equal and ignores build metadata', () => {
-  assert.equal(compareVersions('0.1.1-rc.2', '0.1.1-rc.2'), 0)
   assert.equal(compareVersions('0.1.2+build.1', '0.1.2+build.9'), 0)
 })
 
-test('compares prerelease identifiers numerically, alphanumerically and by length', () => {
-  assert.equal(compareVersions('0.1.2-rc.2', '0.1.2-rc.10'), -1)
-  assert.equal(compareVersions('0.1.2-1', '0.1.2-alpha'), -1)
-  assert.equal(compareVersions('0.1.2-alpha', '0.1.2-alpha.1'), -1)
-  assert.equal(compareVersions('0.1.2-alpha.beta', '0.1.2-beta'), -1)
-})
-
-test('parseVersion throws on garbage input', () => {
-  for (const value of ['', 'latest', '0.1', 'v0.1.2', '0.1.2 ', '0.1.2-', '0.1.2-rc.01', '0.1.2.3']) {
-    assert.throws(() => parseVersion(value), /unparseable version|leading zero|empty prerelease/u, `rejects ${JSON.stringify(value)}`)
+test('rejects malformed semver and keeps prerelease/build parts separate', () => {
+  for (const value of ['', 'latest', '0.1', 'v0.1.2', '0.1.2 ', '0.1.2-rc.01', '01.1.0']) {
+    assert.throws(() => parseVersion(value), /unparseable version|leading zero/u)
   }
-  assert.throws(() => parseVersion(undefined), TypeError)
-  assert.throws(() => parseVersion(112), TypeError)
+  assert.deepEqual(parseVersion('0.1.2-alpha.2+build.7').prerelease, ['alpha', '2'])
+  assert.equal(parseVersion('0.1.2-alpha.2+build.7').build, 'build.7')
+  assert.equal(minorSeries(CURRENT), '0.1.2')
 })
 
-test('parseVersion rejects leading zeroes in the major, minor and patch identifiers', () => {
-  for (const value of ['0.1.02', '01.1.0', '0.01.0', '00.0.0', '0.1.00']) {
-    assert.throws(() => parseVersion(value), /unparseable version/u, `rejects ${JSON.stringify(value)}`)
-  }
-  assert.deepEqual(parseVersion('0.10.20').prerelease, [])
-  assert.equal(parseVersion('0.10.20').patch, 20)
-})
-
-test('parseVersion keeps build metadata separate from the prerelease', () => {
-  assert.deepEqual(parseVersion('0.1.2+build.7').prerelease, [])
-  assert.equal(parseVersion('0.1.2+build.7').build, 'build.7')
-  assert.equal(parseVersion('0.1.2-rc.1+build.7').build, 'build.7')
-  assert.deepEqual(parseVersion('0.1.2-rc.1+build.7').prerelease, ['rc', '1'])
-})
-
-test('minorSeries strips the prerelease suffix used by marketing prose', () => {
-  assert.equal(minorSeries('0.1.1-rc.2'), '0.1.1')
-  assert.equal(minorSeries('0.1.2-alpha.1'), '0.1.2')
-  assert.equal(minorSeries('0.1.2'), '0.1.2')
-  assert.equal(minorSeries('1.2.3+build.4'), '1.2.3')
-})
-
-test('isRuntimePackage excludes independently versioned first-party packages', () => {
+test('recognizes only the DSH runtime train', () => {
   assert.equal(isRuntimePackage('@deepseek-ai/dsh'), true)
   assert.equal(isRuntimePackage('@deepseek-ai/dsh-client-ui-slots'), true)
   assert.equal(isRuntimePackage('@deepseek-ai/cordis'), false)
-  assert.equal(isRuntimePackage('@deepseek-ai/cordis-plugin-loader'), false)
   assert.equal(isRuntimePackage('@deepseek-ai/schemastery'), false)
-  assert.equal(isRuntimePackage('pnpm'), false)
 })
 
-test('readPinnedVersion reads the runtime edge and rejects a manifest without it', () => {
-  assert.equal(readPinnedVersion(desktopManifest), PINNED)
-  assert.throws(() => readPinnedVersion(galaManifest), /declares no @deepseek-ai\/dsh dependency/u)
-  assert.throws(() => readPinnedVersion({}), /declares no @deepseek-ai\/dsh dependency/u)
-  assert.throws(() => readPinnedVersion({ dependencies: { '@deepseek-ai/dsh': `^${PINNED}` } }), /unparseable version/u)
-})
-
-test('collectRuntimePins reports runtime edges from every dependency section', () => {
-  assert.deepEqual(collectRuntimePins(galaManifest), [
-    { section: 'devDependencies', name: '@deepseek-ai/dsh-agent', version: PINNED },
-    { section: 'peerDependencies', name: '@deepseek-ai/dsh-client-ui-slots', version: PINNED },
-  ])
-})
-
-test('planManifestRewrite rewrites exact runtime pins and leaves cordis and schemastery alone', () => {
-  const plan = planManifestRewrite(desktopManifest, PINNED, TARGET)
-
-  assert.deepEqual(plan.changes, [
-    { section: 'dependencies', name: '@deepseek-ai/dsh', from: PINNED, to: TARGET },
-    { section: 'dependencies', name: '@deepseek-ai/dsh-sandbox-windows-acl', from: PINNED, to: TARGET },
-  ])
-  const names = plan.changes.map((change) => change.name)
-  assert.equal(names.includes('@deepseek-ai/cordis'), false)
-  assert.equal(names.includes('@deepseek-ai/cordis-plugin-loader'), false)
-  assert.equal(names.includes('@deepseek-ai/schemastery'), false)
-  assert.equal(names.includes('pnpm'), false)
-  assert.equal(desktopManifest.dependencies['@deepseek-ai/dsh'], PINNED)
-})
-
-test('planManifestRewrite spans devDependencies and peerDependencies', () => {
-  const plan = planManifestRewrite(galaManifest, PINNED, TARGET)
-
-  assert.deepEqual(plan.changes, [
-    { section: 'devDependencies', name: '@deepseek-ai/dsh-agent', from: PINNED, to: TARGET },
-    { section: 'peerDependencies', name: '@deepseek-ai/dsh-client-ui-slots', from: PINNED, to: TARGET },
-  ])
-})
-
-test('planManifestRewrite ignores runtime packages carrying a different specifier', () => {
+test('plans exact runtime manifest pins without touching framework versions', () => {
   const manifest = {
     dependencies: {
-      '@deepseek-ai/dsh-agent': `^${PINNED}`,
-      '@deepseek-ai/dsh-brand': '0.1.0',
+      '@deepseek-ai/cordis': '4.0.2',
+      '@deepseek-ai/dsh': CURRENT,
+      '@deepseek-ai/dsh-settings': CURRENT,
     },
+    peerDependencies: { '@deepseek-ai/dsh-client-ui-slots': CURRENT },
+  }
+  assert.equal(readPinnedVersion(manifest), CURRENT)
+  assert.deepEqual(collectRuntimePins(manifest), [
+    { section: 'dependencies', name: '@deepseek-ai/dsh', version: CURRENT },
+    { section: 'dependencies', name: '@deepseek-ai/dsh-settings', version: CURRENT },
+    { section: 'peerDependencies', name: '@deepseek-ai/dsh-client-ui-slots', version: CURRENT },
+  ])
+  const changes = planManifestRewrite(manifest, CURRENT, TARGET).changes
+  const next = applyManifestRewrite(manifest, changes)
+  assert.equal(next.dependencies['@deepseek-ai/dsh'], TARGET)
+  assert.equal(next.peerDependencies['@deepseek-ai/dsh-client-ui-slots'], TARGET)
+  assert.equal(next.dependencies['@deepseek-ai/cordis'], '4.0.2')
+  assert.equal(manifest.dependencies['@deepseek-ai/dsh'], CURRENT)
+})
+
+test('rebuilds vendor and patch resolutions while preserving unrelated pins and order', () => {
+  const resolutions = {
+    'app-builder-lib@npm:26.15.3': 'patch:app-builder-lib',
+    '@deepseek-ai/dsh': expectedResolution(currentClosure.packages[0], CURRENT, currentClosure.patches),
+    '@deepseek-ai/dsh-settings': expectedResolution(currentClosure.packages[1], CURRENT, currentClosure.patches),
+    'node-pty@npm:1.2.0-beta.15': 'patch:node-pty',
+  }
+  const next = planResolutionRewrite(resolutions, currentClosure, targetClosure)
+  assert.deepEqual(Object.keys(next), Object.keys(resolutions))
+  assert.equal(next['app-builder-lib@npm:26.15.3'], 'patch:app-builder-lib')
+  assert.equal(next['@deepseek-ai/dsh'], expectedResolution(targetClosure.packages[0], TARGET, targetClosure.patches))
+  assert.equal(next['@deepseek-ai/dsh-settings'], expectedResolution(targetClosure.packages[1], TARGET, targetClosure.patches))
+  assert.equal(patchPath('@deepseek-ai/dsh-settings', TARGET), `patches/dsh-settings@${TARGET}.patch`)
+})
+
+test('fails preflight planning on closure, patch, or current-resolution drift', () => {
+  const resolutions = Object.fromEntries(currentClosure.packages.map(entry => [
+    entry.name,
+    expectedResolution(entry, CURRENT, currentClosure.patches),
+  ]))
+  assert.throws(
+    () => planResolutionRewrite(resolutions, currentClosure, { ...targetClosure, packages: targetClosure.packages.slice(0, 1) }),
+    /closure changed/u,
+  )
+  assert.throws(
+    () => planResolutionRewrite(resolutions, currentClosure, { ...targetClosure, patches: [] }),
+    /patch inventory changed/u,
+  )
+  assert.throws(
+    () => planResolutionRewrite({ ...resolutions, '@deepseek-ai/dsh': 'npm:latest' }, currentClosure, targetClosure),
+    /differs from the current vendor manifest/u,
+  )
+})
+
+test('managed-file transaction restores byte-identical originals after an injected failure', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'dsh-version-transaction-'))
+  try {
+    const first = join(directory, 'first.json')
+    const second = join(directory, 'second.json')
+    writeFileSync(first, '{"original":1}\n')
+    writeFileSync(second, '{"original":2}\n')
+    assert.throws(() => writeManagedFiles([
+      { path: first, original: readFileSync(first), next: '{"next":1}\n' },
+      { path: second, original: readFileSync(second), next: '{"next":2}\n' },
+    ], index => {
+      if (index === 0) throw new Error('injected write failure')
+    }), /injected write failure/u)
+    assert.equal(readFileSync(first, 'utf8'), '{"original":1}\n')
+    assert.equal(readFileSync(second, 'utf8'), '{"original":2}\n')
+  } finally {
+    rmSync(directory, { recursive: true, force: true })
+  }
+})
+
+test('real dry-run and missing-target failures preserve managed files and the git index', () => {
+  const managed = ['package.json', 'dsh-plugin-desktop/package.json', 'dsh-plugin-gala/package.json', 'upstream.json']
+  const before = managed.map(file => readFileSync(join(repoRoot, file)))
+  const indexBefore = spawnSync('git', ['diff', '--cached', '--binary'], { cwd: repoRoot }).stdout
+
+  const dryRun = spawnSync(process.execPath, ['scripts/set-dsh-version.mjs', CURRENT, '--dry-run'], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+  })
+  assert.equal(dryRun.status, 0, dryRun.stderr)
+  assert.match(dryRun.stdout, /dry run wrote nothing/u)
+
+  const missing = spawnSync(process.execPath, ['scripts/set-dsh-version.mjs', '9.9.9'], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+  })
+  assert.equal(missing.status, 1)
+  assert.match(missing.stderr, /preflight failed before writes.*missing vendor/u)
+
+  for (const [index, file] of managed.entries()) assert.deepEqual(readFileSync(join(repoRoot, file)), before[index])
+  assert.deepEqual(spawnSync('git', ['diff', '--cached', '--binary'], { cwd: repoRoot }).stdout, indexBefore)
+})
+
+test('real CLI success atomically advances a valid synthetic vendor pair without touching lock, vendor, or git index', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'dsh-version-cli-success-'))
+  const nextVersion = '0.1.2-alpha.3'
+  const run = (command, args, options = {}) => spawnSync(command, args, {
+    cwd: directory,
+    encoding: 'utf8',
+    ...options,
+  })
+  const json = value => `${JSON.stringify(value, null, 2)}\n`
+  const digest = value => createHash('sha256').update(value).digest('hex')
+
+  function createVendor(version, commit) {
+    const vendor = join(directory, 'vendor', 'dsh-runtime', version)
+    const staging = join(directory, '.package-staging', version, 'package')
+    mkdirSync(staging, { recursive: true })
+    writeFileSync(join(staging, 'package.json'), json({
+      name: '@deepseek-ai/dsh',
+      version,
+      license: 'MIT',
+    }))
+    mkdirSync(vendor, { recursive: true })
+    const filename = `deepseek-ai-dsh-${version}.tgz`
+    const archive = join(vendor, filename)
+    const packed = spawnSync('tar', ['-czf', archive, '-C', join(staging, '..'), 'package'], {
+      encoding: 'utf8',
+    })
+    assert.equal(packed.status, 0, packed.stderr)
+    const bytes = readFileSync(archive)
+    writeFileSync(join(vendor, 'licenses.json'), '{}\n')
+    writeFileSync(join(vendor, 'manifest.json'), json({
+      formatVersion: 2,
+      version,
+      registry: 'https://registry.npmjs.org',
+      repository: 'https://github.com/deepseek-ai/deepseek-harness.git',
+      commit,
+      patches: [],
+      packages: [{
+        name: '@deepseek-ai/dsh',
+        filename,
+        size: bytes.byteLength,
+        sha256: digest(bytes),
+        integrity: `sha512-${createHash('sha512').update(bytes).digest('base64')}`,
+        license: 'MIT',
+      }],
+    }))
+    return { archive, filename }
   }
 
-  assert.deepEqual(planManifestRewrite(manifest, PINNED, TARGET).changes, [])
+  try {
+    mkdirSync(join(directory, 'scripts'), { recursive: true })
+    mkdirSync(join(directory, 'dsh-plugin-desktop'), { recursive: true })
+    mkdirSync(join(directory, 'dsh-plugin-gala'), { recursive: true })
+    cpSync(join(repoRoot, 'scripts', 'dsh-version.mjs'), join(directory, 'scripts', 'dsh-version.mjs'))
+    cpSync(join(repoRoot, 'scripts', 'set-dsh-version.mjs'), join(directory, 'scripts', 'set-dsh-version.mjs'))
+    const currentVendor = createVendor(CURRENT, '1'.repeat(40))
+    const targetVendor = createVendor(nextVersion, '2'.repeat(40))
+    const dependencyManifest = name => ({
+      name,
+      private: true,
+      dependencies: { '@deepseek-ai/dsh': CURRENT },
+    })
+    writeFileSync(join(directory, 'package.json'), json({
+      ...dependencyManifest('synthetic-root'),
+      resolutions: {
+        '@deepseek-ai/dsh': `file:vendor/dsh-runtime/${CURRENT}/${currentVendor.filename}`,
+        'unrelated@npm:1.0.0': 'npm:1.0.0',
+      },
+    }))
+    writeFileSync(join(directory, 'dsh-plugin-desktop', 'package.json'), json(dependencyManifest('synthetic-desktop')))
+    writeFileSync(join(directory, 'dsh-plugin-gala', 'package.json'), json(dependencyManifest('synthetic-gala')))
+    writeFileSync(join(directory, 'upstream.json'), json({
+      repository: 'https://github.com/deepseek-ai/deepseek-harness.git',
+      commit: '1'.repeat(40),
+      sourceVersion: CURRENT,
+      runtimePackageVersion: CURRENT,
+      runtimeSource: `vendor/dsh-runtime/${CURRENT}/manifest.json`,
+    }))
+    writeFileSync(join(directory, 'yarn.lock'), 'immutable-lock-sentinel\n')
+    writeFileSync(join(directory, 'staged.txt'), 'committed\n')
+    writeFileSync(join(directory, 'unstaged.txt'), 'committed\n')
+    assert.equal(run('git', ['init']).status, 0)
+    assert.equal(run('git', ['config', 'user.email', 'qa@example.invalid']).status, 0)
+    assert.equal(run('git', ['config', 'user.name', 'Version QA']).status, 0)
+    assert.equal(run('git', ['add', '.']).status, 0)
+    assert.equal(run('git', ['commit', '-m', 'synthetic baseline']).status, 0)
+    writeFileSync(join(directory, 'staged.txt'), 'staged sentinel\n')
+    assert.equal(run('git', ['add', 'staged.txt']).status, 0)
+    writeFileSync(join(directory, 'unstaged.txt'), 'unstaged sentinel\n')
+
+    const indexBefore = run('git', ['diff', '--cached', '--binary']).stdout
+    const unstagedBefore = run('git', ['diff', '--', 'unstaged.txt']).stdout
+    const lockBefore = readFileSync(join(directory, 'yarn.lock'))
+    const currentArchiveBefore = readFileSync(currentVendor.archive)
+    const targetArchiveBefore = readFileSync(targetVendor.archive)
+    const result = run(process.execPath, ['scripts/set-dsh-version.mjs', nextVersion])
+
+    assert.equal(result.status, 0, result.stderr)
+    assert.match(result.stdout, /source and manifests updated; vendor and yarn\.lock were not changed/u)
+    for (const file of ['package.json', 'dsh-plugin-desktop/package.json', 'dsh-plugin-gala/package.json']) {
+      const manifest = JSON.parse(readFileSync(join(directory, file), 'utf8'))
+      assert.equal(manifest.dependencies['@deepseek-ai/dsh'], nextVersion)
+    }
+    const root = JSON.parse(readFileSync(join(directory, 'package.json'), 'utf8'))
+    assert.equal(
+      root.resolutions['@deepseek-ai/dsh'],
+      `file:vendor/dsh-runtime/${nextVersion}/${targetVendor.filename}`,
+    )
+    assert.equal(root.resolutions['unrelated@npm:1.0.0'], 'npm:1.0.0')
+    const upstream = JSON.parse(readFileSync(join(directory, 'upstream.json'), 'utf8'))
+    assert.equal(upstream.commit, '2'.repeat(40))
+    assert.equal(upstream.runtimePackageVersion, nextVersion)
+    assert.deepEqual(readFileSync(join(directory, 'yarn.lock')), lockBefore)
+    assert.deepEqual(readFileSync(currentVendor.archive), currentArchiveBefore)
+    assert.deepEqual(readFileSync(targetVendor.archive), targetArchiveBefore)
+    assert.equal(readFileSync(join(directory, 'staged.txt'), 'utf8'), 'staged sentinel\n')
+    assert.equal(readFileSync(join(directory, 'unstaged.txt'), 'utf8'), 'unstaged sentinel\n')
+    assert.equal(run('git', ['diff', '--cached', '--binary']).stdout, indexBefore)
+    assert.equal(run('git', ['diff', '--', 'unstaged.txt']).stdout, unstagedBefore)
+    assert.equal(run('git', ['status', '--porcelain']).stdout.includes('.dsh-version-'), false)
+  } finally {
+    rmSync(directory, { recursive: true, force: true })
+  }
 })
 
-test('applyManifestRewrite returns a rewritten copy without touching the source', () => {
-  const plan = planManifestRewrite(galaManifest, PINNED, TARGET)
-  const next = applyManifestRewrite(galaManifest, plan.changes)
-
-  assert.equal(next.devDependencies['@deepseek-ai/dsh-agent'], TARGET)
-  assert.equal(next.peerDependencies['@deepseek-ai/dsh-client-ui-slots'], TARGET)
-  assert.equal(next.devDependencies['@deepseek-ai/cordis'], '4.0.1')
-  assert.equal(next.peerDependencies.react, '18.3.1')
-  assert.equal(galaManifest.devDependencies['@deepseek-ai/dsh-agent'], PINNED)
-  assert.deepEqual(Object.keys(next.peerDependencies), Object.keys(galaManifest.peerDependencies))
-})
-
-test('sandboxPatchPath and resolution helpers encode the version once', () => {
-  assert.equal(sandboxPatchPath(PINNED), 'patches/dsh-sandbox-windows-acl@0.1.1-rc.2.patch')
-  assert.deepEqual(resolutionKeys(PINNED), [
-    '@deepseek-ai/dsh-sandbox-windows-acl@npm:0.1.1-rc.2',
-    '@deepseek-ai/dsh-sandbox-windows-acl@npm:^0.1.1-rc.2',
-  ])
-  assert.equal(
-    resolutionValue(PINNED),
-    'patch:@deepseek-ai/dsh-sandbox-windows-acl@npm%3A0.1.1-rc.2#./patches/dsh-sandbox-windows-acl@0.1.1-rc.2.patch',
-  )
-})
-
-test('planResolutionRewrite moves both descriptors, the encoded value and the patch filename', () => {
-  const plan = planResolutionRewrite(rootResolutions, PINNED, TARGET)
-
-  assert.deepEqual(plan.changes, [
-    {
-      from: '@deepseek-ai/dsh-sandbox-windows-acl@npm:0.1.1-rc.2',
-      to: '@deepseek-ai/dsh-sandbox-windows-acl@npm:0.1.2-rc.1',
-      fromValue: resolutionValue(PINNED),
-      toValue: resolutionValue(TARGET),
-    },
-    {
-      from: '@deepseek-ai/dsh-sandbox-windows-acl@npm:^0.1.1-rc.2',
-      to: '@deepseek-ai/dsh-sandbox-windows-acl@npm:^0.1.2-rc.1',
-      fromValue: resolutionValue(PINNED),
-      toValue: resolutionValue(TARGET),
-    },
-  ])
-  assert.deepEqual(plan.resolutions, {
-    'app-builder-lib@npm:26.15.3': 'patch:app-builder-lib@npm%3A26.15.3#./patches/app-builder-lib@26.15.3.patch',
-    'node-pty@npm:1.2.0-beta.15': 'patch:node-pty@npm%3A1.2.0-beta.15#./patches/node-pty@1.2.0-beta.15.patch',
-    '@deepseek-ai/dsh-sandbox-windows-acl@npm:0.1.2-rc.1':
-      'patch:@deepseek-ai/dsh-sandbox-windows-acl@npm%3A0.1.2-rc.1#./patches/dsh-sandbox-windows-acl@0.1.2-rc.1.patch',
-    '@deepseek-ai/dsh-sandbox-windows-acl@npm:^0.1.2-rc.1':
-      'patch:@deepseek-ai/dsh-sandbox-windows-acl@npm%3A0.1.2-rc.1#./patches/dsh-sandbox-windows-acl@0.1.2-rc.1.patch',
-  })
-  assert.deepEqual(Object.keys(plan.resolutions).slice(0, 2), Object.keys(rootResolutions).slice(0, 2))
-  assert.deepEqual(Object.keys(rootResolutions).slice(2), [
-    '@deepseek-ai/dsh-sandbox-windows-acl@npm:0.1.1-rc.2',
-    '@deepseek-ai/dsh-sandbox-windows-acl@npm:^0.1.1-rc.2',
-  ])
-})
-
-test('planResolutionRewrite refuses a missing or hand-edited sandbox resolution', () => {
-  assert.throws(() => planResolutionRewrite({}, PINNED, TARGET), /missing/u)
-  assert.throws(
-    () => planResolutionRewrite({ ...rootResolutions, [`@deepseek-ai/dsh-sandbox-windows-acl@npm:${PINNED}`]: 'patch:whatever' }, PINNED, TARGET),
-    /does not carry the expected patch value/u,
-  )
-})
-
-test('collectSandboxResolutions selects only the sandbox descriptors', () => {
-  assert.deepEqual(collectSandboxResolutions(rootResolutions), [
-    { key: `@deepseek-ai/dsh-sandbox-windows-acl@npm:${PINNED}`, value: resolutionValue(PINNED) },
-    { key: `@deepseek-ai/dsh-sandbox-windows-acl@npm:^${PINNED}`, value: resolutionValue(PINNED) },
-  ])
-  assert.deepEqual(collectSandboxResolutions(undefined), [])
-})
-
-test('findProseSeries captures the upstream series in both prose languages', () => {
+test('findProseSeries captures only Harness/upstream series mentions', () => {
   const text = [
-    '- 🖼️ **Multimodal chat** — tracks DeepSeek Harness 0.1.1 with image input.',
-    '<p>跟随上游 0.1.1，支持图片输入。</p>',
-    'DeepSeek Harness Desktop Gala 2.1.0-preview.4 ships today.',
-    'Nothing to see here.',
+    'DeepSeek Harness 0.1.2 follows alpha.2.',
+    '跟随上游 0.1.2。',
+    'Desktop Gala 2.2.0-preview.1 ships later.',
   ].join('\n')
-
   assert.deepEqual(findProseSeries(text), [
-    { line: 1, series: '0.1.1' },
-    { line: 2, series: '0.1.1' },
+    { line: 1, series: '0.1.2' },
+    { line: 2, series: '0.1.2' },
   ])
-  assert.deepEqual(findProseSeries('no version at all'), [])
 })

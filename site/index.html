@@ -77,7 +77,7 @@
         { "@type": "Question", "name": "DSH 皮肤 / 换肤是怎么实现的？", "acceptedAnswer": { "@type": "Answer", "text": "Gala 角色皮肤通过 DeepSeek Harness 的官方主题 token 与界面扩展点接入：选中角色后，侧边栏头像、欢迎页标题、整片对话舞台背景与配色一起换装；切回经典配色即可恢复原样。" } },
         { "@type": "Question", "name": "怎么下载和安装 DeepSeek Harness Desktop Gala？", "acceptedAnswer": { "@type": "Answer", "text": "在本页点击与你系统对应的下载按钮，或前往 GitHub Releases。macOS 下载 .dmg 拖入应用程序；当前 macOS 安装包已经 Developer ID 签名并通过 Apple 公证，可正常打开。Windows 运行 Setup.exe；当前 Windows Preview 未签名，若 SmartScreen 提示，请选择「更多信息 → 仍要运行」。" } },
         { "@type": "Question", "name": "需要 DeepSeek API Key 吗？", "acceptedAnswer": { "@type": "Answer", "text": "需要。首次发送消息前，在「设置 → 模型」填入 DeepSeek API Key，密钥只保存在本机。账户余额不足时界面会直接提示并给出充值入口。" } },
-        { "@type": "Question", "name": "支持图片输入（多模态）吗？", "acceptedAnswer": { "@type": "Answer", "text": "支持。跟随 DeepSeek Harness 0.1.1，可以拖入图片并选择 DeepSeek-V4 Flash Vision 等视觉模型进行对话。" } },
+        { "@type": "Question", "name": "支持图片输入（多模态）吗？", "acceptedAnswer": { "@type": "Answer", "text": "支持。跟随 DeepSeek Harness 0.1.2，可以拖入图片并选择 DeepSeek-V4 Flash Vision 等视觉模型进行对话。" } },
         { "@type": "Question", "name": "换了角色皮肤，AI 的回答方式会变吗？", "acceptedAnswer": { "@type": "Answer", "text": "开启「个性化人物」后会。十位官方角色各自带有专属人物设定：傲娇天才阿念、御姐大姐姐阿基、粘人管理员忆忆、星海巫女灵灵等。开启后换上谁的皮肤，模型就用谁的语气回答；代码、命令与事实不受影响。该功能默认关闭，可在「设置 → 插件 → 角色空间」或换肤弹层一键开启；全员群星、经典配色与原装始终不带人物语气。" } },
         { "@type": "Question", "name": "什么是角色独立空间？开启有什么代价？", "acceptedAnswer": { "@type": "Answer", "text": "默认关闭的硬核模式：开启后每个角色拥有自己的插件编队与非敏感设置，API Key、聊天记录与工作目录仍共享。代价是每次切换角色都会重启应用，首次进入某个角色会按当前公共配置生成它的工作台；启动失败会自动回到上一套可用配置。只想换皮肤的用户不需要开启。" } }
       ]
@@ -386,7 +386,7 @@
   <div class="section-head"><h2 id="features-title">DeepSeek Harness 桌面端该有的，都在</h2></div>
   <div class="features">
     <div class="feature"><div class="orb">🖥️</div><h3>零配置本地 Host</h3><p>自带 Electron、Node 与固定版本的 DeepSeek Harness 运行时，双击即用；API Key 在「设置 → 模型」填一次。</p></div>
-    <div class="feature"><div class="orb">🖼️</div><h3>多模态对话</h3><p>跟随上游 0.1.1，支持图片输入与 DeepSeek-V4 Flash Vision。</p></div>
+    <div class="feature"><div class="orb">🖼️</div><h3>多模态对话</h3><p>跟随上游 0.1.2，支持图片输入与 DeepSeek-V4 Flash Vision。</p></div>
     <div class="feature"><div class="orb">🎀</div><h3>Gala 角色皮肤与个性化人物</h3><p>首次启动由全员与鲸鱼共同登场，也可选择十位单独角色；头像、欢迎页、整片对话舞台与配色会一起换装，开启「个性化人物」后模型也会换上她的语气。三套经典配色保持无人物界面。</p></div>
     <div class="feature"><div class="orb">🧰</div><h3>托盘、终端、更新</h3><p>常驻托盘，一键打开配好环境的终端；新版本通过 GitHub Releases 检查，下载前必经确认。</p></div>
   </div>
@@ -406,7 +406,7 @@
     <details><summary>DSH 皮肤 / 换肤是怎么做到的？</summary><p>Gala 通过 DeepSeek Harness 的官方主题 token 与界面扩展点接入：选中角色后，侧边栏头像、欢迎页标题、整片对话舞台背景与配色一起换装；切回经典配色即可恢复。</p></details>
     <details><summary>怎么下载安装？</summary><p>点击本页与你系统对应的下载按钮，或前往 <a href="https://github.com/SkyNotSilent/deepseek-harness-desktop-gala/releases">GitHub Releases</a>。macOS 下载 .dmg 拖入「应用程序」即可；当前 macOS 安装包已经 Developer ID 签名并通过 Apple 公证。Windows 运行 Setup.exe；当前 Windows Preview 未签名，若 SmartScreen 提示，请选择「更多信息 → 仍要运行」。</p></details>
     <details><summary>需要 DeepSeek API Key 吗？</summary><p>需要。首次发送消息前在「设置 → 模型」填入，密钥只保存在本机；余额不足时界面会直接提示并给出充值入口。</p></details>
-    <details><summary>支持图片输入吗？</summary><p>支持。跟随 DeepSeek Harness 0.1.1，拖入图片并选择 DeepSeek-V4 Flash Vision 等视觉模型即可。</p></details>
+    <details><summary>支持图片输入吗？</summary><p>支持。跟随 DeepSeek Harness 0.1.2，拖入图片并选择 DeepSeek-V4 Flash Vision 等视觉模型即可。</p></details>
     <details><summary>换了角色皮肤，AI 的回答方式会变吗？</summary><p>开启「个性化人物」后会。十位官方角色各自带有专属人物设定：傲娇天才阿念、御姐大姐姐阿基、粘人管理员忆忆、星海巫女灵灵……开启后换上谁的皮肤，模型就用谁的语气回答；代码、命令与事实不受影响。该功能默认关闭，可在「设置 → 插件 → 角色空间」或换肤弹层一键开启；全员群星、经典配色与原装始终不带人物语气。</p></details>
     <details><summary>什么是角色独立空间？开启有什么代价？</summary><p>默认关闭的硬核模式：开启后每个角色拥有自己的插件编队与非敏感设置，API Key、聊天记录与工作目录仍共享。代价是每次切换角色都会重启应用，首次进入某个角色会按当前公共配置生成它的工作台；启动失败会自动回到上一套可用配置。只想换皮肤的用户不需要开启。</p></details>
   </div>

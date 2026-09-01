@@ -1,75 +1,84 @@
-import type { SessionId, WorkspaceId } from '@deepseek-ai/dsh-api-remotes/client'
-import type { IWorkspaces } from '@deepseek-ai/dsh-client-runtime/client'
+import type { ISessions } from '@deepseek-ai/dsh-api-session-controller/client'
+import type {
+  IWorkspaces,
+  WorkspaceId,
+  WorkspaceView,
+} from '@deepseek-ai/dsh-api-workspace-controller/client'
+import type { UiWorkspace } from '@deepseek-ai/dsh-client-ui-workspace/client'
+import type { SessionId } from '@deepseek-ai/dsh-session/types'
 
-interface RuntimeSessionSummary {
-  readonly id: SessionId
-  readonly blank: boolean
-}
-
-interface RuntimeSessions {
-  readonly list: {
-    getSnapshot(): {
-      readonly ids: readonly SessionId[]
-      readonly byId: Readonly<Record<SessionId, RuntimeSessionSummary>>
-      readonly current: SessionId | undefined
-    }
-  }
-  create(options: { workspaceId: WorkspaceId }): Promise<SessionId>
-  open(sessionId: SessionId): void
-}
-
-interface WorkspaceRuntimeWithSessions extends IWorkspaces {
-  readonly sessions: RuntimeSessions
+function currentWorkspace(
+  items: readonly WorkspaceView[],
+  current: SessionId,
+  cwd: string | undefined,
+): WorkspaceView | undefined {
+  return items.find(item => item.sessionIds.includes(current))
+    ?? (cwd === undefined ? undefined : items.find(item => item.path === cwd))
 }
 
 /**
- * Work around DSH 0.1.1-rc.2 reopening the current blank session when New Session is clicked.
- * @param publicWorkspaces - Workspace service exposed by the pinned client runtime.
+ * Make New Session create a distinct blank session when alpha.2 would reconnect
+ * the current blank session in the same Workspace.
+ * @param uiWorkspace - public alpha.2 Workspace navigation service.
+ * @param sessions - public alpha.2 Session Controller.
+ * @param workspaces - public alpha.2 Workspace Controller.
  * @returns disposer restoring the upstream action.
  */
-export function installCurrentBlankNewSessionFix(publicWorkspaces: IWorkspaces): () => void {
-  const workspaces = publicWorkspaces as WorkspaceRuntimeWithSessions
-  const upstream = workspaces.startSession
+export function installCurrentBlankNewSessionFix(
+  uiWorkspace: Pick<UiWorkspace, 'startSession'>,
+  sessions: Pick<ISessions, 'list' | 'create' | 'open'>,
+  workspaces: Pick<IWorkspaces, 'list'>,
+): () => void {
+  const upstream = uiWorkspace.startSession
   const pending = new Map<WorkspaceId, Promise<SessionId>>()
+  let active = true
 
   const startSession = (workspaceId?: WorkspaceId): void => {
     const workspaceSnapshot = workspaces.list.getSnapshot()
-    const sessionSnapshot = workspaces.sessions.list.getSnapshot()
+    const sessionSnapshot = sessions.list.getSnapshot()
     const current = sessionSnapshot.current
-    const currentWorkspace = current === undefined
+    const currentSummary = current === undefined ? undefined : sessionSnapshot.byId[current]
+    const currentTarget = current === undefined
       ? undefined
-      : workspaceSnapshot.items.find(item => item.sessionIds.includes(current))
-    const targetId = workspaceId ?? currentWorkspace?.workspaceId ?? workspaceSnapshot.recentWorkspaceId
+      : currentWorkspace(workspaceSnapshot.items, current, currentSummary?.cwd)
+    const targetId = workspaceId ?? currentTarget?.workspaceId
     const target = targetId === undefined
       ? undefined
       : workspaceSnapshot.items.find(item => item.workspaceId === targetId)
-    const currentSummary = current === undefined ? undefined : sessionSnapshot.byId[current]
+    const currentBelongsToTarget = current !== undefined
+      && target !== undefined
+      && (target.sessionIds.includes(current) || currentSummary?.cwd === target.path)
 
     if (
-      current !== undefined
-      && currentSummary?.blank === true
-      && target !== undefined
-      && target.sessionIds.includes(current)
-      && !workspaceSnapshot.archivedSessionIds.includes(current)
+      current === undefined
+      || currentSummary?.blank !== true
+      || target === undefined
+      || !currentBelongsToTarget
+      || workspaceSnapshot.archivedSessionIds.includes(current)
     ) {
-      let attempt = pending.get(target.workspaceId)
-      if (attempt === undefined) {
-        attempt = workspaces.sessions.create({ workspaceId: target.workspaceId })
-          .finally(() => { pending.delete(target.workspaceId) })
-        pending.set(target.workspaceId, attempt)
-      }
-      void attempt.then(
-        sessionId => { workspaces.sessions.open(sessionId) },
-        reason => { console.warn('new session failed:', reason) },
-      )
+      upstream.call(uiWorkspace, workspaceId)
       return
     }
 
-    upstream.call(workspaces, workspaceId)
+    if (pending.has(target.workspaceId)) return
+
+    const attempt = sessions.create({ workspaceId: target.workspaceId })
+      .finally(() => { pending.delete(target.workspaceId) })
+    pending.set(target.workspaceId, attempt)
+    void attempt.then(
+      sessionId => {
+        if (!active || sessions.list.getSnapshot().current !== current) return
+        sessions.open(sessionId)
+      },
+      reason => {
+        if (active) console.warn('new session failed:', reason)
+      },
+    )
   }
 
-  workspaces.startSession = startSession
+  uiWorkspace.startSession = startSession
   return () => {
-    if (workspaces.startSession === startSession) workspaces.startSession = upstream
+    active = false
+    if (uiWorkspace.startSession === startSession) uiWorkspace.startSession = upstream
   }
 }

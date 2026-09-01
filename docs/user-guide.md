@@ -67,6 +67,13 @@ dsh plugin update
 
 改动插件后重启应用生效。
 
+## 数据、网络与升级说明
+
+- **会话遥测与会话日志上传保持关闭。** Desktop 会无条件禁用 DSH 的 session telemetry exporter，即使外部环境设置了 `DSH_TELEMETRY_MODE=FULL` 也不会启用。
+- **插件清单上报保持 alpha.2 默认行为。** 向 DeepSeek 模型发起请求时，会随请求携带当前已启用插件的 npm 包名与版本（例如 `dsh-plugin-desktop`、`dsh-plugin-gala`），用于运行时兼容诊断；不会携带插件路径、配置、设置、API Key 或其他凭据。
+- **WebFetch 按 alpha.2 的 Agent 预设分层启用。** 默认 `standard` 预设以及 `ptc`、`cordis` 预设可使用公网 WebFetch，调用时不再逐次弹出审批；`minimal` 预设不启用 WebFetch。WebFetch 仍受上游的公网地址、协议、重定向、响应大小与超时安全边界限制。
+- **会话数据只承诺单向原地升级。** `2.2.0-preview.1` 首次打开旧 Preview 数据时会由 alpha.2 按上游规则升级。升级后的记录可能无法再被 `2.1.0-preview.4` 或更早版本读取；如需保留降级可能，请先退出应用并备份 `~/.dsh` 与应用用户数据目录。
+
 ## 终端
 
 应用里的 Bash 代码工具和托盘 **Open DeepSeek Harness Desktop Gala Terminal** 都能直接使用安装包自带的 `node` 与 `pnpm`；不提供伪装的 `npm` / `npx`。Finder 启动时，应用只读取 `/etc/paths`、`/etc/paths.d/*` 和实际存在的常用目录来补 PATH，不执行 `.zshrc`、`.bashrc` 等启动文件，也不会改动系统 PATH 或 shell 配置。用户自行安装的其他 CLI 只有位于这些标准 PATH 目录时才可见。

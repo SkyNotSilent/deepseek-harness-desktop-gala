@@ -1,84 +1,56 @@
-# 升级到上游 DSH 0.1.2
+# DSH 0.1.2 兼容升级维护说明
 
-当前上游运行时固定在 `0.1.1-rc.2`。这份文档只讲怎么把它抬到 `0.1.2`，以及哪些活工具链替不了。
+当前产品版本为 `2.2.0-preview.1`，运行时固定为官方 npm 发布的 `0.1.2-alpha.2`，对应上游 tag `dsh-v0.1.2-alpha.2`、commit `0a53fb55bea101816fa226bb964ae2bed71c343b`。alpha 运行时只能进入 Preview；稳定版至少等待上游 RC。
 
-## 前置阻塞：npm 上还没有 0.1.2
+## 固化的运行时闭包
 
-```sh
-npm view @deepseek-ai/dsh dist-tags   # latest 与 next 都是 0.1.1-rc.2
-```
-
-`dsh-v0.1.2-alpha.1` 目前只是上游 GitHub 上的 tag，没发到 npm，`yarn install` 拿不到，所以升级动作现在做不了。等 npm 出包后再动。
-
-alpha 只允许进 Preview 构建，不得进签名正式版；正式版必须等上游至少发到 `rc`。
-
-## 一条命令抬版本
-
-把 `<新版本>` 换成 npm 上真实存在的版本号（例如上游发到 `0.1.2-rc.1` 之后就写 `0.1.2-rc.1`），不要照抄占位符：
+`vendor/dsh-runtime/0.1.2-alpha.2/` 包含上游该 commit 的 245 个公开包，不包含 9 个 private 包。每个 tarball 必须与 npm registry 的 `dist.integrity` 字节一致；`manifest.json` 记录 SHA-256、SHA-512 integrity、包内 name/version 和许可证，`licenses.json` 是独立许可证清单。
 
 ```sh
-yarn set:dsh-version <新版本>
-yarn install
-yarn check
+corepack yarn verify:dsh-runtime
+corepack yarn verify:dsh-runtime:registry
+corepack yarn install --immutable
 ```
 
-`set:dsh-version` 只做形式校验，不查 npm 有没有这个版本：任何合法 semver 都会被接受并写进三个 `package.json`，`rc.x` 这种「看着像占位符、其实是合法 semver 预发布标识」也会被照写。写错了要靠 `yarn install` 报错发现，回退需要 `yarn set:dsh-version <旧版本> --allow-downgrade`。先跑一次 `--dry-run` 看计划再执行。
+第一条离线校验闭包、tar 元数据、root resolutions、lockfile 和七个补丁在 registry 原始 tarball 上的 clean apply。第二条联网向 npm registry 复核全部 245 个 SHA-512 integrity。
 
-`set:dsh-version` 会改三个 `package.json` 里所有精确等于当前 pin 的 `@deepseek-ai/dsh*` 依赖、根 `resolutions` 的两条 Windows ACL 补丁条目（含 `%3A` 编码与补丁文件名），并用 `git mv` 重命名 `patches/dsh-sandbox-windows-acl@<版本>.patch`。`@deepseek-ai/cordis*` 与 `@deepseek-ai/schemastery` 独立发版，脚本不碰；带 build metadata（`+`）的版本号会被拒绝，因为补丁文件名与 Yarn patch 描述符放不下 `+`。已经偏离当前 pin 的运行时依赖不会被改写，只会在输出里列成 `skipped ... off-version runtime pins`，需要手工处理。
+需要重新取得 registry 原始字节时运行 `corepack yarn vendor:dsh-runtime:registry`。脚本先写 staging 目录，全部 245 包通过后才原子替换目标 vendor 目录。
 
-`yarn check` 里的 `verify:dsh-version` 会拦住版本漂移：任何 `@deepseek-ai/dsh*` 依赖、补丁文件名、`resolutions` 或 README / 下载站里写的上游版本号跟 pin 不一致就失败。README、`README.en.md`、`site/` 里的上游版本号仍需手改，脚本不动文案。
+## 版本工具边界
 
-### 漂移检查的已知盲区
+```sh
+corepack yarn set:dsh-version <目标版本> --dry-run
+corepack yarn set:dsh-version <目标版本>
+```
 
-文案那一项靠正则识别「`Harness` 或 `上游` 紧跟版本号」这个句式（`scripts/dsh-version.mjs` 的 `PROSE_SERIES_PATTERN`）。当前 5 处活文案全部命中，`docs/releases/` 里的历史版本号被正确忽略。但改写句式就会让检查静默失效——例如「跟随上游 DSH 0.1.0 运行时」「Tracks the DeepSeek Harness runtime 0.1.0 release」这两种写法都不会被抓到。改动这几处文案的措辞时，要么保持 `Harness <版本>` / `上游 <版本>` 的紧邻句式，要么同步改正则。
+目标版本的完整 vendor 目录和版本化补丁必须事先存在。工具会在写入前校验：
 
-## 工具链替不了的破坏性改动
+- 当前与目标 vendor manifest、tar 大小与双哈希、包内 name/version/许可证；
+- 当前和目标包集合完全相同；闭包变化必须先由人工完成兼容改造；
+- patch inventory 完全相同，且目标补丁全部在目标 registry tarball 上 clean apply；
+- 三份产品 manifest 的所有 DSH 依赖属于目标闭包；
+- 根 `resolutions` 与当前 vendor manifest 精确一致。
 
-### 1. 删掉 `@deepseek-ai/dsh-host-apiproxy`
+成功时，工具只更新 `upstream.json`、三份 `package.json` 的 DSH pin 和根 `resolutions`。它不会下载或生成 vendor、不会改 `yarn.lock`、不会运行安装，也不会执行 `git add`/`git mv`。自身失败会把已写受管文件恢复为原始字节；`--dry-run` 写入零文件。
 
-上游用 `@Remote` 网关取代了旧的 ApiProxy 接口。这个包没有任何源码 `import`，只作为运行时闭包依赖挂在 `dsh-plugin-desktop/package.json:164` 与 `dsh-plugin-gala/package.json:95`，直接删两行即可。判断依据是 `yarn verify:closure`（`dsh-plugin-desktop` 的 `verify:closure`）：闭包不再要求它，就说明可以删。
+## alpha.2 迁移点
 
-### 2. 会话 UI 分层重构
+- 删除上游已移除的 `@deepseek-ai/dsh-client-runtime` 与 `@deepseek-ai/dsh-host-apiproxy`，改用拆分后的 session/workspace controller、ui-chat、util-time 等包。
+- Client 统一使用 Cordis `Context` 和 alpha.2 公共服务；Turn Error 节点跟随 alpha.2 类型。
+- New Session workaround 包装公开的 `uiWorkspace.startSession`，通过独立 `sessions`/`workspaces` controller 处理同工作区当前空白会话。
+- Desktop/Gala 使用 alpha.2 settings API；`dsh-settings` 补丁只保留旧插件仍会导入的三个 legacy helper。
+- 主窗口先通过 `connection.authenticatedUrl()` 生成的干净 origin URL交换 cookie，再加载保留桌面查询参数的 renderer URL。Gala panel 共享主窗口 Electron session，所有桌面 sibling routes 经过 `connection.requestRejection()`。
+- Windows ACL 兼容修复移到 `dsh-win32-process`；目录选择、子进程与浏览器 helper 环境补丁各自版本化。Gala 自有 node-pty ASAR 修复继续保留。
 
-上游把会话界面拆成了分层模块。Gala 同时消费 `@deepseek-ai/dsh-client-ui-conversation`、`-slots`、`-sidebar`、`-theme`、`-primitives`、`-settings` 和 `dsh-client-runtime`（`dsh-plugin-gala/package.json` 的 `devDependencies` 与 `peerDependencies` 两处都有），import 路径与 slot 名预计都会挪位置。这是整个升级里最大的一块，靠 `yarn typecheck` 逐个暴露。
+## 产品默认行为
 
-### 3. 复检 `new-session-fix.ts`，不要直接删
+- Desktop 无条件禁用 session telemetry；会话日志上传保持关闭。
+- `dsh_plugin_packages` 插件包名/版本清单上报按 alpha.2 默认保持启用。
+- WebFetch 分层跟随上游：base/global disabled，默认 `standard` 与 `ptc`/`cordis` preset 启用，`minimal` 不启用；启用后不逐次审批。
+- 会话记录只按上游方向单向原地升级，不承诺降级兼容。
 
-`dsh-plugin-desktop/src/client/new-session-fix.ts:31` 用 `publicWorkspaces as WorkspaceRuntimeWithSessions` 把运行时私有的 `sessions` API 断言成了手写形状，并 monkey-patch 了 `workspaces.startSession`。形状一变，编译照样通过，只在运行时静默失效。
+用户可见披露位于[用户指南](user-guide.md)和 [`v2.2.0-preview.1` 候选说明](releases/v2.2.0-preview.1.md)。
 
-上游 0.1.2 修的是一个**相关但不同**的空会话 bug，所以必须先跑 `dsh-plugin-desktop/tests/client-new-session-current-blank.spec.ts`，再手动点一次「新建会话」确认上游已经修对，才能删这个 workaround。
+## 合并门槛
 
-### 4. 先验证启动 URL 是否需要一次性 token
-
-上游现在要求经网络访问 Web UI 时在启动 URL 里带一次性 token。桌面壳加载的是 `desktopRendererUrl()`（`dsh-plugin-desktop/src/index.ts:72`，在 `src/index.ts:160` 被使用）拼出的 `http://127.0.0.1:<port>/?dsh-desktop-mode=...`，Gala 面板窗口另有两处 `loadURL`（`dsh-plugin-desktop/src/gala-electron.ts:71` 与 `:89`）。
-
-回环地址大概率豁免；如果不豁免，症状是启动后白窗。**升级后第一件事就验这个。**
-
-### 5. 会话记录存储格式又变了
-
-上游此前已明确宣告过一次格式不兼容，这次又改。按单向升级处理：从当前已发布的 Preview 做一次原地升级实测，并在 release notes 里写清降级后果（旧版读不回新格式的记录）。
-
-### 6. 两个默认开启的上游行为，都对用户可见
-
-- 官方 adapter 每次请求都会带上已启用插件的包名与版本，会泄露 `dsh-plugin-gala` 及其版本。决定是否用配置关掉；无论关不关，都要在用户指南里披露。
-- 公网 WebFetch 不再需要逐次审批。
-- 会话日志上传仍保持关闭，升级后确认一遍。
-
-### 7. `Code mode` 改名 `PTC mode`
-
-扫一遍 Gala 人格与预设文案里的旧名。当前仓库检索不到 `Code mode` / `代码模式` 字样，但上游改名后随上游文案变化的部分仍需复检。
-
-## 验证与发布
-
-`yarn check` 过了之后，按 [发布流程](release.md) 走 Preview 专项验收（Finder 启动、普通聊天、纯 HTML 小游戏、内置 `node`/`pnpm` 最小项目、多短进程构建，再换一台 Apple Silicon Mac 从浏览器下载复验）。
-
-建议按 MINOR 发布，即 `2.2.0-preview.1`：运行时、权限默认值、可能还有磁盘上的记录格式三样都变了。
-
-三个 `package.json` 的 `version` 应当一致，但实际拦住不一致的只有两道，且都不覆盖 `dsh-plugin-gala`：
-
-- `preview-release.yml:29` 与 `signed-release.yml:30`、`:78` 只把**根** `package.json` 的 `version` 和 `GITHUB_REF_NAME` 比对；
-- `dsh-plugin-desktop/tests/package.spec.ts:162` 只断言 `dsh-plugin-desktop` 的 `version` 等于根的 `version`。
-
-也就是说 `dsh-plugin-gala/package.json` 的 `version` 写错不会让任何流程失败，只能靠人。`docs/release.md:7` 写的「三个必须一致，不一致直接失败」这句话对前半句成立、对后半句不成立；这份文档不去改它，但这个缺口应当单独补一条校验来堵。
-
-`yarn check:upstream-dsh` 比对当前 pin 与 npm 上已发布的版本，随时可以手动跑。配套的 `.github/workflows/upstream-watch.yml` 每周自动跑一次并更新同一个 `upstream-watch` issue；推送 workflow 文件需要带 `workflow` scope 的凭据，在它落地之前先手动跑脚本。
+先运行根 `check`、registry integrity、immutable install 和本机 package gate，再由独立 QA 从候选 SHA 的 clean clone 全量复验。Linux、macOS ARM64、Windows x64 的原生构建/PTY/安装，以及 assembled sidebar、旧 Preview 数据副本升级和跨电脑浏览器下载均是独立 gate。任一 gate 没有证据时，不得宣称“已兼容”，也不得创建 Preview tag 或 release。
