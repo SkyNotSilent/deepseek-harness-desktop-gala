@@ -33,7 +33,7 @@ export interface MacReleaseVerificationOptions {
   readonly makeTemporaryDirectory: (prefix: string) => string
   readonly run: (command: string, args: readonly string[]) => VerificationCommandResult
   readonly removeTemporaryDirectory: (path: string) => void
-  readonly verifySmoke: (appPath: string) => void
+  readonly verifySmoke: (appPath: string) => Promise<void>
   readonly read: (path: string) => Buffer
   readonly size: (path: string) => number
 }
@@ -172,7 +172,7 @@ function verifyGatekeeper(
   }
 }
 
-function verifyApp(appPath: string, options: MacReleaseVerificationOptions): void {
+async function verifyApp(appPath: string, options: MacReleaseVerificationOptions): Promise<void> {
   options.run('codesign', ['--verify', '--deep', '--strict', '--verbose=4', appPath])
   const signature = commandOutput(options.run('codesign', ['--display', '--verbose=4', appPath]))
   if (!signature.includes(`Identifier=${options.bundleId}`)) {
@@ -196,13 +196,13 @@ function verifyApp(appPath: string, options: MacReleaseVerificationOptions): voi
     'macOS application',
   )
   options.run('xcrun', ['stapler', 'validate', appPath])
-  options.verifySmoke(appPath)
+  await options.verifySmoke(appPath)
 }
 
 /** Verify signed DMG and ZIP applications, metadata, quarantine handling, and PTY startup. */
-export function verifyMacRelease(
+export async function verifyMacRelease(
   options: MacReleaseVerificationOptions = defaultOptions(),
-): { readonly dmgPath: string; readonly zipPath: string } {
+): Promise<{ readonly dmgPath: string; readonly zipPath: string }> {
   assertGatekeeperEnabled(options)
   const files = options.listFiles(options.distDir)
   const prefix = `DeepSeek-Harness-Desktop-Gala-${options.version}-${options.arch}`
@@ -228,16 +228,16 @@ export function verifyMacRelease(
     const attachResult = options.run('hdiutil', ['attach', dmgPath, '-mountpoint', mountPoint, '-nobrowse', '-readonly'])
     mountedDevice = attachedDiskDevice(attachResult)
     mounted = true
-    verifyApp(join(mountPoint, `${options.productName}.app`), options)
+    await verifyApp(join(mountPoint, `${options.productName}.app`), options)
 
     options.run('ditto', ['-x', '-k', zipPath, zipDirectory])
     const zipApp = join(zipDirectory, `${options.productName}.app`)
-    verifyApp(zipApp, options)
+    await verifyApp(zipApp, options)
 
     const quarantinedApp = join(quarantineDirectory, `${options.productName}.app`)
     options.run('ditto', [zipApp, quarantinedApp])
     options.run('xattr', ['-w', 'com.apple.quarantine', '0081;00000000;Codex;Preview3', quarantinedApp])
-    verifyApp(quarantinedApp, options)
+    await verifyApp(quarantinedApp, options)
   } catch (cause) {
     failure = cause
   }
@@ -282,7 +282,7 @@ export function verifyMacRelease(
 const invokedPath = process.argv[1]
 if (invokedPath !== undefined && resolve(invokedPath) === fileURLToPath(import.meta.url)) {
   try {
-    const verified = verifyMacRelease()
+    const verified = await verifyMacRelease()
     console.log(`macOS release verification passed: ${verified.dmgPath}; ${verified.zipPath}`)
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error))

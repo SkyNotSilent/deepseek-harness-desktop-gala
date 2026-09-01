@@ -71,7 +71,7 @@ function options(overrides: Partial<MacReleaseVerificationOptions> = {}) {
       return { stdout: '', stderr: '' }
     },
     removeTemporaryDirectory: path => { removed.push(path) },
-    verifySmoke: path => { smokes.push(path) },
+    verifySmoke: async path => { smokes.push(path) },
     read: path => CONTENTS[path] ?? Buffer.alloc(0),
     size: path => (CONTENTS[path] ?? Buffer.alloc(0)).length,
     ...overrides,
@@ -80,9 +80,9 @@ function options(overrides: Partial<MacReleaseVerificationOptions> = {}) {
 }
 
 describe('macOS release artifact verification', () => {
-  it('verifies DMG, ZIP, signature identity, Hardened Runtime, tickets, metadata, quarantine, and PTY', () => {
+  it('verifies DMG, ZIP, signature identity, Hardened Runtime, tickets, metadata, quarantine, and PTY', async () => {
     const harness = options()
-    expect(verifyMacRelease(harness.value)).toEqual({ dmgPath: DMG, zipPath: ZIP })
+    await expect(verifyMacRelease(harness.value)).resolves.toEqual({ dmgPath: DMG, zipPath: ZIP })
 
     expect(harness.calls[0]).toEqual({ command: 'spctl', args: ['--status'] })
     expect(harness.calls).toContainEqual({ command: 'hdiutil', args: ['verify', DMG] })
@@ -116,9 +116,35 @@ describe('macOS release artifact verification', () => {
     ])
   })
 
-  it('rejects missing blockmaps or mismatched updater hashes before mounting', () => {
+  it('keeps mounted and extracted applications alive until the asynchronous PTY smoke finishes', async () => {
+    let releaseSmoke!: () => void
+    const smokeGate = new Promise<void>(resolve => { releaseSmoke = resolve })
+    let smokeCount = 0
+    const harness = options({
+      verifySmoke: async path => {
+        harness.smokes.push(path)
+        smokeCount += 1
+        if (smokeCount === 1) await smokeGate
+      },
+    })
+
+    const verification = verifyMacRelease(harness.value)
+    expect(harness.smokes).toHaveLength(1)
+    expect(harness.removed).toEqual([])
+    expect(harness.calls).not.toContainEqual({
+      command: 'hdiutil',
+      args: ['detach', '/private/tmp/dsh-desktop-dmg-0'],
+    })
+
+    releaseSmoke()
+    await expect(verification).resolves.toEqual({ dmgPath: DMG, zipPath: ZIP })
+    expect(harness.smokes).toHaveLength(3)
+    expect(harness.removed).toHaveLength(3)
+  })
+
+  it('rejects missing blockmaps or mismatched updater hashes before mounting', async () => {
     const noBlockmap = options({ listFiles: () => Object.keys(CONTENTS).filter(path => path !== ZIP_BLOCKMAP) })
-    expect(() => verifyMacRelease(noBlockmap.value)).toThrow('missing a non-empty blockmap')
+    await expect(verifyMacRelease(noBlockmap.value)).rejects.toThrow('missing a non-empty blockmap')
     expect(noBlockmap.calls).toEqual([{ command: 'spctl', args: ['--status'] }])
 
     const badUpdate = Buffer.from(CONTENTS[UPDATE]!.toString('utf8').replace(sha512(CONTENTS[ZIP]!), 'invalid'))
@@ -126,10 +152,10 @@ describe('macOS release artifact verification', () => {
       read: path => path === UPDATE ? badUpdate : CONTENTS[path]!,
       size: path => (path === UPDATE ? badUpdate : CONTENTS[path]!).length,
     })
-    expect(() => verifyMacRelease(badMetadata.value)).toThrow('SHA-512 mismatch')
+    await expect(verifyMacRelease(badMetadata.value)).rejects.toThrow('SHA-512 mismatch')
   })
 
-  it('refuses verification when Gatekeeper is disabled or does not identify notarization', () => {
+  it('refuses verification when Gatekeeper is disabled or does not identify notarization', async () => {
     const disabled = options({
       run: (command, args) => {
         disabled.calls.push({ command, args: [...args] })
@@ -139,7 +165,7 @@ describe('macOS release artifact verification', () => {
         return { stdout: '', stderr: '' }
       },
     })
-    expect(() => verifyMacRelease(disabled.value)).toThrow('Gatekeeper assessments must be enabled')
+    await expect(verifyMacRelease(disabled.value)).rejects.toThrow('Gatekeeper assessments must be enabled')
     expect(disabled.calls).toEqual([{ command: 'spctl', args: ['--status'] }])
 
     const missingSource = options({
@@ -161,9 +187,9 @@ describe('macOS release artifact verification', () => {
         return { stdout: '', stderr: '' }
       },
     })
-    const failure = (() => {
+    const failure = await (async () => {
       try {
-        verifyMacRelease(missingSource.value)
+        await verifyMacRelease(missingSource.value)
       } catch (cause) {
         return cause
       }
@@ -174,7 +200,7 @@ describe('macOS release artifact verification', () => {
     )
   })
 
-  it('rejects a wrong Team ID, runtime flag, or architecture', () => {
+  it('rejects a wrong Team ID, runtime flag, or architecture', async () => {
     for (const output of [
       'Identifier=io.github.skynotsilent.harnessgala\nTeamIdentifier=WRONGTEAM1\nflags=0x10000(runtime)',
       'Identifier=io.github.skynotsilent.harnessgala\nTeamIdentifier=TEAM123456\nflags=0x0(none)',
@@ -189,7 +215,7 @@ describe('macOS release artifact verification', () => {
           return { stdout: '', stderr: '' }
         },
       })
-      expect(() => verifyMacRelease(harness.value)).toThrow(AggregateError)
+      await expect(verifyMacRelease(harness.value)).rejects.toThrow(AggregateError)
     }
     const wrongArch = options({
       run: (command, args) => {
@@ -203,10 +229,10 @@ describe('macOS release artifact verification', () => {
         return { stdout: '', stderr: '' }
       },
     })
-    expect(() => verifyMacRelease(wrongArch.value)).toThrow(AggregateError)
+    await expect(verifyMacRelease(wrongArch.value)).rejects.toThrow(AggregateError)
   })
 
-  it('detaches the image and preserves verification and cleanup failures', () => {
+  it('detaches the image and preserves verification and cleanup failures', async () => {
     const verifyFailure = new Error('Gatekeeper rejected the app')
     const detachFailure = new Error('detach failed')
     const fallbackFailure = new Error('device detach failed')
@@ -237,7 +263,7 @@ describe('macOS release artifact verification', () => {
 
     let caught: unknown
     try {
-      verifyMacRelease(harness.value)
+      await verifyMacRelease(harness.value)
     } catch (cause) {
       caught = cause
     }
@@ -251,7 +277,7 @@ describe('macOS release artifact verification', () => {
     expect(harness.removed).toHaveLength(3)
   })
 
-  it('recovers a busy mountpoint by unmounting and detaching the exact attached device', () => {
+  it('recovers a busy mountpoint by unmounting and detaching the exact attached device', async () => {
     const harness = options({
       run: (command, args) => {
         harness.calls.push({ command, args: [...args] })
@@ -276,7 +302,7 @@ describe('macOS release artifact verification', () => {
       },
     })
 
-    expect(verifyMacRelease(harness.value)).toEqual({ dmgPath: DMG, zipPath: ZIP })
+    await expect(verifyMacRelease(harness.value)).resolves.toEqual({ dmgPath: DMG, zipPath: ZIP })
     expect(harness.calls).toContainEqual({
       command: 'diskutil',
       args: ['unmount', '/private/tmp/dsh-desktop-dmg-0'],
