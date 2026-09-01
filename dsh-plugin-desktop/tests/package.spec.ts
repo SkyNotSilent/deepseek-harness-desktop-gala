@@ -275,6 +275,8 @@ describe('published package surface', () => {
       new URL('.github/workflows/preview-release.yml', workspaceRoot),
       'utf8',
     )
+    const workspaceBuild = previewWorkflow.indexOf('run: corepack yarn build')
+    const desktopTest = previewWorkflow.indexOf('run: corepack yarn workspace dsh-plugin-desktop test')
 
     expect(previewWorkflow).toContain('Build ad-hoc signed artifacts')
     expect(previewWorkflow).toContain('--config.mac.identity=-')
@@ -282,7 +284,8 @@ describe('published package surface', () => {
     expect(previewWorkflow).toContain('codesign --verify --deep --strict --verbose=4')
     expect(previewWorkflow).toContain('hdiutil verify "$dmg"')
     expect(previewWorkflow).toContain('node scripts/verify-mac-smoke.ts')
-    expect(previewWorkflow).toContain('corepack yarn workspace dsh-plugin-desktop test')
+    expect(workspaceBuild).toBeGreaterThan(-1)
+    expect(desktopTest).toBeGreaterThan(workspaceBuild)
     expect(previewWorkflow).toContain('name: windows')
     expect(previewWorkflow).toContain('--draft')
     expect(previewWorkflow).not.toContain('merge-multiple: true')
